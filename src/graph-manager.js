@@ -12,11 +12,11 @@ export class GraphManager {
   // Graphs maintained by this graph manager, including the root of the nesting hierarchy
   #graphs;
 
-	/*
-	 * Inter-graph edges in this graph manager. Notice that all inter-graph
-	 * edges go here, not in any of the edge lists of individual graphs (either
-	 * source or target node's owner graph).
-	 */  
+  /*
+  * Inter-graph edges in this graph manager. Notice that all inter-graph
+  * edges go here, not in any of the edge lists of individual graphs (either
+  * source or target node's owner graph).
+  */
   #edges;
 
   // The root of the inclusion/nesting hierarchy of this compound structure
@@ -32,7 +32,7 @@ export class GraphManager {
   #isVisible;
 
   /**
-   * 
+   * Constructor
    * @param {ComplexityManager} owner - owner complexity manager 
    * @param {bool} isVisible - whether the graph manager manages visible graph or not
    */
@@ -105,10 +105,10 @@ export class GraphManager {
     this.#isVisible = isVisible;
   }
 
-	/**
-	 * This method adds a new graph to this graph manager and sets as the root.
-	 * It also creates the root node as the parent of the root graph.
-	 */  
+  /**
+   * This method adds a new graph to this graph manager and sets as the root.
+   * It also creates the root node as the parent of the root graph.
+   */  
   addRoot() {
     let newGraph = this.#owner.newGraph();
     let newNode = this.#owner.newNode(null);
@@ -117,11 +117,11 @@ export class GraphManager {
     return this.#rootGraph;
   }
 
-	/**
-	 * This method adds the input graph into this graph manager. The new graph
-	 * is associated as the child graph of the input parent node. If the parent
-	 * node is null, then the graph is set to be the root.
-	 */
+  /**
+   * This method adds the input graph into this graph manager. The new graph
+   * is associated as the child graph of the input parent node. If the parent
+   * node is null, then the graph is set to be the root.
+   */
   addGraph(newGraph, parentNode) {
     if (newGraph == null) {
       throw "Graph is null!";
@@ -148,11 +148,11 @@ export class GraphManager {
     return newGraph;
   }
 
-	/**
-	 * This method adds the input edge between specified nodes into this graph
-	 * manager. We assume both source and target nodes to be already in this
-	 * graph manager.
-	 */
+  /**
+   * This method adds the input edge between specified nodes into this graph
+   * manager. We assume both source and target nodes to be already in this
+   * graph manager.
+   */
   addInterGraphEdge(newEdge, sourceNode, targetNode) {
     const sourceGraph = sourceNode.owner;
     const targetGraph = targetNode.owner;
@@ -240,10 +240,9 @@ export class GraphManager {
     graph.parent = null;
   }
 
-
-	/**
-	 * This method removes the input inter-graph edge from this graph manager.
-	 */
+  /**
+   * This method removes the input inter-graph edge from this graph manager.
+   */
   removeInterGraphEdge(edge) {
     if (edge == null) {
       throw "Edge is null!";

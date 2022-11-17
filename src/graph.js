@@ -9,7 +9,7 @@
 export class Graph {
   /** 
    * Parent node of the graph. This should never be null (the parent of the
-	 * root graph is the root node) when this graph is part of a compound
+   * root graph is the root node) when this graph is part of a compound
    * structure (i.e. a graph manager).
    */ 
   #parent;
@@ -85,10 +85,10 @@ export class Graph {
     this.#siblingGraph = siblingGraph;
   }
 
-	/**
-	 * This methods adds the given node to this graph. We assume 
+  /**
+   * This methods adds the given node to this graph. We assume 
    * this graph has a proper graph manager.
-	 */  
+   */
   addNode(newNode) {
     if (this.#owner == null) {
       throw "Graph has no graph manager!"
@@ -104,10 +104,10 @@ export class Graph {
     return newNode;
   }
 
-	/**
-	 * This methods adds the given edge to this graph with 
+  /**
+   * This methods adds the given edge to this graph with 
    * specified nodes as source and target.
-	 */  
+   */
   addEdge(newEdge, sourceNode, targetNode) {
     if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes().indexOf(targetNode)) > -1)) {
       throw "Source or target not in graph!";
@@ -143,11 +143,11 @@ export class Graph {
     return newEdge;
   }
 
-	/**
-	 * This method removes the input node from this graph. If the node has any
-	 * incident edges, they are removed from the graph (the graph manager for
-	 * inter-graph edges) as well.
-	 */
+  /**
+   * This method removes the input node from this graph. If the node has any
+   * incident edges, they are removed from the graph (the graph manager for
+   * inter-graph edges) as well.
+   */
   removeNode(node) {
     if (node == null) {
       throw "Node is null!";
@@ -182,10 +182,10 @@ export class Graph {
     this.nodes.splice(index, 1);    
   }
 
-	/**
-	 * This method removes the input edge from this graph. 
+  /**
+   * This method removes the input edge from this graph. 
    * Should not be used for inter-graph edges.
-	 */  
+   */
   removeEdge(edge) {
     if (edge == null) {
       throw "Edge is null!";
