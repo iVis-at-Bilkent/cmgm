@@ -1,0 +1,26 @@
+{
+  "name": "cmgm",
+  "version": "1.0.0",
+  "description": "CMGM is a unified complexity management framework for compound graphs ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iVis-at-Bilkent/cmgm.git"
+  },
+  "keywords": [
+    "compound",
+    "graph",
+    "complexity",
+    "visualzation",
+    "layout"
+  ],
+  "author": "iVis-at-Bilkent",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iVis-at-Bilkent/cmgm/issues"
+  },
+  "homepage": "https://github.com/iVis-at-Bilkent/cmgm#readme"
+}
