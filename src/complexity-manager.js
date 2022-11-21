@@ -29,11 +29,11 @@ export class ComplexityManager {
 
   // Get methods
   get visibleGraphManager() {
-    this.#visibleGraphManager;
+    return this.#visibleGraphManager;
   }
 
   get invisibleGraphManager() {
-    this.#invisibleGraphManager;
+    return this.#invisibleGraphManager;
   }
 
   /*
