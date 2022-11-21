@@ -20,9 +20,9 @@ export default [
 		plugins: [
 			nodeResolve(), // so Rollup can find `ms`
 			commonjs(), // so Rollup can convert `ms` to an ES module
-			babel({
+/* 			babel({
 				exclude: ['node_modules/**']
-			})
+			}) */
 		]
 	},
 
@@ -39,10 +39,10 @@ export default [
 			{ file: pkg.main, format: 'cjs', exports: 'auto', plugins: [isProduction && terser()] },
 			{ file: pkg.module, format: 'es', exports: 'auto', plugins: [isProduction && terser()] }
 		],
-		plugins: [
+/* 		plugins: [
 			babel({
 				exclude: ['node_modules/**']
 			})
-		]
+		] */
 	}
 ];
