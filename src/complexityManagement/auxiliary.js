@@ -1,5 +1,13 @@
 export class Auxiliary {
 
+  static lastID = 0;
+
+  static createUniqueID() {
+    let newID = "Object#" + this.lastID + "";
+    this.lastID++;
+    return newID;
+  }
+
   static removeEdgeFromGraph(edgeToRemove, visibleGM, invisibleGM) {
 
   }

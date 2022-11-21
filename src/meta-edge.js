@@ -1,3 +1,4 @@
+import { Auxiliary } from "./complexityManagement/auxiliary";
 import {Edge} from "./edge"
 
 /**
@@ -15,7 +16,8 @@ export class MetaEdge extends Edge {
    * @param {Node} source - source node of the meta edge 
    * @param {*} target - target node of the meta edge
    */
-  constructor(ID, source, target) {
+  constructor(source, target) {
+    let ID = Auxiliary.createUniqueID();
     super(ID, source, target);
     this.#originalEdges = [];
   }
