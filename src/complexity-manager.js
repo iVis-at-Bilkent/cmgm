@@ -4,6 +4,8 @@ import { FilterUnfilter } from "./complexityManagement/filter-unfilter";
 import { GraphManager } from "./graph-manager";
 import { HideShow } from "./complexityManagement/hide-show";
 import { Topology } from "./complexityManagement/topology";
+import { Graph } from "./graph";
+import { Node } from "./node";
 
 /**
  * This class is responsible for the communication between CMGM core 
@@ -43,6 +45,21 @@ export class ComplexityManager {
   #newGraphManager(isVisible) {
     let gm = new GraphManager(this, isVisible);
     return gm;
+  }
+
+  /**
+   * This method creates a new graph in the graph manager associated with the input.
+   */
+  newGraph(graphManager) {
+    return new Graph(null, graphManager);
+  }
+
+  /**
+   * This method creates a new node associated with the input view node.
+   */
+  newNode(ID) {
+    let nodeID = ID ? ID : Auxiliary.createUniqueID();
+    return new Node(nodeID);
   }
 
   // Topology related API methods

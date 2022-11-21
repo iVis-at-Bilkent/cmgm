@@ -1,5 +1,5 @@
 /* This class defines properties specific to an edge. */
-import {GraphObject} from "./graph-object"
+import { GraphObject } from "./graph-object"
 
 /**
  * This class represents an edge. An edge maintains

@@ -1,5 +1,5 @@
 import { Auxiliary } from "./complexityManagement/auxiliary";
-import {Edge} from "./edge"
+import { Edge } from "./edge"
 
 /**
  * This class represents a meta edge. A meta edge maintains 

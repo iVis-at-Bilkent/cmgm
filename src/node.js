@@ -1,4 +1,4 @@
-import {GraphObject} from "./graph-object"
+import { GraphObject } from "./graph-object"
 
 /**
  * This class represents a node. A node maintains
@@ -50,7 +50,7 @@ export class Node extends GraphObject {
     this.#edges = edges;
   }
 
-  set isCollapsed(isCollpased) {
-    this.#isCollpased = isCollpased;
+  set isCollapsed(isCollapsed) {
+    this.#isCollapsed = isCollapsed;
   }
 }

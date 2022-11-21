@@ -110,10 +110,10 @@ export class GraphManager {
    * It also creates the root node as the parent of the root graph.
    */  
   addRoot() {
-    let newGraph = this.#owner.newGraph();
-    let newNode = this.#owner.newNode(null);
+    let newGraph = this.#owner.newGraph(this);
+    let newNode = this.#owner.newNode();
     let root = this.addGraph(newGraph, newNode);
-    this.rootGraph = root;
+    this.#rootGraph = root;
     return this.#rootGraph;
   }
 

@@ -2,6 +2,29 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+class Auxiliary {
+
+  static lastID = 0;
+
+  static createUniqueID() {
+    let newID = "Object#" + this.lastID + "";
+    this.lastID++;
+    return newID;
+  }
+
+  static removeEdgeFromGraph(edgeToRemove, visibleGM, invisibleGM) {
+
+  }
+
+  static moveNodeToVisible(node, visibleGM, invisibleGM) {
+
+  }
+
+  static moveEdgeToVisible(node, visibleGM, invisibleGM) {
+    
+  }
+}
+
 class ExpandCollapse {
 
   #collapseNode(node, visibleGM, invisibleGM) {
@@ -161,10 +184,10 @@ class GraphManager {
    * It also creates the root node as the parent of the root graph.
    */  
   addRoot() {
-    let newGraph = this.#owner.newGraph();
-    let newNode = this.#owner.newNode(null);
+    let newGraph = this.#owner.newGraph(this);
+    let newNode = this.#owner.newNode();
     let root = this.addGraph(newGraph, newNode);
-    this.rootGraph = root;
+    this.#rootGraph = root;
     return this.#rootGraph;
   }
 
@@ -331,6 +354,366 @@ class GraphManager {
 }
 
 /**
+ * This class represents a graph. A graph maintains
+ * its owner graph manager, its nodes, its intra-graph edges,
+ * its parent node and its sibling graph. A graph is always
+ * a child of a compound node. The root of the compound graph
+ * structure is a child of the root node, which is the only node
+ * in compound structure without an owner graph.
+ */
+class Graph {
+  /** 
+   * Parent node of the graph. This should never be null (the parent of the
+   * root graph is the root node) when this graph is part of a compound
+   * structure (i.e. a graph manager).
+   */ 
+  #parent;
+
+  // Graph manager that owns this graph
+  #owner;
+
+  // Nodes maintained by the graph
+  #nodes;
+
+  // Edges whose source and target nodes are in this graph (intra-graph edge)
+  #edges;
+
+  /**
+   * Sibling graph of this graph. If this graph is owned by the visible 
+   * graph manager, then siblingGraph must be owned by the invisible
+   * graph manager or vice versa.
+   */
+  #siblingGraph;
+
+  /**
+   * Constructor
+   * @param {Node} parent - parent node of the graph
+   * @param {GraphManager} owner - owner graph manager of the graph
+   */
+  constructor(parent, owner) {
+    this.#parent = parent;
+    this.#owner = owner;
+    this.#nodes = [];
+    this.#edges = [];
+    this.#siblingGraph = null;
+  }
+
+  // get methods
+  get parent() {
+    return this.#parent;
+  }
+
+  get owner() {
+    return this.#owner;
+  }
+
+  get nodes() {
+    return this.#nodes;
+  }
+
+  get edges() {
+    return this.#edges
+  }
+
+  get siblingGraph() {
+    return this.#siblingGraph;
+  }
+
+  // set methods
+  set parent(parent) {
+    this.#parent = parent;
+  }
+
+  set owner(owner) {
+    this.#owner = owner;
+  }
+
+  set nodes(nodes) {
+    this.#nodes = nodes;
+  }
+
+  set edges(edges) {
+    this.#edges = edges;
+  }
+
+  set siblingGraph(siblingGraph) {
+    this.#siblingGraph = siblingGraph;
+  }
+
+  /**
+   * This methods adds the given node to this graph. We assume 
+   * this graph has a proper graph manager.
+   */
+  addNode(newNode) {
+    if (this.#owner == null) {
+      throw "Graph has no graph manager!"
+    }
+
+    if (this.#nodes.indexOf(newNode) > -1) {
+      throw "Node already in graph!"
+    }
+
+    newNode.owner = this;
+    this.#nodes.push(newNode);
+
+    return newNode;
+  }
+
+  /**
+   * This methods adds the given edge to this graph with 
+   * specified nodes as source and target.
+   */
+  addEdge(newEdge, sourceNode, targetNode) {
+    if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes().indexOf(targetNode)) > -1)) {
+      throw "Source or target not in graph!";
+    }
+
+    if (!(sourceNode.owner == targetNode.owner && sourceNode.owner == this)) {
+      throw "Both owners must be this graph!";
+    }
+
+    if (sourceNode.owner != targetNode.owner)
+    {
+      return null;
+    }
+
+    // set source and target
+    newEdge.source = sourceNode;
+    newEdge.target = targetNode;
+
+    // set as intra-graph edge
+    newEdge.isInterGraph = false;
+
+    // add to graph edge list
+    this.#edges().push(newEdge);
+
+    // add to incidency lists
+    sourceNode.edges.push(newEdge);
+
+    if (targetNode != sourceNode)
+    {
+      targetNode.edges.push(newEdge);
+    }
+
+    return newEdge;
+  }
+
+  /**
+   * This method removes the input node from this graph. If the node has any
+   * incident edges, they are removed from the graph (the graph manager for
+   * inter-graph edges) as well.
+   */
+  removeNode(node) {
+    if (node == null) {
+      throw "Node is null!";
+    }
+    if (!(node.owner != null && node.owner == this)) {
+      throw "Owner graph is invalid!";
+    }
+    if (this.owner == null) {
+      throw "Owner graph manager is invalid!";
+    }
+
+    // remove incident edges first (make a copy to do it safely)
+    const edgesToBeRemoved = node.edges.slice();
+    edgesToBeRemoved.forEach(edge => {
+      if (edge.isInterGraph)
+      {
+        this.owner.remove(edge);
+      }
+      else
+      {
+        edge.source.owner.remove(edge);
+      }
+    });
+
+    // now the node itself
+    const index = this.#nodes.indexOf(node);
+    if (index == -1) {
+      throw "Node not in owner node list!";
+    }
+
+    this.nodes.splice(index, 1);    
+  }
+
+  /**
+   * This method removes the input edge from this graph. 
+   * Should not be used for inter-graph edges.
+   */
+  removeEdge(edge) {
+    if (edge == null) {
+      throw "Edge is null!";
+    }
+    if (!(edge.source != null && edge.target != null)) {
+      throw "Source and/or target is null!";
+    }
+    if (!(edge.source.owner != null && edge.target.owner != null &&
+            edge.source.owner == this && edge.target.owner == this)) {
+      throw "Source and/or target owner is invalid!";
+    }
+
+    // remove edge from source and target nodes' incidency lists
+
+    const sourceIndex = edge.source.edges.indexOf(edge);
+    const targetIndex = edge.target.edges.indexOf(edge);
+
+    if (!(sourceIndex > -1 && targetIndex > -1)) {
+      throw "Source and/or target doesn't know this edge!";
+    }
+
+    edge.source.edges.splice(sourceIndex, 1);
+
+    if (edge.target != edge.source)
+    {
+      edge.target.edges.splice(targetIndex, 1);
+    }
+
+    // remove edge from owner graph's edge list
+
+    const index = edge.source.owner.getEdges().indexOf(edge);
+    if (index == -1) {
+      throw "Not in owner's edge list!";
+    }
+
+    edge.source.owner.edges.splice(index, 1);
+  }
+}
+
+/**
+ * This class represents a graph object which 
+ * can be either a  node or an edge.
+ */
+class GraphObject {
+
+  // ID of the graph object; must be unique
+  #ID;
+
+  // Owner graph or graph manager of the graph object
+  #owner;
+
+  // Whether the graph object is visible or not
+  #isVisible;
+
+  // Whether the graph object is filtered or not
+  #isFiltered;
+
+  // Whether the graph object is hidden or not
+  #isHidden;
+
+  /**
+   * Constuctor
+   * @param {String} ID - ID of the graph object
+   */
+  constructor(ID) {
+    this.#ID = ID;
+    this.#owner = null;
+    this.#isVisible = true;
+    this.#isFiltered = false;
+    this.#isHidden = false;
+  }
+
+  // get methods
+  get ID() {
+    return this.#ID;
+  }
+
+  get owner() {
+    if (this.#owner == null) {
+      throw "Owner graph of a node cannot be null"
+    }
+    return this.#owner;
+  }
+
+  get isVisible() {
+    return this.#isVisible;
+  }
+
+  get isFiltered() {
+    return this.#isFiltered;
+  }
+
+  get isHidden() {
+    return this.#isHidden;
+  }
+
+  // set methods
+  set ID(newID) {
+    this.#ID = newID;
+  }
+
+  set owner(newOwner) {
+    this.#owner = newOwner;
+  }
+
+  set isVisible(isVisible) {
+    this.#isVisible = isVisible;
+  }
+
+  set isFiltered(isFiltered) {
+    this.#isFiltered = isFiltered;
+  }
+
+  set isHidden(isHidden) {
+    this.#isHidden = isHidden;
+  }
+}
+
+/**
+ * This class represents a node. A node maintains
+ * its child graph if exists, a list of its incident 
+ * edges and the information of whether it is collapsed
+ * or not together with the properties that are 
+ * inherited from GraphObject class.
+ */
+class Node extends GraphObject {
+  // Child graph of the node
+  #child;
+
+  // List of edges incident with the node 
+  #edges;
+
+  // Whether the node is collapsed or not
+  #isCollapsed;
+
+  /**
+   * Constuctor
+   * @param {String} ID - ID of the node
+   */
+  constructor(ID) {
+    super(ID);
+    this.#child = null;
+    this.#edges = [];
+    this.#isCollapsed = false;
+  }
+
+  // get methods
+  get child() {
+    return this.#child;
+  }
+
+  get edges() {
+    return this.#edges;
+  }
+
+  get isCollapsed() {
+    return this.#isCollapsed;
+  }
+
+  // set methods
+  set child(child) {
+    this.#child = child;
+  }
+
+  set edges(edges) {
+    this.#edges = edges;
+  }
+
+  set isCollapsed(isCollapsed) {
+    this.#isCollapsed = isCollapsed;
+  }
+}
+
+/**
  * This class is responsible for the communication between CMGM core 
  * and the outside world via API functions. These API functions include
  * both the ones used to synchronize CMGM with the graph model of Rendering
@@ -368,6 +751,21 @@ class ComplexityManager {
   #newGraphManager(isVisible) {
     let gm = new GraphManager(this, isVisible);
     return gm;
+  }
+
+  /**
+   * This method creates a new graph in the graph manager associated with the input.
+   */
+  newGraph(graphManager) {
+    return new Graph(null, graphManager);
+  }
+
+  /**
+   * This method creates a new node associated with the input view node.
+   */
+  newNode(ID) {
+    let nodeID = ID ? ID : Auxiliary.createUniqueID();
+    return new Node(nodeID);
   }
 
   // Topology related API methods

@@ -2,7 +2,7 @@
  * This class represents a graph object which 
  * can be either a  node or an edge.
  */
-class GraphObject {
+export class GraphObject {
 
   // ID of the graph object; must be unique
   #ID;
