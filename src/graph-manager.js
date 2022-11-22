@@ -43,6 +43,7 @@ export class GraphManager {
     this.#rootGraph = null
     this.#siblingGraphManager = null;
     this.#isVisible = isVisible;
+    this.addRoot(); // Add root graph
   }
 
   // get methods

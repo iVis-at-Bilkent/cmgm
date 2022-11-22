@@ -113,6 +113,7 @@ class GraphManager {
     this.#rootGraph = null;
     this.#siblingGraphManager = null;
     this.#isVisible = isVisible;
+    this.addRoot(); // Add root graph
   }
 
   // get methods
@@ -729,6 +730,9 @@ class ComplexityManager {
   constructor() {
     this.#visibleGraphManager = this.#newGraphManager(true);
     this.#invisibleGraphManager = this.#newGraphManager(false);
+    // Set sibling graph managers
+    this.#visibleGraphManager.siblingGraphManager = this.#invisibleGraphManager;
+    this.#invisibleGraphManager.siblingGraphManager = this.#visibleGraphManager;
   }
 
   // Get methods
