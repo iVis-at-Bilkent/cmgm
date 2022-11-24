@@ -158,10 +158,10 @@ export class GraphManager {
     const sourceGraph = sourceNode.owner;
     const targetGraph = targetNode.owner;
 
-    if (!(sourceGraph != null && sourceGraph.getGraphManager() == this)) {
+    if (!(sourceGraph != null && sourceGraph.owner == this)) {
       throw "Source not in this graph mgr!";
     }
-    if (!(targetGraph != null && targetGraph.getGraphManager() == this)) {
+    if (!(targetGraph != null && targetGraph.owner == this)) {
       throw "Target not in this graph mgr!";
     }
 

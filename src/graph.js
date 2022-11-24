@@ -109,7 +109,7 @@ export class Graph {
    * specified nodes as source and target.
    */
   addEdge(newEdge, sourceNode, targetNode) {
-    if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes().indexOf(targetNode)) > -1)) {
+    if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes.indexOf(targetNode)) > -1)) {
       throw "Source or target not in graph!";
     }
 
@@ -130,7 +130,7 @@ export class Graph {
     newEdge.isInterGraph = false;
 
     // add to graph edge list
-    this.#edges().push(newEdge);
+    this.#edges.push(newEdge);
 
     // add to incidency lists
     sourceNode.edges.push(newEdge);

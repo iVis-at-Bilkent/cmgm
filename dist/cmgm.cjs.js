@@ -232,10 +232,10 @@ class GraphManager {
     const sourceGraph = sourceNode.owner;
     const targetGraph = targetNode.owner;
 
-    if (!(sourceGraph != null && sourceGraph.getGraphManager() == this)) {
+    if (!(sourceGraph != null && sourceGraph.owner == this)) {
       throw "Source not in this graph mgr!";
     }
-    if (!(targetGraph != null && targetGraph.getGraphManager() == this)) {
+    if (!(targetGraph != null && targetGraph.owner == this)) {
       throw "Target not in this graph mgr!";
     }
 
@@ -465,7 +465,7 @@ class Graph {
    * specified nodes as source and target.
    */
   addEdge(newEdge, sourceNode, targetNode) {
-    if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes().indexOf(targetNode)) > -1)) {
+    if (!(this.#nodes.indexOf(sourceNode) > -1 && (this.#nodes.indexOf(targetNode)) > -1)) {
       throw "Source or target not in graph!";
     }
 
@@ -486,7 +486,7 @@ class Graph {
     newEdge.isInterGraph = false;
 
     // add to graph edge list
-    this.#edges().push(newEdge);
+    this.#edges.push(newEdge);
 
     // add to incidency lists
     sourceNode.edges.push(newEdge);
