@@ -31,6 +31,9 @@ export class GraphManager {
   // Whether this graph manager manages the visible graph or not
   #isVisible;
 
+  // NodeId to NodeObject map.
+  nodesMap;
+  edgesMap;
   /**
    * Constructor
    * @param {ComplexityManager} owner - owner complexity manager 
@@ -43,6 +46,8 @@ export class GraphManager {
     this.#rootGraph = null
     this.#siblingGraphManager = null;
     this.#isVisible = isVisible;
+    this.nodesMap = new Map();
+    this.edgesMap = new Map();
     this.addRoot(); // Add root graph
   }
 
@@ -158,10 +163,10 @@ export class GraphManager {
     const sourceGraph = sourceNode.owner;
     const targetGraph = targetNode.owner;
 
-    if (!(sourceGraph != null && sourceGraph.getGraphManager() == this)) {
+    if (!(sourceGraph != null && sourceGraph.owner == this)) {
       throw "Source not in this graph mgr!";
     }
-    if (!(targetGraph != null && targetGraph.getGraphManager() == this)) {
+    if (!(targetGraph != null && targetGraph.owner == this)) {
       throw "Target not in this graph mgr!";
     }
 
@@ -277,5 +282,32 @@ export class GraphManager {
 
     index = edge.source.owner.getGraphManager().edges.indexOf(edge);
     edge.source.owner.getGraphManager().edges.splice(index, 1);
+  }
+
+  getDecendantsInorder(node){
+    let decendants = {
+      edges:new Set(),
+      simpleNodes:[],
+      compoundNodes:[]
+    };
+    let childGraph = node.child();
+    if(childGraph){
+      let childGraphNodes = childGraph.nodes();
+      childGraphNodes.forEach((childNode)=>{
+        let childDescendents = this.getDecendantsInorder(childNode);
+        for(var id in childDescendents){
+          decendants[id] = [...decendants[date] || [],...childDescendents[date]];
+        }
+        if(childNode.child()){
+          decendants.compoundNodes.push(childNode)
+        }else{
+          decendants.simpleNodes.push(childNode)
+        }
+      let nodeEdges = childNode.edges();
+      nodeEdges.forEach(item => decendants['edges'].add(item))
+      })
+    }
+
+    return decendants
   }
 }

@@ -1,3 +1,5 @@
+import { GraphManager } from "../graph-manager";
+
 export class Auxiliary {
 
   static lastID = 0;
@@ -8,8 +10,13 @@ export class Auxiliary {
     return newID;
   }
 
-  static removeEdgeFromGraph(edgeToRemove, visibleGM, invisibleGM) {
-
+  static removeEdgeFromGraph(edgeToRemove) {
+    if(edgeToRemove.owner instanceof GraphManager){
+      edgeToRemove.owner.removeInterGraphEdge(edgeToRemove);
+    }
+    else{
+      edgeToRemove.owner.removeEdge(edgeToRemove);
+    }
   }
 
   static moveNodeToVisible(node, visibleGM, invisibleGM) {
