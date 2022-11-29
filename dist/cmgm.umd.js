@@ -4,76 +4,6 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.cmgm = {}));
 })(this, (function (exports) { 'use strict';
 
-  class Auxiliary {
-
-    static lastID = 0;
-
-    static createUniqueID() {
-      let newID = "Object#" + this.lastID + "";
-      this.lastID++;
-      return newID;
-    }
-
-    static removeEdgeFromGraph(edgeToRemove, visibleGM, invisibleGM) {
-
-    }
-
-    static moveNodeToVisible(node, visibleGM, invisibleGM) {
-
-    }
-
-    static moveEdgeToVisible(node, visibleGM, invisibleGM) {
-      
-    }
-  }
-
-  class ExpandCollapse {
-
-    #collapseNode(node, visibleGM, invisibleGM) {
-
-    }
-
-    #expandNode(node, isRecursive, visibleGM, invisibleGM) {
-
-    }
-
-    static collpaseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
-
-    }
-
-    static expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
-
-    }
-
-    static collapseAllNodes(visibleGM, invisibleGM) {
-
-    }
-
-    static expandAllNodes(visibleGM, invisibleGM) {
-
-    }
-
-    static collapseEdges(edgeIDList, visibleGM, invisibleGM) {
-
-    }
-
-    static expandEdges(edgeIDList, visibleGM, invisibleGM) {
-
-    }
-
-    static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
-
-    }
-
-    static expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
-
-    }
-
-    static collapseAllEdges(visibleGM, invisibleGM) {
-
-    }
-  }
-
   /**
    * This class represents a graph manager for complexity management purposes. A graph
    * manager maintains a collection of graphs, forming a compound graph structure
@@ -358,6 +288,108 @@
 
       index = edge.source.owner.getGraphManager().edges.indexOf(edge);
       edge.source.owner.getGraphManager().edges.splice(index, 1);
+    }
+
+    getDecendantsInorder(node){
+      let decendants = {
+        edges:new Set(),
+        simpleNodes:[],
+        compoundNodes:[]
+      };
+      let childGraph = node.child();
+      if(childGraph){
+        let childGraphNodes = childGraph.nodes();
+        childGraphNodes.forEach((childNode)=>{
+          let childDescendents = this.getDecendantsInorder(childNode);
+          for(var id in childDescendents){
+            decendants[id] = [...decendants[date] || [],...childDescendents[date]];
+          }
+          if(childNode.child()){
+            decendants.compoundNodes.push(childNode);
+          }else {
+            decendants.simpleNodes.push(childNode);
+          }
+        let nodeEdges = childNode.edges();
+        nodeEdges.forEach(item => decendants['edges'].add(item));
+        });
+      }
+
+      return decendants
+    }
+  }
+
+  class Auxiliary {
+
+    static lastID = 0;
+
+    static createUniqueID() {
+      let newID = "Object#" + this.lastID + "";
+      this.lastID++;
+      return newID;
+    }
+
+    static removeEdgeFromGraph(edgeToRemove) {
+      if(edgeToRemove.owner instanceof GraphManager){
+        edgeToRemove.owner.removeInterGraphEdge(edgeToRemove);
+      }
+      else {
+        edgeToRemove.owner.removeEdge(edgeToRemove);
+      }
+    }
+
+    static moveNodeToVisible(node, visibleGM, invisibleGM) {
+
+    }
+
+    static moveEdgeToVisible(node, visibleGM, invisibleGM) {
+      
+    }
+  }
+
+  class ExpandCollapse {
+
+    #collapseNode(node, visibleGM, invisibleGM) {
+
+    }
+
+    #expandNode(node, isRecursive, visibleGM, invisibleGM) {
+
+    }
+
+    static collpaseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+
+    }
+
+    static expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+
+    }
+
+    static collapseAllNodes(visibleGM, invisibleGM) {
+
+    }
+
+    static expandAllNodes(visibleGM, invisibleGM) {
+
+    }
+
+    static collapseEdges(edgeIDList, visibleGM, invisibleGM) {
+
+    }
+
+    static expandEdges(edgeIDList, visibleGM, invisibleGM) {
+
+    }
+
+    static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
+
+    }
+
+    static expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+
+    }
+
+    static collapseAllEdges(visibleGM, invisibleGM) {
+
     }
   }
 
@@ -660,15 +692,16 @@
       }
 
       // remove incident edges first (make a copy to do it safely)
+      // Requires further invesitgations.
       const edgesToBeRemoved = node.edges.slice();
       edgesToBeRemoved.forEach(edge => {
         if (edge.isInterGraph)
         {
-          this.owner.remove(edge);
+          this.owner.removeInterGraphEdge(edge);
         }
         else
         {
-          edge.source.owner.remove(edge);
+          edge.source.owner.removeEdge(edge);
         }
       });
 
@@ -721,6 +754,38 @@
       }
 
       edge.source.owner.edges.splice(index, 1);
+    }
+  }
+
+  /**
+   * This class represents a meta edge. A meta edge maintains 
+   * the original edges it represents together with the properties 
+   * that are inherited from Edge class.
+   */
+  class MetaEdge extends Edge {
+    // The original edges this meta edge represents
+    #originalEdges;
+
+    /**
+     * Constructor
+     * @param {Stirng} ID - ID of the meta edge 
+     * @param {Node} source - source node of the meta edge 
+     * @param {*} target - target node of the meta edge
+     */
+    constructor(source, target) {
+      let ID = Auxiliary.createUniqueID();
+      super(ID, source, target);
+      this.#originalEdges = [];
+    }
+
+    // get methods
+    get originalEdges() {
+      return this.#originalEdges;
+    }
+
+    // set methods
+    set originalEdges(originalEdges) {
+      this.#originalEdges = originalEdges;
     }
   }
 
@@ -838,17 +903,74 @@
 
     static removeNode(nodeID, visibleGM, invisibleGM) {
       let nodeToRemove = visibleGM.nodesMap.get(nodeID);
+      let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
       if(nodeToRemove){
-        nodeToRemove.owner.removeNode(nodeToRemove);
-        let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
-        nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
+        //Removing nodes from Visible Graph Manager
+        let nodeToRemoveDescendants = visibleGM.getDecendantsInorder(nodeToRemove);
+        nodeToRemoveDescendants.edges.forEach((nodeToRemoveEdge)=>{
+          //call removeEdge here
+          removeEdge(nodeToRemoveEdge,visibleGM,invisibleGM);
+        });
+        nodeToRemoveDescendants.simpleNodes.forEach((nodeToRemoveSimpleNode)=>{
+          nodeToRemoveSimpleNode.owner.removeNode(nodeToRemoveSimpleNode);
+          visibleGM.nodesMap.delete(nodeToRemoveSimpleNode.ID());
+
+        });
+        nodeToRemoveDescendants.compoundNodes.forEach(nodeToRemoveCompoundNode=>{
+          nodeToRemoveCompoundNode.owner.removeNode(nodeToRemoveCompoundNode);
+          visibleGM.nodesMap.delete(nodeToRemoveCompoundNode);
+
+        });
+        //Removing nodes from Invisible Graph Manager
+        let nodeToRemoveDescendantsInvisible = invisibleGM.getDecendantsInorder(nodeToRemoveInvisible);
+        nodeToRemoveDescendantsInvisible.edges.forEach((nodeToRemoveEdgeInvisible)=>{
+          //call removeEdge here
+          removeEdge(nodeToRemoveEdgeInvisible,visibleGM,invisibleGM);
+        });
+        nodeToRemoveDescendantsInvisible.simpleNodes.forEach((nodeToRemoveSimpleNodeInvisible)=>{
+          nodeToRemoveSimpleNodeInvisible.owner.removeNode(nodeToRemoveSimpleNodeInvisible);
+          invisibleGM.nodesMap.delete(nodeToRemoveSimpleNodeInvisible.ID());
+
+        });
+        nodeToRemoveDescendantsInvisible.compoundNodes.forEach(nodeToRemoveCompoundNodeInvisible=>{
+          nodeToRemoveCompoundNodeInvisible.owner.removeNode(nodeToRemoveCompoundNodeInvisible);
+          invisibleGM.nodesMap.delete(nodeToRemoveCompoundNodeInvisible.ID());
+        });
       }
+      nodeToRemove.owner.removeNode(nodeToRemove);
       visibleGM.nodesMap.delete(nodeID);
+      nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
       invisibleGM.nodesMap.delete(nodeID);
     }
 
     static removeEdge(edgeID, visibleGM, invisibleGM) {
+      let edgeToRemove = visibleGM.edgesMap.get(edgeID);
+      let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
+      if(edgeToRemove){
+        //meta edges
+         if(edgeToRemove instanceof MetaEdge){
+          //Returns the array of edge IDs. Needs more investigation on structure.
+          actualEdgesInInvisble = edgeToRemove.originalEdges();
+          visibleGM.edgesMap.delete(edgeToRemove);
+          Auxiliary.removeEdgeFromGraph(edgeToRemove);
+          removeNestedEdges(actualEdgesInInvisble,invisibleGM);
+         }
+      }else {
+        invisibleGM.edgesMap.delete(edgeToRemoveInvisible);
+        Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
+      }
+    }
 
+    removeNestedEdges(nestedEdges, invisibleGM){
+      nestedEdges.forEach(edgeInInvisibleItem => {
+        if(typeof edgeInInvisibleItem === 'string'){
+          let edgeInInvisible = invisibleGM.edgesMap.get(edgeInInvisibleItem);
+          invisibleGM.edgesMap.delete(edgeInInvisible);
+          Auxiliary.removeEdgeFromGraph(edgeInInvisible);
+        }else {
+          removeNestedEdges(edgeInInvisibleItem,invisibleGM);
+        }
+      });
     }
 
     static reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM) {
@@ -939,8 +1061,9 @@
     }
 
     removeEdge(edgeID) {
-      this.#visibleGraphManager;
-      this.#invisibleGraphManager;
+      let visibleGM = this.#visibleGraphManager;
+      let invisibleGM = this.#invisibleGraphManager;
+      Topology.removeEdge(edgeID, visibleGM, invisibleGM);
     }
 
     reconnect(edgeID, newSourceID, newTargetID) {

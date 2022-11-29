@@ -166,11 +166,11 @@ export class Graph {
     edgesToBeRemoved.forEach(edge => {
       if (edge.isInterGraph)
       {
-        this.owner.remove(edge);
+        this.owner.removeInterGraphEdge(edge);
       }
       else
       {
-        edge.source.owner.remove(edge);
+        edge.source.owner.removeEdge(edge);
       }
     });
 
