@@ -286,7 +286,7 @@ export class GraphManager {
    * This method returns all descendants of the input node together with their incident edges.
    * The output does not include the input node, but includes its incident edges
    */
-  getDecendantsInorder(node) {
+  getDescendantsInorder(node) {
     let descendants = {
       edges: new Set(),
       simpleNodes: [],
@@ -296,10 +296,11 @@ export class GraphManager {
     if (childGraph) {
       let childGraphNodes = childGraph.nodes;
       childGraphNodes.forEach((childNode) => {
-        let childDescendents = this.getDecendantsInorder(childNode);
+        let childDescendents = this.getDescendantsInorder(childNode);
         for (var id in childDescendents) {
-          descendants[id] = [...descendants[date] || [], ...childDescendents[date]];
+          descendants[id] = [...descendants[id] || [], ...childDescendents[id]];
         }
+        descendants['edges'] = new Set(descendants['edges']);
         if (childNode.child) {
           descendants.compoundNodes.push(childNode);
         } else {
