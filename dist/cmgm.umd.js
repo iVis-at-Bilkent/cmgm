@@ -277,15 +277,15 @@
 
       // remove edge from owner graph manager's inter-graph edge list
 
-      if (!(edge.source.owner != null && edge.source.owner.getGraphManager() != null)) {
+      if (!(edge.source.owner != null && edge.source.owner.owner != null)) {
         throw "Edge owner graph or owner graph manager is null!";
       }
-      if (edge.source.owner.getGraphManager().edges.indexOf(edge) == -1) {
+      if (edge.source.owner.owner.edges.indexOf(edge) == -1) {
         throw "Not in owner graph manager's edge list!";
       }
 
-      index = edge.source.owner.getGraphManager().edges.indexOf(edge);
-      edge.source.owner.getGraphManager().edges.splice(index, 1);
+      index = edge.source.owner.owner.edges.indexOf(edge);
+      edge.source.owner.owner.edges.splice(index, 1);
     }
 
     /**
@@ -514,7 +514,7 @@
       return this.#target;
     }
 
-    get interGraph() {
+    get isInterGraph() {
       return this.#isInterGraph;
     }
 
@@ -750,7 +750,7 @@
 
       // remove edge from owner graph's edge list
 
-      const index = edge.source.owner.getEdges().indexOf(edge);
+      const index = edge.source.owner.edges.indexOf(edge);
       if (index == -1) {
         throw "Not in owner's edge list!";
       }

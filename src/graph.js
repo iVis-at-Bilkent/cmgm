@@ -217,7 +217,7 @@ export class Graph {
 
     // remove edge from owner graph's edge list
 
-    const index = edge.source.owner.getEdges().indexOf(edge);
+    const index = edge.source.owner.edges.indexOf(edge);
     if (index == -1) {
       throw "Not in owner's edge list!";
     }

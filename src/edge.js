@@ -39,7 +39,7 @@ export class Edge extends GraphObject {
     return this.#target;
   }
 
-  get interGraph() {
+  get isInterGraph() {
     return this.#isInterGraph;
   }
 
