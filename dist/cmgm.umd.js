@@ -191,6 +191,9 @@
           throw "Edge already in inter-graph edge list!";
         }
 
+        // Set owner of the edge
+        newEdge.owner = this;
+
         this.#edges.push(newEdge);
 
         // add edge to source and target incidency lists
@@ -664,6 +667,9 @@
       // set as intra-graph edge
       newEdge.isInterGraph = false;
 
+      // set the owner 
+      newEdge.owner = this;
+
       // add to graph edge list
       this.#edges.push(newEdge);
 
@@ -953,7 +959,7 @@
         if (edgeToRemove instanceof MetaEdge) {
           // Returns the array of edge IDs. Needs more investigation on structure.
           actualEdgesInInvisble = edgeToRemove.originalEdges();
-          visibleGM.edgesMap.delete(edgeToRemove);
+          visibleGM.edgesMap.delete(edgeToRemove.ID);
           Auxiliary.removeEdgeFromGraph(edgeToRemove);
           removeNestedEdges(actualEdgesInInvisble, invisibleGM);
         } else {
@@ -974,14 +980,14 @@
             }
           });
           if (!found) {
-            visibleGM.edgesMap.delete(edgeToRemove);
+            visibleGM.edgesMap.delete(edgeToRemove.ID);
             Auxiliary.removeEdgeFromGraph(edgeToRemove);
           }
-          invisibleGM.edgesMap.delete(edgeToRemoveInvisible);
+          invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
           Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
         }
       } else {
-        invisibleGM.edgesMap.delete(edgeToRemoveInvisible);
+        invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
         Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
       }
     }
@@ -1091,7 +1097,16 @@
     }
 
     static changeParent(nodeID, newParentID, visibleGM, invisibleGM) {
-
+      let nodeToRemove = visibleGM.nodesMap.get(nodeID);
+      if (nodeToRemove){
+        let newParent = visibleGM.nodesMap.get(newParentID);
+        let removedNode = nodeToRemove.owner.removeNode(nodeToRemove);
+        newParent.child().addNode(removedNode);
+      }
+      let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
+      let newParentInInvisible = invisibleGM.nodesMap.get(newParentID);
+      let removedNodeInvisible = nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
+      newParentInInvisible.child().addNode(removedNodeInvisible);
     }
   }
 
@@ -1186,8 +1201,9 @@
     }
 
     changeParent(nodeID, newParentID) {
-      this.#visibleGraphManager;
-      this.#invisibleGraphManager;
+      let visibleGM = this.#visibleGraphManager;
+      let invisibleGM = this.#invisibleGraphManager;
+      Topology.changeParent(nodeID, newParentID, visibleGM, invisibleGM);
     }
 
     // Complexity management related API methods

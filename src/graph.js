@@ -129,6 +129,9 @@ export class Graph {
     // set as intra-graph edge
     newEdge.isInterGraph = false;
 
+    // set the owner 
+    newEdge.owner = this;
+
     // add to graph edge list
     this.#edges.push(newEdge);
 

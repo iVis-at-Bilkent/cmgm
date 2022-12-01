@@ -185,6 +185,9 @@ export class GraphManager {
         throw "Edge already in inter-graph edge list!";
       }
 
+      // Set owner of the edge
+      newEdge.owner = this;
+
       this.#edges.push(newEdge);
 
       // add edge to source and target incidency lists
