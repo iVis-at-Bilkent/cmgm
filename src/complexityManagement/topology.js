@@ -71,7 +71,24 @@ export class Topology {
       }
     });
   }
-
+  static updateMetaEdge(nestedEdges,targetEdge){
+    let updatedMegaEdges = [];
+    let status = false;
+    let newStatus = false;
+    nestedEdges.forEach((nestedEdge, index)=>{
+      if(typeof nestedEdge === 'string'){
+        if(nestedEdge!=targetEdge.ID){
+          updatedMegaEdges.push(nestedEdge);
+        }else{
+          status = true;
+        }
+      }else{
+        update, newStatus = updateMetaEdge(nestedEdge,targetEdge)
+        updatedMegaEdges.push(update);
+      }
+    })
+    return updatedMegaEdges.length==1?updatedMegaEdges[0]:updatedMegaEdges , (status==true || newStatus == true) ? true:false;
+  }
   static removeEdge(edgeID, visibleGM, invisibleGM) {
     let edgeToRemove = visibleGM.edgesMap.get(edgeID);
     let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
@@ -84,7 +101,19 @@ export class Topology {
         Auxiliary.removeEdgeFromGraph(edgeToRemove);
         removeNestedEdges(actualEdgesInInvisble, invisibleGM);
       } else {
-        //update meta edge or dete a simple edge
+          let found = false;
+          visibleGM.edgesMap.forEach((visibleEdge)=>{
+            if(visibleEdge instanceof MetaEdge){
+              updatedOrignalEnds , found = updateMetaEdge(visibleEdge.originalEdges(),edgeToRemove) 
+              visibleEdge.originalEdges();
+            }
+          })
+          if(!found){      
+            visibleGM.edgesMap.delete(edgeToRemove);
+            Auxiliary.removeEdgeFromGraph(edgeToRemove);
+          }
+          invisibleGM.edgesMap.delete(edgeToRemoveInvisible);
+          Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
       }
     } else {
       invisibleGM.edgesMap.delete(edgeToRemoveInvisible);
