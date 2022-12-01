@@ -973,6 +973,16 @@ class Topology {
         invisibleGM.nodesMap.delete(nodeID);
       }
     }
+    visibleGM.graphs.forEach((graph, index) => {
+      if (graph.nodes.length == 0 && graph != visibleGM.rootGraph) {
+        visibleGM.graphs.splice(index, 1);
+      }
+    });
+    invisibleGM.graphs.forEach((graph, index) => {
+      if (graph.nodes.length == 0 && graph != invisibleGM.rootGraph) {
+        invisibleGM.graphs.splice(index, 1);
+      }
+    });
   }
 
   static reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM) {
