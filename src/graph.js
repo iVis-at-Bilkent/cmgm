@@ -184,6 +184,7 @@ export class Graph {
     }
 
     this.nodes.splice(index, 1);    
+    return node;
   }
 
   /**
@@ -226,5 +227,6 @@ export class Graph {
     }
 
     edge.source.owner.edges.splice(index, 1);
+    return edge;
   }
 }

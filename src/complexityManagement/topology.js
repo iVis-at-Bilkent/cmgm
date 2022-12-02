@@ -216,10 +216,10 @@ export class Topology {
   static reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM) {
     let edgeToRemove = visibleGM.edgesMap.get(edgeID);
     if (newSourceID == undefined){
-      newSourceID = edgeToRemove.source().ID;
+      newSourceID = edgeToRemove.source.ID;
     }
     else if(newTargetID == undefined){
-      newTargetID = edgeToRemove.taget().ID;
+      newTargetID = edgeToRemove.taget.ID;
     }
     if(edgeToRemove){
       visibleGM.edgesMap.delete(edgeToRemove.ID);
@@ -227,22 +227,22 @@ export class Topology {
     }
     let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
     let edgeToAddForInvisible = new Edge(edgeID,newSourceID,newTargetID);
-    edgeToAddForInvisible.isVisible(edgeToRemoveInvisible.isVisible());
-    edgeToAddForInvisible.isHidden(edgeToRemoveInvisible.isHidden());
-    if (edgeToAddForInvisible.isFiltered() == false && edgeToAddForInvisible.isHidden() == false && visibleGM.nodesMap.get(newSourceID).isVisible() && visibleGM.nodesMap.get(newTargetID).isVisible()){
+    edgeToAddForInvisible.isVisible(edgeToRemoveInvisible.isVisible);
+    edgeToAddForInvisible.isHidden(edgeToRemoveInvisible.isHidden);
+    if (edgeToAddForInvisible.isFiltered == false && edgeToAddForInvisible.isHidden == false && visibleGM.nodesMap.get(newSourceID).isVisible && visibleGM.nodesMap.get(newTargetID).isVisible){
       edgeToAddForInvisible.isVisible(true);
     }
     else{
       edgeToAddForInvisible.isVisible(false);
     }
-    if (edgeToAddForInvisible.isVisible() == true){
+    if (edgeToAddForInvisible.isVisible == true){
       addEdge(edgeID,newSourceID,newSourceID,visibleGM,invisibleGM);
     }else{
-      if (edgeToAddForInvisible.source().owner == edgeToAddForInvisible.target().owner){
-        edgeToAddForInvisible.source().owner.addEdge(edgeToAddForInvisible,edgeToAddForInvisible.source(),edgeToAddForInvisible.target())
+      if (edgeToAddForInvisible.source.owner == edgeToAddForInvisible.target.owner){
+        edgeToAddForInvisible.source.owner.addEdge(edgeToAddForInvisible,edgeToAddForInvisible.source,edgeToAddForInvisible.target)
       }
       else{
-        invisibleGM.addInterGraphEdge(edgeToAddForInvisible,edgeToAddForInvisible.source(),edgeToAddForInvisible.target())
+        invisibleGM.addInterGraphEdge(edgeToAddForInvisible,edgeToAddForInvisible.source,edgeToAddForInvisible.target)
       }
     }
   }
@@ -252,11 +252,11 @@ export class Topology {
     if (nodeToRemove){
       let newParent = visibleGM.nodesMap.get(newParentID);
       let removedNode = nodeToRemove.owner.removeNode(nodeToRemove);
-      newParent.child().addNode(removedNode);
+      newParent.child.addNode(removedNode);
     }
     let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
     let newParentInInvisible = invisibleGM.nodesMap.get(newParentID);
     let removedNodeInvisible = nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
-    newParentInInvisible.child().addNode(removedNodeInvisible);
+    newParentInInvisible.child.addNode(removedNodeInvisible);
   }
 }
