@@ -222,10 +222,11 @@ export class Topology {
       newTargetID = edgeToRemove.taget().ID;
     }
     if(edgeToRemove){
-      this.removeEdge(edgeID,visibleGM,invisibleGM);
+      visibleGM.edgesMap.delete(edgeToRemove.ID);
+      Auxiliary.removeEdgeFromGraph(edgeToRemove);
     }
     let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
-    edgeToAddForInvisible = new Edge(edgeID,newSourceID,newTargetID);
+    let edgeToAddForInvisible = new Edge(edgeID,newSourceID,newTargetID);
     edgeToAddForInvisible.isVisible(edgeToRemoveInvisible.isVisible());
     edgeToAddForInvisible.isHidden(edgeToRemoveInvisible.isHidden());
     if (edgeToAddForInvisible.isFiltered() == false && edgeToAddForInvisible.isHidden() == false && visibleGM.nodesMap.get(newSourceID).isVisible() && visibleGM.nodesMap.get(newTargetID).isVisible()){
