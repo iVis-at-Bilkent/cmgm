@@ -252,6 +252,9 @@ export class Topology {
     if (nodeToRemove){
       let newParent = visibleGM.nodesMap.get(newParentID);
       let removedNode = nodeToRemove.owner.removeNode(nodeToRemove);
+      if(newParent.child == undefined){
+        newParent.child = new Graph(newParent,visibleGM)
+      }
       newParent.child.addNode(removedNode);
     }
     let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
