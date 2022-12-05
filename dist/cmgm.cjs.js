@@ -1101,6 +1101,9 @@ class Topology {
     let nodeToRemove = visibleGM.nodesMap.get(nodeID);
     if (nodeToRemove) {
       let newParent = visibleGM.nodesMap.get(newParentID);
+      if (newParent == undefined) {
+        newParent = visibleGM.rootGraph.parent;
+      }
       let removedNode = nodeToRemove.owner.removeNode(nodeToRemove);
       if (newParent.child == undefined) {
         visibleGM.addGraph(new Graph(null, visibleGM), newParent);
@@ -1109,6 +1112,9 @@ class Topology {
     }
     let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
     let newParentInInvisible = invisibleGM.nodesMap.get(newParentID);
+    if (newParentInInvisible == undefined) {
+      newParentInInvisible = invisibleGM.rootGraph.parent;
+    }
     let removedNodeInvisible = nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
     if (newParentInInvisible.child == undefined) {
       invisibleGM.addGraph(new Graph(null, invisibleGM), newParentInInvisible);
