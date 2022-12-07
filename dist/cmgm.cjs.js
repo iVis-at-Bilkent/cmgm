@@ -1142,52 +1142,81 @@ class Topology {
 
   static reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM) {
     let edgeToRemove = visibleGM.edgesMap.get(edgeID);
-    if (newSourceID == undefined){
+    if (newSourceID == undefined) {
       newSourceID = edgeToRemove.source.ID;
     }
-    else if(newTargetID == undefined){
+    else if (newTargetID == undefined) {
       newTargetID = edgeToRemove.taget.ID;
     }
-    if(edgeToRemove){
+    if (edgeToRemove) {
       visibleGM.edgesMap.delete(edgeToRemove.ID);
       Auxiliary$1.removeEdgeFromGraph(edgeToRemove);
     }
     let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
+<<<<<<< HEAD
     let edgeToAddForInvisible = new Edge(edgeID,newSourceID,newTargetID);
     edgeToAddForInvisible.isVisible = edgeToRemoveInvisible.isVisible;
     edgeToAddForInvisible.isHidden = edgeToRemoveInvisible.isHidden;
     if (edgeToAddForInvisible.isFiltered == false && edgeToAddForInvisible.isHidden == false && visibleGM.nodesMap.get(newSourceID).isVisible && visibleGM.nodesMap.get(newTargetID).isVisible){
+=======
+    let edgeToAddForInvisible = new Edge(edgeID, newSourceID, newTargetID);
+    edgeToAddForInvisible.isVisible = edgeToRemoveInvisible.isVisible;
+    edgeToAddForInvisible.isHidden = edgeToRemoveInvisible.isHidden;
+    if (edgeToAddForInvisible.isFiltered == false && edgeToAddForInvisible.isHidden == false && visibleGM.nodesMap.get(newSourceID).isVisible && visibleGM.nodesMap.get(newTargetID).isVisible) {
+>>>>>>> e61e0f30ed95ff4a1ecf4c848723a0e91efa7aec
       edgeToAddForInvisible.isVisible = true;
     }
     else {
       edgeToAddForInvisible.isVisible = false;
     }
+<<<<<<< HEAD
     if (edgeToAddForInvisible.isVisible == true){
       Topology.addEdge(edgeID,newSourceID,newSourceID,visibleGM,invisibleGM);
     }else {
       if (edgeToAddForInvisible.source.owner == edgeToAddForInvisible.target.owner){
         edgeToAddForInvisible.source.owner.addEdge(edgeToAddForInvisible,edgeToAddForInvisible.source,edgeToAddForInvisible.target);
+=======
+    if (edgeToAddForInvisible.isVisible == true) {
+      Topology.addEdge(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM);
+    } else {
+      if (edgeToAddForInvisible.source.owner == edgeToAddForInvisible.target.owner) {
+        edgeToAddForInvisible.source.owner.addEdge(edgeToAddForInvisible, edgeToAddForInvisible.source, edgeToAddForInvisible.target);
+>>>>>>> e61e0f30ed95ff4a1ecf4c848723a0e91efa7aec
       }
       else {
-        invisibleGM.addInterGraphEdge(edgeToAddForInvisible,edgeToAddForInvisible.source,edgeToAddForInvisible.target);
+        invisibleGM.addInterGraphEdge(edgeToAddForInvisible, edgeToAddForInvisible.source, edgeToAddForInvisible.target);
       }
     }
   }
 
   static changeParent(nodeID, newParentID, visibleGM, invisibleGM) {
     let nodeToRemove = visibleGM.nodesMap.get(nodeID);
-    if (nodeToRemove){
+    if (nodeToRemove) {
       let newParent = visibleGM.nodesMap.get(newParentID);
+      if (newParent == undefined) {
+        newParent = visibleGM.rootGraph.parent;
+      }
       let removedNode = nodeToRemove.owner.removeNode(nodeToRemove);
+<<<<<<< HEAD
       if(newParent.child == undefined){
+=======
+      if (newParent.child == undefined) {
+>>>>>>> e61e0f30ed95ff4a1ecf4c848723a0e91efa7aec
         visibleGM.addGraph(new Graph(null, visibleGM), newParent);
       }
       newParent.child.addNode(removedNode);
     }
     let nodeToRemoveInvisible = invisibleGM.nodesMap.get(nodeID);
     let newParentInInvisible = invisibleGM.nodesMap.get(newParentID);
+    if (newParentInInvisible == undefined) {
+      newParentInInvisible = invisibleGM.rootGraph.parent;
+    }
     let removedNodeInvisible = nodeToRemoveInvisible.owner.removeNode(nodeToRemoveInvisible);
+<<<<<<< HEAD
     if(newParentInInvisible.child == undefined){
+=======
+    if (newParentInInvisible.child == undefined) {
+>>>>>>> e61e0f30ed95ff4a1ecf4c848723a0e91efa7aec
       invisibleGM.addGraph(new Graph(null, invisibleGM), newParentInInvisible);
     }
     newParentInInvisible.child.addNode(removedNodeInvisible);
