@@ -1,3 +1,6 @@
+import { MetaEdge } from "../meta-edge";
+import { Auxiliary } from "./auxiliary";
+
 export class FilterUnfilter {
 
   static filter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
@@ -57,7 +60,7 @@ export class FilterUnfilter {
             }
           );
           nodeToFilter.owner.removeNode(nodeToFilter);
-          nodeToFilter.nodesMap.delete(nodeID);
+          visibleGM.nodesMap.delete(nodeID);
           let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
           nodeToFilterInvisible.isFiltered = true;
           nodeToFilterInvisible.isVisible = false;

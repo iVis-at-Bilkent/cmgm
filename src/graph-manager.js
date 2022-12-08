@@ -313,6 +313,9 @@ export class GraphManager {
         nodeEdges.forEach(item => descendants['edges'].add(item));
       })
     }
+    node.edges.forEach((edge) => {
+      descendants.edges.add(edge);
+    });
 
     return descendants;
   }
