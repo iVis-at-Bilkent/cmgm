@@ -93,7 +93,7 @@ export class Topology {
           updatedMegaEdges.push(nestedEdge);
         }
       } else {
-        update, (newStatus = updateMetaEdge(nestedEdge, targetEdge));
+        update = this.updateMetaEdge(nestedEdge, targetEdge);
         updatedMegaEdges.push(update);
       }
     });
@@ -118,7 +118,7 @@ export class Topology {
         visibleGM.edgesMap.forEach((visibleEdge) => {
           if (visibleEdge instanceof MetaEdge) {
             // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-            updatedOrignalEdges = updateMetaEdge(
+            updatedOrignalEdges = this.updateMetaEdge(
               visibleEdge.originalEdges(),
               edgeToRemove
             );

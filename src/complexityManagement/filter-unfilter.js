@@ -74,6 +74,86 @@ export class FilterUnfilter {
   }
 
   static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+    nodeIDList.forEach((nodeID)=>{
+      let nodeToUnfilter = invisibleGM.nodesMap.get(nodeID);
+      nodeToUnfilter.isFiltered = false;
+      let canNodeToUnfilterBeVisible = true;
+      if( nodeToUnfilter.isHidden==false){
+        let tempNode = nodeToUnfilter;
+        while(true){
+          if(tempNode.owner == invisibleGM.rootGraph){
+            break;
+          }else{
+            if( tempNode.owner.parent.isHidden || tempNode.owner.parent.isFiltered || tempNode.owner.parent.isCollapsed){
+              canNodeToUnfilterBeVisible = false;
+              break;
+            }else{
+              tempNode = tempNode.owner.parent;
+            }
+          }
+        }
+      }else{
+        canNodeToUnfilterBeVisible = false;
+      }
+      if(canNodeToUnfilterBeVisible){
+        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter)
+        Auxiliary.moveNodeToVisible(nodeToUnfilter,visibleGM,invisibleGM);
+        
+      }
+    })
+    edgeIDList.forEach((edgeID)=>{
+      let edgeToUnfilter = invisibleGM.edgesMap.get(edgeID);
+      edgeToUnfilter.isFiltered = false;
+      // check edge is part of a meta edge in visible graph
+      let found = false;
+      visibleGM.edgesMap.forEach((visibleEdge) => {
+        if (visibleEdge instanceof MetaEdge) {
+          // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
+          updatedOrignalEdges = this.updateMetaEdge(
+            visibleEdge.originalEdges(),
+            edgeToUnfilter.ID
+          );
+          // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
+          if (updatedOrignalEdges != visibleEdge.originalEdges()) {
+            found = true;
+          } 
+        }
+      });
+      if (!found && edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
+        Auxiliary.moveEdgeToVisible(edgeToUnfilter,visibleGM,invisibleGM);
+      }
+    })
+  }
+
+  static makeDescendantNodesVisible(nodeToUnFilter){
+    if(nodeToUnFilter.owner){
+      let nodeToUnFilterDescendants = nodeToUnFilter.owner.nodes;
+      nodeToUnFilterDescendants.forEach((descendantNode)=>{
+        if(descendantNode.isFiltered==false && descendantNode.isHidden==false){
+          Auxiliary.moveNodeToVisible(descendantNode,visibleGM,invisibleGM);
+          if(descendantNode.isCollapsed==false){
+            this.makeDescendantNodesVisible(descendantNode);
+          }
+        }
+      })
+    }
     
+  }
+
+  static updateMetaEdge(nestedEdges, targetEdgeID) {
+    let updatedMegaEdges = [];
+    nestedEdges.forEach((nestedEdge, index) => {
+      if (typeof nestedEdge === "string") {
+        if (nestedEdge != targetEdgeID) {
+          updatedMegaEdges.push(nestedEdge);
+        }
+      } else {
+        update = this.updateMetaEdge(nestedEdge, targetEdge);
+        updatedMegaEdges.push(update);
+      }
+    });
+    return updatedMegaEdges.length == 1
+      ? updatedMegaEdges[0]
+      : updatedMegaEdges;
   }
 }
