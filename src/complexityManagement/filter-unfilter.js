@@ -8,7 +8,8 @@ export class FilterUnfilter {
     let edgeIDsListPostProcess = [...edgeIDList]
     edgeIDList.forEach(edgeID => {
       let edgeToFilter = visibleGM.edgesMap.get(edgeID)
-      let found = false;
+      if(edgeToFilter) {
+        let found = false;
         visibleGM.edgesMap.forEach((visibleEdge) => {
           if (visibleEdge instanceof MetaEdge) {
             // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
@@ -27,81 +28,82 @@ export class FilterUnfilter {
           visibleGM.edgesMap.delete(edgeToFilter.ID);
           Auxiliary.removeEdgeFromGraph(edgeToFilter);
         }
-        let edgeToFilterInvisible = invisibleGM.edgesMap.get(edgeID);
-        edgeToFilterInvisible.isFiltered = true;
-        edgeToFilterInvisible.isVisible = false;
+      }
+      let edgeToFilterInvisible = invisibleGM.edgesMap.get(edgeID);
+      edgeToFilterInvisible.isFiltered = true;
+      edgeToFilterInvisible.isVisible = false;
     });
-    nodeIDList.forEach((nodeID)=>{
-        let nodeToFilter = visibleGM.nodesMap.get(nodeID);
-        if (nodeToFilter){
-          let nodeToFilterDescendants =
+    nodeIDList.forEach((nodeID) => {
+      let nodeToFilter = visibleGM.nodesMap.get(nodeID);
+      if (nodeToFilter) {
+        let nodeToFilterDescendants =
           visibleGM.getDescendantsInorder(nodeToFilter);
-          nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
-            edgeIDsListPostProcess.push(nodeToFilterEdge.ID);
-            let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
-            nodeToFilterEdgeInvisible.isVisible = false;
-            visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
-            Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
-          });
-          nodeToFilterDescendants.simpleNodes.forEach((nodeToFilterSimpleNode) => {
-            let nodeToFilterSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterSimpleNode.ID);
-            nodeToFilterSimpleNodeInvisible.isVisible = false;
-            nodeIDsListPostProcess.push(nodeToFilterSimpleNode.ID);
-            nodeToFilterSimpleNode.owner.removeNode(nodeToFilterSimpleNode);
-            visibleGM.nodesMap.delete(nodeToFilterSimpleNode.ID);
-          });
-          nodeToFilterDescendants.compoundNodes.forEach(
-            (nodeToFilterCompoundNode) => {
-              let nodeToFilterCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterCompoundNode.ID);
-              nodeToFilterCompoundNodeInvisible.isVisible = false;
-              nodeIDsListPostProcess.push(nodeToFilterCompoundNode.ID);
-              nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
-              visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
-            }
-          );
-          nodeToFilter.owner.removeNode(nodeToFilter);
-          visibleGM.nodesMap.delete(nodeID);
-          let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
-          nodeToFilterInvisible.isFiltered = true;
-          nodeToFilterInvisible.isVisible = false;
+        nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
+          edgeIDsListPostProcess.push(nodeToFilterEdge.ID);
+          let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
+          nodeToFilterEdgeInvisible.isVisible = false;
+          visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
+          Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
+        });
+        nodeToFilterDescendants.simpleNodes.forEach((nodeToFilterSimpleNode) => {
+          let nodeToFilterSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterSimpleNode.ID);
+          nodeToFilterSimpleNodeInvisible.isVisible = false;
+          nodeIDsListPostProcess.push(nodeToFilterSimpleNode.ID);
+          nodeToFilterSimpleNode.owner.removeNode(nodeToFilterSimpleNode);
+          visibleGM.nodesMap.delete(nodeToFilterSimpleNode.ID);
+        });
+        nodeToFilterDescendants.compoundNodes.forEach(
+          (nodeToFilterCompoundNode) => {
+            let nodeToFilterCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterCompoundNode.ID);
+            nodeToFilterCompoundNodeInvisible.isVisible = false;
+            nodeIDsListPostProcess.push(nodeToFilterCompoundNode.ID);
+            nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
+            visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
+          }
+        );
+        nodeToFilter.owner.removeNode(nodeToFilter);
+        visibleGM.nodesMap.delete(nodeID);
+        let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
+        nodeToFilterInvisible.isFiltered = true;
+        nodeToFilterInvisible.isVisible = false;
 
-      }else{
-          let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
-          nodeToFilterInvisible.isFiltered = true;
-          nodeToFilterInvisible.isVisible = false;
+      } else {
+        let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
+        nodeToFilterInvisible.isFiltered = true;
+        nodeToFilterInvisible.isVisible = false;
       }
     })
   }
 
   static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
-    nodeIDList.forEach((nodeID)=>{
+    nodeIDList.forEach((nodeID) => {
       let nodeToUnfilter = invisibleGM.nodesMap.get(nodeID);
       nodeToUnfilter.isFiltered = false;
       let canNodeToUnfilterBeVisible = true;
-      if( nodeToUnfilter.isHidden==false){
+      if (nodeToUnfilter.isHidden == false) {
         let tempNode = nodeToUnfilter;
-        while(true){
-          if(tempNode.owner == invisibleGM.rootGraph){
+        while (true) {
+          if (tempNode.owner == invisibleGM.rootGraph) {
             break;
-          }else{
-            if( tempNode.owner.parent.isHidden || tempNode.owner.parent.isFiltered || tempNode.owner.parent.isCollapsed){
+          } else {
+            if (tempNode.owner.parent.isHidden || tempNode.owner.parent.isFiltered || tempNode.owner.parent.isCollapsed) {
               canNodeToUnfilterBeVisible = false;
               break;
-            }else{
+            } else {
               tempNode = tempNode.owner.parent;
             }
           }
         }
-      }else{
+      } else {
         canNodeToUnfilterBeVisible = false;
       }
-      if(canNodeToUnfilterBeVisible){
-        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter)
-        Auxiliary.moveNodeToVisible(nodeToUnfilter,visibleGM,invisibleGM);
-        
+      if (canNodeToUnfilterBeVisible) {
+        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM)
+        Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
+
       }
     })
-    edgeIDList.forEach((edgeID)=>{
+    edgeIDList.forEach((edgeID) => {
       let edgeToUnfilter = invisibleGM.edgesMap.get(edgeID);
       edgeToUnfilter.isFiltered = false;
       // check edge is part of a meta edge in visible graph
@@ -116,28 +118,28 @@ export class FilterUnfilter {
           // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
           if (updatedOrignalEdges != visibleEdge.originalEdges()) {
             found = true;
-          } 
+          }
         }
       });
       if (!found && edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
-        Auxiliary.moveEdgeToVisible(edgeToUnfilter,visibleGM,invisibleGM);
+        Auxiliary.moveEdgeToVisible(edgeToUnfilter, visibleGM, invisibleGM);
       }
     })
   }
 
-  static makeDescendantNodesVisible(nodeToUnFilter){
-    if(nodeToUnFilter.owner){
-      let nodeToUnFilterDescendants = nodeToUnFilter.owner.nodes;
-      nodeToUnFilterDescendants.forEach((descendantNode)=>{
-        if(descendantNode.isFiltered==false && descendantNode.isHidden==false){
-          Auxiliary.moveNodeToVisible(descendantNode,visibleGM,invisibleGM);
-          if(descendantNode.isCollapsed==false){
-            this.makeDescendantNodesVisible(descendantNode);
+  static makeDescendantNodesVisible(nodeToUnFilter, visibleGM, invisibleGM) {
+    if (nodeToUnFilter.child) {
+      let nodeToUnFilterDescendants = nodeToUnFilter.child.nodes;
+      nodeToUnFilterDescendants.forEach((descendantNode) => {
+        if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
+          Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
+          if (descendantNode.isCollapsed == false) {
+            this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
           }
         }
       })
     }
-    
+
   }
 
   static updateMetaEdge(nestedEdges, targetEdgeID) {
