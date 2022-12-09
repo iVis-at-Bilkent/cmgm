@@ -12,9 +12,9 @@ export class FilterUnfilter {
         visibleGM.edgesMap.forEach((visibleEdge) => {
           if (visibleEdge instanceof MetaEdge) {
             // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-            updatedOrignalEdges = updateMetaEdge(
+            updatedOrignalEdges = this.updateMetaEdge(
               visibleEdge.originalEdges(),
-              edgeToFilter
+              edgeToFilter.ID
             );
             // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
             if (updatedOrignalEdges != visibleEdge.originalEdges()) {
