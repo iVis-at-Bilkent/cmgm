@@ -30,6 +30,7 @@ export class Auxiliary {
       if (node.isCollpased == false) {
         let newGraph = visibleGM.addGraph(new Graph(null, visibleGM), nodeForVisible);
         newGraph.siblingGraph = node.child;
+        node.child.siblingGraph = newGraph;
       }
     }
     node.edges.forEach(incidentEdge => {

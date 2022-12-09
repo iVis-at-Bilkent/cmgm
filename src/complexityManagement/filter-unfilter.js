@@ -102,8 +102,7 @@ export class FilterUnfilter {
       }
       if (canNodeToUnfilterBeVisible) {
         Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
-        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM)
-
+        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
       }
     })
     edgeIDList.forEach((edgeID) => {
@@ -132,8 +131,8 @@ export class FilterUnfilter {
 
   static makeDescendantNodesVisible(nodeToUnFilter, visibleGM, invisibleGM) {
     if (nodeToUnFilter.child) {
-      let nodeToUnFilterDescendants = nodeToUnFilter.child.nodes;
-      nodeToUnFilterDescendants.forEach((descendantNode) => {
+      let nodeToUnfilterDescendants = nodeToUnFilter.child.nodes;
+      nodeToUnfilterDescendants.forEach((descendantNode) => {
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
           Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
           if (descendantNode.isCollapsed == false) {
