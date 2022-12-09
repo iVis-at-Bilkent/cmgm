@@ -57,6 +57,9 @@ export class FilterUnfilter {
             let nodeToFilterCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterCompoundNode.ID);
             nodeToFilterCompoundNodeInvisible.isVisible = false;
             nodeIDsListPostProcess.push(nodeToFilterCompoundNode.ID);
+            if(nodeToFilterCompoundNode.child.nodes.length == 0){
+              nodeToFilterCompoundNode.child.siblingGraph.siblingGraph = null;
+            }        
             nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
             visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
           }
@@ -98,8 +101,8 @@ export class FilterUnfilter {
         canNodeToUnfilterBeVisible = false;
       }
       if (canNodeToUnfilterBeVisible) {
-        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM)
         Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM)
 
       }
     })

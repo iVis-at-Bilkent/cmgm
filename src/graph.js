@@ -182,7 +182,6 @@ export class Graph {
     if (index == -1) {
       throw "Node not in owner node list!";
     }
-
     this.nodes.splice(index, 1);    
     return node;
   }
