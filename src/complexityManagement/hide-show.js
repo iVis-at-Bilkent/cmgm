@@ -4,10 +4,6 @@ export class HideShow {
 
   static hide(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
     //// first hide edges
-  
-  }
-
-  static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
     let nodeIDsListPostProcess = []
     let edgeIDsListPostProcess = [...edgeIDList]
     edgeIDList.forEach(edgeID => {
@@ -82,55 +78,71 @@ export class HideShow {
     })
   }
 
-  static showAll(visibleGM, invisibleGM) {
+  static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
     nodeIDList.forEach((nodeID)=>{
-        let nodeToShow = invisibleGM.nodesMap.get(nodeID);
-        nodeToShow.isHidden = false;
-        let canNodeToShowBeVisible = true;
-        if( nodeToShow.isFiltered==false){
-          let tempNode = nodeToShow;
-          while(true){
-            if(tempNode.owner == invisibleGM.rootGraph){
+      let nodeToShow = invisibleGM.nodesMap.get(nodeID);
+      nodeToShow.isHidden = false;
+      let canNodeToShowBeVisible = true;
+      if( nodeToShow.isFiltered==false){
+        let tempNode = nodeToShow;
+        while(true){
+          if(tempNode.owner == invisibleGM.rootGraph){
+            break;
+          }else{
+            if( tempNode.owner.parent.isFiltered || tempNode.owner.parent.isHidden || tempNode.owner.parent.isCollapsed){
+              canNodeToShowBeVisible = false;
               break;
             }else{
-              if( tempNode.owner.parent.isFiltered || tempNode.owner.parent.isHidden || tempNode.owner.parent.isCollapsed){
-                canNodeToShowBeVisible = false;
-                break;
-              }else{
-                tempNode = tempNode.owner.parent;
-              }
+              tempNode = tempNode.owner.parent;
             }
           }
-        }else{
-          canNodeToShowBeVisible = false;
         }
-        if(canNodeToShowBeVisible){
-          FilterUnfilter.makeDescendantNodesVisible(nodeToShow)
-          Auxiliary.moveNodeToVisible(nodeToShow,visibleGM,invisibleGM);
-          
+      }else{
+        canNodeToShowBeVisible = false;
+      }
+      if(canNodeToShowBeVisible){
+        FilterUnfilter.makeDescendantNodesVisible(nodeToShow)
+        Auxiliary.moveNodeToVisible(nodeToShow,visibleGM,invisibleGM);
+        
+      }
+    })
+    edgeIDList.forEach((edgeID)=>{
+      let edgeToShow = invisibleGM.edgesMap.get(edgeID);
+      edgeToShow.isHidden = false;
+      // check edge is part of a meta edge in visible graph
+      let found = false;
+      visibleGM.edgesMap.forEach((visibleEdge) => {
+        if (visibleEdge instanceof MetaEdge) {
+          // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
+          updatedOrignalEdges = FilterUnfilter.updateMetaEdge(
+            visibleEdge.originalEdges(),
+            edgeToShow.ID
+          );
+          // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
+          if (updatedOrignalEdges != visibleEdge.originalEdges()) {
+            found = true;
+          } 
         }
-      })
-      edgeIDList.forEach((edgeID)=>{
-        let edgeToShow = invisibleGM.edgesMap.get(edgeID);
-        edgeToShow.isHidden = false;
-        // check edge is part of a meta edge in visible graph
-        let found = false;
-        visibleGM.edgesMap.forEach((visibleEdge) => {
-          if (visibleEdge instanceof MetaEdge) {
-            // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-            updatedOrignalEdges = FilterUnfilter.updateMetaEdge(
-              visibleEdge.originalEdges(),
-              edgeToShow.ID
-            );
-            // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-            if (updatedOrignalEdges != visibleEdge.originalEdges()) {
-              found = true;
-            } 
-          }
-        });
-        if (!found && edgeToShow.isFiltered == false && edgeToShow.source.isVisible && edgeToShow.target.isVisible) {
-          Auxiliary.moveEdgeToVisible(edgeToShow,visibleGM,invisibleGM);
-        }
-      })
+      });
+      if (!found && edgeToShow.isFiltered == false && edgeToShow.source.isVisible && edgeToShow.target.isVisible) {
+        Auxiliary.moveEdgeToVisible(edgeToShow,visibleGM,invisibleGM);
+      }
+    })
+  }
+
+  static showAll(visibleGM, invisibleGM) {
+    let hiddenNodeIDList = []
+    let hiddenEdgeIDList = []
+    invisibleGM.nodesMap.forEach((node,NodeID)=>{
+      if(node.isHidden){
+        hiddenNodeIDList.push(node.ID);
+      }
+    })
+    invisibleGM.edgesMap.forEach((edge,EdgeID)=>{
+      if(edge.isHidden){
+        hiddenEdgeIDList.push(edge.ID);
+      }
+    })
+    this.show(hiddenNodeIDList,hiddenEdgeIDList,visibleGM,invisibleGM)
   }
 }
