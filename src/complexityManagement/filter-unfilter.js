@@ -59,11 +59,14 @@ export class FilterUnfilter {
             nodeIDsListPostProcess.push(nodeToFilterCompoundNode.ID);
             if(nodeToFilterCompoundNode.child.nodes.length == 0){
               nodeToFilterCompoundNode.child.siblingGraph.siblingGraph = null;
-            }        
+            }
             nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
             visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
           }
         );
+        if(nodeToFilter.child && nodeToFilter.child.nodes.length == 0){
+          nodeToFilter.child.siblingGraph.siblingGraph = null;
+        }
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);

@@ -8,7 +8,7 @@ export class ExpandCollapse {
 
   }
 
-  static collpaseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+  static collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
 
   }
 

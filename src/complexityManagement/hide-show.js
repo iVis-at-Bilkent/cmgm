@@ -1,3 +1,4 @@
+import { MetaEdge } from "../meta-edge";
 import { Auxiliary } from "./auxiliary";
 import { FilterUnfilter } from "./filter-unfilter";
 
@@ -60,10 +61,16 @@ export class HideShow {
             let nodeToHideCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToHideCompoundNode.ID);
             nodeToHideCompoundNodeInvisible.isVisible = false;
             nodeIDsListPostProcess.push(nodeToHideCompoundNode.ID);
+            if(nodeToHideCompoundNode.child.nodes.length == 0){
+              nodeToHideCompoundNode.child.siblingGraph.siblingGraph = null;
+            }
             nodeToHideCompoundNode.owner.removeNode(nodeToHideCompoundNode);
             visibleGM.nodesMap.delete(nodeToHideCompoundNode.ID);
           }
         );
+        if(nodeToHide.child && nodeToHide.child.nodes.length == 0){
+          nodeToHide.child.siblingGraph.siblingGraph = null;
+        }
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);

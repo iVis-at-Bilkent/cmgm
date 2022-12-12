@@ -1,4 +1,5 @@
 import { GraphManager } from "../graph-manager";
+import { Graph } from "../graph";
 import { Edge } from "../edge";
 import { Node } from "../node";
 import { MetaEdge } from "../meta-edge";
@@ -27,7 +28,7 @@ export class Auxiliary {
     let newNode = node.owner.siblingGraph.addNode(nodeForVisible);
     visibleGM.nodesMap.set(newNode.ID, newNode);
     if (node.child) {
-      if (node.isCollpased == false) {
+      if (node.isCollapsed == false) {
         let newGraph = visibleGM.addGraph(new Graph(null, visibleGM), nodeForVisible);
         newGraph.siblingGraph = node.child;
         node.child.siblingGraph = newGraph;
