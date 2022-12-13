@@ -158,13 +158,13 @@ export class FilterUnfilter {
               descendants[id] = [...descendants[id] || [], ...childDescendents[id]];
             }
             descendants['edges'] = new Set(descendants['edges']);
-            if (childNode.child) {
-              descendants.compoundNodes.push(childNode);
+            if (descendantNode.child) {
+              descendants.compoundNodes.push(descendantNode.ID);
             } else {
-              descendants.simpleNodes.push(childNode);
+              descendants.simpleNodes.push(descendantNode.ID);
             }
             let nodeEdges = childNode.edges;
-            nodeEdges.forEach(item => descendants['edges'].add(item));
+            nodeEdges.forEach(item => descendants['edges'].add(item.ID));
           }
         }
       })
