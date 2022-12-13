@@ -4,11 +4,11 @@ import { Auxiliary } from "./auxiliary";
 export class FilterUnfilter {
 
   static filter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
-    let nodeIDsListPostProcess = []
-    let edgeIDsListPostProcess = [...edgeIDList]
+    let nodeIDListPostProcess = [];
+    let edgeIDListPostProcess = [...edgeIDList];
     edgeIDList.forEach(edgeID => {
       let edgeToFilter = visibleGM.edgesMap.get(edgeID)
-      if(edgeToFilter) {
+      if (edgeToFilter) {
         let found = false;
         visibleGM.edgesMap.forEach((visibleEdge) => {
           if (visibleEdge instanceof MetaEdge) {
@@ -39,7 +39,7 @@ export class FilterUnfilter {
         let nodeToFilterDescendants =
           visibleGM.getDescendantsInorder(nodeToFilter);
         nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
-          edgeIDsListPostProcess.push(nodeToFilterEdge.ID);
+          edgeIDListPostProcess.push(nodeToFilterEdge.ID);
           let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
           nodeToFilterEdgeInvisible.isVisible = false;
           visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
@@ -48,7 +48,7 @@ export class FilterUnfilter {
         nodeToFilterDescendants.simpleNodes.forEach((nodeToFilterSimpleNode) => {
           let nodeToFilterSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterSimpleNode.ID);
           nodeToFilterSimpleNodeInvisible.isVisible = false;
-          nodeIDsListPostProcess.push(nodeToFilterSimpleNode.ID);
+          nodeIDListPostProcess.push(nodeToFilterSimpleNode.ID);
           nodeToFilterSimpleNode.owner.removeNode(nodeToFilterSimpleNode);
           visibleGM.nodesMap.delete(nodeToFilterSimpleNode.ID);
         });
@@ -56,15 +56,15 @@ export class FilterUnfilter {
           (nodeToFilterCompoundNode) => {
             let nodeToFilterCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterCompoundNode.ID);
             nodeToFilterCompoundNodeInvisible.isVisible = false;
-            nodeIDsListPostProcess.push(nodeToFilterCompoundNode.ID);
-            if(nodeToFilterCompoundNode.child.nodes.length == 0){
+            nodeIDListPostProcess.push(nodeToFilterCompoundNode.ID);
+            if (nodeToFilterCompoundNode.child.nodes.length == 0) {
               nodeToFilterCompoundNode.child.siblingGraph.siblingGraph = null;
             }
             nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
             visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
           }
         );
-        if(nodeToFilter.child && nodeToFilter.child.nodes.length == 0){
+        if (nodeToFilter.child && nodeToFilter.child.nodes.length == 0) {
           nodeToFilter.child.siblingGraph.siblingGraph = null;
         }
         nodeToFilter.owner.removeNode(nodeToFilter);
@@ -72,13 +72,15 @@ export class FilterUnfilter {
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
-
-      } else {
+      }
+      else {
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
       }
     })
+
+    return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
   static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {

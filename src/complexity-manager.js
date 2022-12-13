@@ -110,7 +110,7 @@ export class ComplexityManager {
   filter(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    FilterUnfilter.filter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    return FilterUnfilter.filter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
   }
 
   unfilter(nodeIDList, edgeIDList) {
@@ -124,7 +124,7 @@ export class ComplexityManager {
   hide(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    HideShow.hide(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    return HideShow.hide(nodeIDList, edgeIDList, visibleGM, invisibleGM);
   }
 
   show(nodeIDList, edgeIDList) {
