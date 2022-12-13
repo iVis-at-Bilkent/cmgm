@@ -153,7 +153,7 @@ export class HideShow {
     
     edgeIDListPostProcess = new Set(edgeIDListPostProcess)
     edgeIDListPostProcess = [...edgeIDListPostProcess]
-    return edgeIDListPostProcess.concat(nodeIDListPostProcess);
+    return nodeIDListPostProcess.concat(edgeIDListPostProcess);
 
   }
 
