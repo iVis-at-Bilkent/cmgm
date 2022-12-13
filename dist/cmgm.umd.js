@@ -982,6 +982,8 @@
     }
 
     static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+      let nodeIDListPostProcess = [];
+      let edgeIDListPostProcess = [];
       nodeIDList.forEach((nodeID) => {
         let nodeToUnfilter = invisibleGM.nodesMap.get(nodeID);
         nodeToUnfilter.isFiltered = false;
@@ -1005,7 +1007,10 @@
         }
         if (canNodeToUnfilterBeVisible) {
           Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
-          FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+          let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+          nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
+          edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges];
+          nodeIDListPostProcess.push(nodeToUnfilter.ID);
         }
       });
       edgeIDList.forEach((edgeID) => {
@@ -1028,23 +1033,45 @@
         });
         if (!found && edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
           Auxiliary.moveEdgeToVisible(edgeToUnfilter, visibleGM, invisibleGM);
+          edgeIDListPostProcess.push(edgeToUnfilter.ID);
         }
       });
+
+      return nodeIDListPostProcess.concat(edgeIDListPostProcess);
     }
 
-    static makeDescendantNodesVisible(nodeToUnFilter, visibleGM, invisibleGM) {
-      if (nodeToUnFilter.child) {
-        let nodeToUnfilterDescendants = nodeToUnFilter.child.nodes;
+    static makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM) {
+      let descendants = {
+        edges: new Set(),
+        simpleNodes: [],
+        compoundNodes: []
+      };
+      if (nodeToUnfilter.child) {
+        let nodeToUnfilterDescendants = nodeToUnfilter.child.nodes;
         nodeToUnfilterDescendants.forEach((descendantNode) => {
           if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
             Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
             if (descendantNode.isCollapsed == false) {
-              this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
+              let childDescendents = this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
+              for (var id in childDescendents) {
+                descendants[id] = [...descendants[id] || [], ...childDescendents[id]];
+              }
+              descendants['edges'] = new Set(descendants['edges']);
+              if (descendantNode.child) {
+                descendants.compoundNodes.push(descendantNode.ID);
+              } else {
+                descendants.simpleNodes.push(descendantNode.ID);
+              }
+              let nodeEdges = descendantNode.edges;
+              nodeEdges.forEach(item => descendants['edges'].add(item.ID));
             }
           }
         });
       }
-
+      nodeToUnfilter.edges.forEach((edge) => {
+        descendants.edges.add(edge.ID);
+      });
+      return descendants;
     }
 
     static updateMetaEdge(nestedEdges, targetEdgeID) {
@@ -1604,7 +1631,7 @@
     unfilter(nodeIDList, edgeIDList) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+      return FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
     }
 
     // hide/show methods

@@ -116,7 +116,7 @@ export class ComplexityManager {
   unfilter(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    return FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
   }
 
   // hide/show methods
