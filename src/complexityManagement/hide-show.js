@@ -73,6 +73,7 @@ export class HideShow {
         }
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
+        nodeIDListPostProcess.push(nodeID);
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;

@@ -69,6 +69,7 @@ export class FilterUnfilter {
         }
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
+        nodeIDListPostProcess.push(nodeID);
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
@@ -113,7 +114,8 @@ export class FilterUnfilter {
         Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
         let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
         nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
-        edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges] 
+        edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges];
+        nodeIDListPostProcess.push(nodeToUnfilter.ID);
       }
     })
     edgeIDList.forEach((edgeID) => {
@@ -141,18 +143,18 @@ export class FilterUnfilter {
     })
     edgeIDListPostProcess = new Set(edgeIDListPostProcess)
     edgeIDListPostProcess = [...edgeIDListPostProcess]
-    return edgeIDListPostProcess.concat(nodeIDListPostProcess);
 
+    return nodeIDListPostProcess.concat(edgeIDListPostProcess);
   }
 
-  static makeDescendantNodesVisible(nodeToUnFilter, visibleGM, invisibleGM) {
+  static makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM) {
     let descendants = {
       edges: new Set(),
       simpleNodes: [],
       compoundNodes: []
     };
-    if (nodeToUnFilter.child) {
-      let nodeToUnfilterDescendants = nodeToUnFilter.child.nodes;
+    if (nodeToUnfilter.child) {
+      let nodeToUnfilterDescendants = nodeToUnfilter.child.nodes;
       nodeToUnfilterDescendants.forEach((descendantNode) => {
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
           Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
@@ -167,16 +169,16 @@ export class FilterUnfilter {
             } else {
               descendants.simpleNodes.push(descendantNode.ID);
             }
-            let nodeEdges = childNode.edges;
+            let nodeEdges = descendantNode.edges;
             nodeEdges.forEach(item => descendants['edges'].add(item.ID));
           }
         }
       })
     }
-    node.edges.forEach((edge) => {
-      descendants.edges.add(edge);
+    nodeToUnfilter.edges.forEach((edge) => {
+      descendants.edges.add(edge.ID);
     });
-    return descendants
+    return descendants;
   }
 
   static updateMetaEdge(nestedEdges, targetEdgeID) {
