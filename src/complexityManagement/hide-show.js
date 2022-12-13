@@ -85,11 +85,15 @@ export class HideShow {
       }
     })
 
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess)
+    edgeIDListPostProcess = [...edgeIDListPostProcess]
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
   static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
-    nodeIDList.forEach((nodeID) => {
+    let nodeIDListPostProcess = [];
+    let edgeIDListPostProcess = [];
+   nodeIDList.forEach((nodeID) => {
       if (!visibleGM.nodesMap.get(nodeID)) {
         let nodeToShow = invisibleGM.nodesMap.get(nodeID);
         nodeToShow.isHidden = false;
@@ -113,8 +117,9 @@ export class HideShow {
         }
         if (canNodeToShowBeVisible) {
           Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, invisibleGM);
-          FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
-
+          let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
+          nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
+          edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges] 
         }
       }
     });
@@ -139,9 +144,16 @@ export class HideShow {
         });
         if (!found && edgeToShow.isFiltered == false && edgeToShow.source.isVisible && edgeToShow.target.isVisible) {
           Auxiliary.moveEdgeToVisible(edgeToShow, visibleGM, invisibleGM);
+          edgeIDListPostProcess.push(edgeToShow.ID);
+
         }
       }
     })
+    
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess)
+    edgeIDListPostProcess = [...edgeIDListPostProcess]
+    return edgeIDListPostProcess.concat(nodeIDListPostProcess);
+
   }
 
   static showAll(visibleGM, invisibleGM) {

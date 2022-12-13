@@ -79,7 +79,9 @@ export class FilterUnfilter {
         nodeToFilterInvisible.isVisible = false;
       }
     })
-
+    
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess)
+    edgeIDListPostProcess = [...edgeIDListPostProcess]
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
@@ -137,6 +139,8 @@ export class FilterUnfilter {
         edgeIDListPostProcess.push(edgeToUnfilter.ID);
       }
     })
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess)
+    edgeIDListPostProcess = [...edgeIDListPostProcess]
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
 
   }
