@@ -84,6 +84,8 @@ export class FilterUnfilter {
   }
 
   static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+    let nodeIDListPostProcess = [];
+    let edgeIDListPostProcess = [];
     nodeIDList.forEach((nodeID) => {
       let nodeToUnfilter = invisibleGM.nodesMap.get(nodeID);
       nodeToUnfilter.isFiltered = false;
@@ -107,7 +109,9 @@ export class FilterUnfilter {
       }
       if (canNodeToUnfilterBeVisible) {
         Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
-        FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
+        edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges] 
       }
     })
     edgeIDList.forEach((edgeID) => {
@@ -130,23 +134,45 @@ export class FilterUnfilter {
       });
       if (!found && edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
         Auxiliary.moveEdgeToVisible(edgeToUnfilter, visibleGM, invisibleGM);
+        edgeIDListPostProcess.push(edgeToUnfilter.ID);
       }
     })
+    return edgeIDListPostProcess.concat(nodeIDListPostProcess);
+
   }
 
   static makeDescendantNodesVisible(nodeToUnFilter, visibleGM, invisibleGM) {
+    let descendants = {
+      edges: new Set(),
+      simpleNodes: [],
+      compoundNodes: []
+    };
     if (nodeToUnFilter.child) {
       let nodeToUnfilterDescendants = nodeToUnFilter.child.nodes;
       nodeToUnfilterDescendants.forEach((descendantNode) => {
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
           Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
           if (descendantNode.isCollapsed == false) {
-            this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
+            let childDescendents = this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
+            for (var id in childDescendents) {
+              descendants[id] = [...descendants[id] || [], ...childDescendents[id]];
+            }
+            descendants['edges'] = new Set(descendants['edges']);
+            if (childNode.child) {
+              descendants.compoundNodes.push(childNode);
+            } else {
+              descendants.simpleNodes.push(childNode);
+            }
+            let nodeEdges = childNode.edges;
+            nodeEdges.forEach(item => descendants['edges'].add(item));
           }
         }
       })
     }
-
+    node.edges.forEach((edge) => {
+      descendants.edges.add(edge);
+    });
+    return descendants
   }
 
   static updateMetaEdge(nestedEdges, targetEdgeID) {
