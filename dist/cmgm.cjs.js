@@ -964,6 +964,7 @@ class FilterUnfilter {
         }
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
+        nodeIDListPostProcess.push(nodeID);
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
@@ -1133,6 +1134,7 @@ class HideShow {
         }
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
+        nodeIDListPostProcess.push(nodeID);
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;
