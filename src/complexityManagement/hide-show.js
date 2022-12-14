@@ -120,7 +120,8 @@ export class HideShow {
           Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, invisibleGM);
           let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
           nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
-          edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges]
+          edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
+          nodeIDListPostProcess.push(nodeToShow.ID);
         }
       }
     });
