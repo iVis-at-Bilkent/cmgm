@@ -130,13 +130,13 @@ export class ComplexityManager {
   show(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    HideShow.show(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    return HideShow.show(nodeIDList, edgeIDList, visibleGM, invisibleGM);
   }
 
   showAll() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    HideShow.showAll(visibleGM, invisibleGM);
+    return HideShow.showAll(visibleGM, invisibleGM);
   }
 
   // expand/collapse methods

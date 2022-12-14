@@ -77,7 +77,7 @@ export class HideShow {
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;
-      } 
+      }
       else {
         // nodeToHide does not exist in visible graph
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
@@ -94,7 +94,7 @@ export class HideShow {
   static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
     let nodeIDListPostProcess = [];
     let edgeIDListPostProcess = [];
-   nodeIDList.forEach((nodeID) => {
+    nodeIDList.forEach((nodeID) => {
       if (!visibleGM.nodesMap.get(nodeID)) {
         let nodeToShow = invisibleGM.nodesMap.get(nodeID);
         nodeToShow.isHidden = false;
@@ -119,8 +119,8 @@ export class HideShow {
         if (canNodeToShowBeVisible) {
           Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, invisibleGM);
           let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
-          nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
-          edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges] 
+          nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
+          edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges]
         }
       }
     });
@@ -150,26 +150,26 @@ export class HideShow {
         }
       }
     })
-    
-    edgeIDListPostProcess = new Set(edgeIDListPostProcess)
-    edgeIDListPostProcess = [...edgeIDListPostProcess]
+
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess);
+    edgeIDListPostProcess = [...edgeIDListPostProcess];
     return nodeIDListPostProcess.concat(edgeIDListPostProcess);
 
   }
 
   static showAll(visibleGM, invisibleGM) {
-    let hiddenNodeIDList = []
-    let hiddenEdgeIDList = []
+    let hiddenNodeIDList = [];
+    let hiddenEdgeIDList = [];
     invisibleGM.nodesMap.forEach((node, NodeID) => {
       if (node.isHidden) {
         hiddenNodeIDList.push(node.ID);
       }
-    })
+    });
     invisibleGM.edgesMap.forEach((edge, EdgeID) => {
       if (edge.isHidden) {
         hiddenEdgeIDList.push(edge.ID);
       }
-    })
-    this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, invisibleGM)
+    });
+    return this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, invisibleGM);
   }
 }

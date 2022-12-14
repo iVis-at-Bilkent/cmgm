@@ -976,6 +976,8 @@ class FilterUnfilter {
       }
     });
 
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess);
+    edgeIDListPostProcess = [...edgeIDListPostProcess];
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
@@ -1006,8 +1008,8 @@ class FilterUnfilter {
       if (canNodeToUnfilterBeVisible) {
         Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
         let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
-        nodeIDListPostProcess = [...nodeIDListPostProcess,...descendants.simpleNodes,...descendants.compoundNodes];
-        edgeIDListPostProcess = [...edgeIDListPostProcess,...descendants.edges];
+        nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
+        edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
         nodeIDListPostProcess.push(nodeToUnfilter.ID);
       }
     });
@@ -1034,6 +1036,8 @@ class FilterUnfilter {
         edgeIDListPostProcess.push(edgeToUnfilter.ID);
       }
     });
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess);
+    edgeIDListPostProcess = [...edgeIDListPostProcess];
 
     return nodeIDListPostProcess.concat(edgeIDListPostProcess);
   }
@@ -1067,7 +1071,9 @@ class FilterUnfilter {
       });
     }
     nodeToUnfilter.edges.forEach((edge) => {
-      descendants.edges.add(edge.ID);
+      if (edge.isFiltered == false && edge.isHidden == false && edge.source.isVisible && edge.target.isVisible) {
+        descendants.edges.add(edge.ID);
+      }
     });
     return descendants;
   }
@@ -1165,7 +1171,7 @@ class HideShow {
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;
-      } 
+      }
       else {
         // nodeToHide does not exist in visible graph
         let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
@@ -1174,10 +1180,14 @@ class HideShow {
       }
     });
 
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess);
+    edgeIDListPostProcess = [...edgeIDListPostProcess];
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
   static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+    let nodeIDListPostProcess = [];
+    let edgeIDListPostProcess = [];
     nodeIDList.forEach((nodeID) => {
       if (!visibleGM.nodesMap.get(nodeID)) {
         let nodeToShow = invisibleGM.nodesMap.get(nodeID);
@@ -1202,8 +1212,9 @@ class HideShow {
         }
         if (canNodeToShowBeVisible) {
           Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, invisibleGM);
-          FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
-
+          let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
+          nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
+          edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
         }
       }
     });
@@ -1228,9 +1239,16 @@ class HideShow {
         });
         if (!found && edgeToShow.isFiltered == false && edgeToShow.source.isVisible && edgeToShow.target.isVisible) {
           Auxiliary.moveEdgeToVisible(edgeToShow, visibleGM, invisibleGM);
+          edgeIDListPostProcess.push(edgeToShow.ID);
+
         }
       }
     });
+
+    edgeIDListPostProcess = new Set(edgeIDListPostProcess);
+    edgeIDListPostProcess = [...edgeIDListPostProcess];
+    return nodeIDListPostProcess.concat(edgeIDListPostProcess);
+
   }
 
   static showAll(visibleGM, invisibleGM) {
@@ -1246,7 +1264,7 @@ class HideShow {
         hiddenEdgeIDList.push(edge.ID);
       }
     });
-    this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, invisibleGM);
+    return this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, invisibleGM);
   }
 }
 
@@ -1643,13 +1661,13 @@ class ComplexityManager {
   show(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    HideShow.show(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    return HideShow.show(nodeIDList, edgeIDList, visibleGM, invisibleGM);
   }
 
   showAll() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    HideShow.showAll(visibleGM, invisibleGM);
+    return HideShow.showAll(visibleGM, invisibleGM);
   }
 
   // expand/collapse methods
