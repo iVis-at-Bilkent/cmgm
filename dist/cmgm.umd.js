@@ -1501,6 +1501,7 @@
       let edgeToAddForInvisible = new Edge(edgeID, newSourceID, newTargetID);
       edgeToAddForInvisible.isVisible = edgeToRemoveInvisible.isVisible;
       edgeToAddForInvisible.isHidden = edgeToRemoveInvisible.isHidden;
+      Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
       if (edgeToAddForInvisible.isFiltered == false && edgeToAddForInvisible.isHidden == false && visibleGM.nodesMap.get(newSourceID).isVisible && visibleGM.nodesMap.get(newTargetID).isVisible) {
         edgeToAddForInvisible.isVisible = true;
       }
