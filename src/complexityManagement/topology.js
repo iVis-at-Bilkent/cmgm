@@ -52,7 +52,9 @@ export class Topology {
     let sourceNodeInvisible = invisibleGM.nodesMap.get(sourceID);
     let targetNodeInvisible = invisibleGM.nodesMap.get(targetID);
     //create edge for visible and invisible Graph Managers
-    let edge = new Edge(edgeID, sourceNode, targetNode);
+    if(sourceNode != undefined && targetNode != undefined){
+      let edge = new Edge(edgeID, sourceNode, targetNode);
+    }
     let edgeInvisible = new Edge(
       edgeID,
       sourceNodeInvisible,
@@ -60,14 +62,18 @@ export class Topology {
     );
     //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
     if (sourceNode.owner === targetNode.owner) {
+    if(sourceNode != undefined && targetNode != undefined){
       sourceNode.owner.addEdge(edge, sourceNode, targetNode);
+    }
       sourceNodeInvisible.owner.addEdge(
         edgeInvisible,
         sourceNodeInvisible,
         targetNodeInvisible
       );
     } else {//add inter graph edges
+    if(sourceNode != undefined && targetNode != undefined){
       visibleGM.addInterGraphEdge(edge, sourceNode, targetNode);
+    }
       invisibleGM.addInterGraphEdge(
         edgeInvisible,
         sourceNodeInvisible,
@@ -75,7 +81,9 @@ export class Topology {
       );
     }
     //add edge id to edgesMap of visible and invisible Graph Managers
-    visibleGM.edgesMap.set(edgeID, edge);
+    if(sourceNode != undefined && targetNode != undefined){
+      visibleGM.edgesMap.set(edgeID, edge);
+    }
     invisibleGM.edgesMap.set(edgeID, edgeInvisible);
   }
 
@@ -284,6 +292,7 @@ export class Topology {
   static changeParent(nodeID, newParentID, visibleGM, invisibleGM) {
     //get node from visible graph
     let nodeToRemove = visibleGM.nodesMap.get(nodeID);
+    let edgesOfNodeToRemove = nodeToRemove.edges;
     if (nodeToRemove) {//node might not be in visible graph
       //get new parent node from visible graph
       let newParent = visibleGM.nodesMap.get(newParentID);
@@ -308,5 +317,8 @@ export class Topology {
       invisibleGM.addGraph(new Graph(null, invisibleGM), newParentInInvisible);
     }
     newParentInInvisible.child.addNode(removedNodeInvisible);
+    edgesOfNodeToRemove.forEach((edge)=>{
+      Topology.addEdge(edge.ID,edge.source.ID,edge.taget.ID);
+    })
   }
 }
