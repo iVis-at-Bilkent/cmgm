@@ -200,4 +200,9 @@ export class ComplexityManager {
     let invisibleGM = this.#invisibleGraphManager;
     ExpandCollapse.expandAllEdges(visibleGM, invisibleGM);
   }
+
+  getNeighborhoodElements(nodeID) {
+    let invisibleGM = this.#invisibleGraphManager;
+    return Auxiliary.getNeighborhoodElements(nodeID, invisibleGM);
+  }
 }

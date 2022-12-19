@@ -322,7 +322,7 @@ export class Topology {
   static changeParent(nodeID, newParentID, visibleGM, invisibleGM) {
     //get node from visible graph
     let nodeToRemove = visibleGM.nodesMap.get(nodeID);
-    let edgesOfNodeToRemove = nodeToRemove.edges;
+    let edgesOfNodeToRemove = [...nodeToRemove.edges];
     if (nodeToRemove) {
       //node might not be in visible graph
       //get new parent node from visible graph
