@@ -9,7 +9,8 @@ export class HideShow {
     let edgeIDListPostProcess = [...edgeIDList];
     // first hide edges
     edgeIDList.forEach(edgeID => {
-      let edgeToHide = visibleGM.edgesMap.get(edgeID); // edgeToHide can be a part of a meta edge, a simple (non-meta edge) or may not exist (may be removed inside a collapsed node or may be filtered)
+      let edgeToHide = visibleGM.edgesMap.get(edgeID); 
+      // edgeToHide can be a part of a meta edge, a simple (non-meta edge) or may not exist (may be removed inside a collapsed node or may be filtered)
       if (edgeToHide) {
         let found = false;
         visibleGM.edgesMap.forEach((visibleEdge) => {
@@ -26,22 +27,30 @@ export class HideShow {
             }
           }
         });
+        // if edge is not part of any meta edge
         if (!found) {
           visibleGM.edgesMap.delete(edgeToHide.ID);
           Auxiliary.removeEdgeFromGraph(edgeToHide);
         }
       }
+      //get ege from the invisible graph
       let edgeToHideInvisible = invisibleGM.edgesMap.get(edgeID);
+      //change hidden and visibleity flag
       edgeToHideInvisible.isHidden = true;
       edgeToHideInvisible.isVisible = false;
     });
+    //looping through list of nodes to hide
     nodeIDList.forEach((nodeID) => {
-      let nodeToHide = visibleGM.nodesMap.get(nodeID); // nodeToHide can be a simple node, a compound node or may not exist (may be removed inside a collapsed node or may be a filtered simple or compound node)
+      let nodeToHide = visibleGM.nodesMap.get(nodeID); 
+      // nodeToHide can be a simple node, a compound node or may not exist (may be removed inside a collapsed node or may be a filtered simple or compound node)
       if (nodeToHide) {
         // nodeToHide is either simple or a compound node in visible graph, so we first store the IDs of nodeToHide, its descendant nodes and their incident edges in elementIDsForInvisible, then remove those nodes and edges from the graph 
         //All done by getDescendantsInorder
         let nodeToHideDescendants =
           visibleGM.getDescendantsInorder(nodeToHide);
+        //looping thorugh descendant edeges
+        //get edge from invisible graph chnage visibility flag
+        //remove edge from the visible graph
         nodeToHideDescendants.edges.forEach((nodeToHideEdge) => {
           edgeIDListPostProcess.push(nodeToHideEdge.ID);
           let nodeToHideEdgeInvisible = invisibleGM.edgesMap.get(nodeToHideEdge.ID);
@@ -49,6 +58,9 @@ export class HideShow {
           visibleGM.edgesMap.delete(nodeToHideEdge.ID);
           Auxiliary.removeEdgeFromGraph(nodeToHideEdge);
         });
+        //looping thorugh descendant simple nodes
+        //get node from invisible graph chnage visibility flag
+        //remove node from the visible graph and nodes map
         nodeToHideDescendants.simpleNodes.forEach((nodeToHideSimpleNode) => {
           let nodeToHideSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToHideSimpleNode.ID);
           nodeToHideSimpleNodeInvisible.isVisible = false;
@@ -56,6 +68,9 @@ export class HideShow {
           nodeToHideSimpleNode.owner.removeNode(nodeToHideSimpleNode);
           visibleGM.nodesMap.delete(nodeToHideSimpleNode.ID);
         });
+        //looping thorugh descendant compound nodes
+        //get node from invisible graph chnage visibility flag
+        //remove node from the visible graph and nodes map
         nodeToHideDescendants.compoundNodes.forEach(
           (nodeToHideCompoundNode) => {
             let nodeToHideCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToHideCompoundNode.ID);
@@ -68,9 +83,11 @@ export class HideShow {
             visibleGM.nodesMap.delete(nodeToHideCompoundNode.ID);
           }
         );
+        //not to remove the child graph can be empty, if yes set sibling graph status of sibling invisible graph to null
         if (nodeToHide.child && nodeToHide.child.nodes.length == 0) {
           nodeToHide.child.siblingGraph.siblingGraph = null;
         }
+        //remove node owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);
@@ -85,7 +102,7 @@ export class HideShow {
         nodeToHideInvisible.isVisible = false;
       }
     })
-
+    //remove duplication from edge list and retrun the combined list of edges and nodes in that order
     edgeIDListPostProcess = new Set(edgeIDListPostProcess)
     edgeIDListPostProcess = [...edgeIDListPostProcess]
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
