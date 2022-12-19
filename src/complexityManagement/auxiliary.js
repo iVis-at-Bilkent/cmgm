@@ -73,4 +73,21 @@ export class Auxiliary {
     }
     visibleGM.edgesMap.set(newEdge.ID, newEdge);
   }
+
+  static getNeighbourhoodElements(nodeID,invisibleGM){
+    let node = invisibleGM.nodesMap.get(nodeID);
+    let neighbourElements = {
+      nodes:[],
+      edges:[]
+    }
+    node.edges.forEach((edge)=>{
+      if(edge.source.ID==nodeID){
+        neighbourElements['nodes'].push(edge.target.ID)
+      }else{
+        neighbourElements['nodes'].push(edge.source.ID)
+      }
+      neighbourElements['edges'].push(edge.ID)
+    })
+    return neighbourElements;
+  }
 }
