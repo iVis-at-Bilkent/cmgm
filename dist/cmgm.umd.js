@@ -1551,7 +1551,7 @@
       }
       //check if target is given
       else if (newTargetID == undefined) {
-        newTargetID = edgeToRemove.taget.ID;
+        newTargetID = edgeToRemove.target.ID;
       }
       //remove existing edge from visible graph
       if (edgeToRemove) {
