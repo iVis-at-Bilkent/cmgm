@@ -90,6 +90,32 @@ export class Topology {
     }
     invisibleGM.edgesMap.set(edgeID, edgeInvisible);
   }
+  
+  static addMetaEdge(sourceID, targetID, visibleGM, invisibleGM) {
+    //get nodes from visible graph manager
+    let sourceNode = visibleGM.nodesMap.get(sourceID);
+    let targetNode = visibleGM.nodesMap.get(targetID);
+    let metaEdge;
+    //create edge for visible and invisible Graph Managers
+    if (sourceNode != undefined && targetNode != undefined) {
+      metaEdge = new MetaEdge(sourceNode, targetNode);
+    }
+    //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
+    if (sourceNode.owner === targetNode.owner) {
+      if (sourceNode != undefined && targetNode != undefined) {
+        sourceNode.owner.addEdge(metaEdge, sourceNode, targetNode);
+      }
+    } else {
+      //add inter graph edges
+      if (sourceNode != undefined && targetNode != undefined) {
+        visibleGM.addInterGraphEdge(metaEdge, sourceNode, targetNode);
+      }
+    }
+    //add edge id to edgesMap of visible graph manager
+    if (sourceNode != undefined && targetNode != undefined) {
+      visibleGM.edgesMap.set(metaEdge.ID, metaEdge);
+    }
+  }
 
   removeNestedEdges(nestedEdges, invisibleGM) {
     //loop through the list of nested edges

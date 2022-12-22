@@ -210,10 +210,10 @@ export class GraphManager {
    * This method removes the input graph from this graph manager. 
    */
   removeGraph(graph) {
-    if (graph.getGraphManager() != this) {
+    if (graph.owner != this) {
       throw "Graph not in this graph mgr";
     }
-    if (!(graph == this.rootGraph || (graph.parent != null && graph.parent.graphManager == this))) {
+    if (!(graph == this.rootGraph || (graph.parent != null && graph.parent.owner.owner == this))) {
       throw "Invalid parent node!";
     }
 
@@ -223,7 +223,7 @@ export class GraphManager {
     edgesToBeRemoved = edgesToBeRemoved.concat(graph.edges);
 
     edgesToBeRemoved.forEach(edge => {
-      graph.remove(edge);
+      graph.removeEdge(edge);
     });
 
     // then the nodes (make a copy to do it safely)
@@ -232,7 +232,7 @@ export class GraphManager {
     nodesToBeRemoved = nodesToBeRemoved.concat(graph.nodes);
 
     nodesToBeRemoved.forEach(node => {
-      graph.remove(mode);
+      graph.removeNode(node);
     });
 
     // check if graph is the root
@@ -241,7 +241,8 @@ export class GraphManager {
     }
 
     // now remove the graph itself
-    this.graphs.remove(graph);
+    let index = this.#graphs.indexOf(graph);
+    this.#graphs.splice(index, 1);
 
     // also reset the parent of the graph
     graph.parent = null;
