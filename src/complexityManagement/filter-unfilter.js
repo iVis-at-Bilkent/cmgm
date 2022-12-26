@@ -13,13 +13,10 @@ export class FilterUnfilter {
         visibleGM.edgesMap.forEach((visibleEdge) => {
           if (visibleEdge instanceof MetaEdge) {
             // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-            updatedOrignalEdges = this.updateMetaEdge(
-              visibleEdge.originalEdges(),
-              edgeToFilter.ID
-            );
-            // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-            if (updatedOrignalEdges != visibleEdge.originalEdges()) {
-              visibleEdge.originalEdges(updatedOrignalEdges);
+            updatedOriginalEdges = this.updateMetaEdge(visibleEdge.originalEdges(), edgeToFilter.ID);
+            // updatedOriginalEdges will be same as originalEdges if edge to remove is not part of the meta edge
+            if (updatedOriginalEdges != visibleEdge.originalEdges()) {
+              visibleEdge.originalEdges(updatedOriginalEdges);
               found = true;
             }
           }
@@ -40,8 +37,10 @@ export class FilterUnfilter {
           visibleGM.getDescendantsInorder(nodeToFilter);
         nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
           edgeIDListPostProcess.push(nodeToFilterEdge.ID);
-          let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
-          nodeToFilterEdgeInvisible.isVisible = false;
+          if (!(nodeToFilterEdge instanceof MetaEdge)) {
+            let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
+            nodeToFilterEdgeInvisible.isVisible = false;
+          }
           visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
           Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
         });
@@ -126,12 +125,9 @@ export class FilterUnfilter {
       visibleGM.edgesMap.forEach((visibleEdge) => {
         if (visibleEdge instanceof MetaEdge) {
           // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-          updatedOrignalEdges = this.updateMetaEdge(
-            visibleEdge.originalEdges(),
-            edgeToUnfilter.ID
-          );
-          // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-          if (updatedOrignalEdges != visibleEdge.originalEdges()) {
+          updatedOriginalEdges = this.updateMetaEdge(visibleEdge.originalEdges(), edgeToUnfilter.ID);
+          // updatedOriginalEdges will be same as originalEdges if edge to remove is not part of the meta edge
+          if (updatedOriginalEdges != visibleEdge.originalEdges()) {
             found = true;
           }
         }

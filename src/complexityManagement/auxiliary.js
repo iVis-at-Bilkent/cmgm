@@ -3,6 +3,7 @@ import { Graph } from "../graph";
 import { Edge } from "../edge";
 import { Node } from "../node";
 import { MetaEdge } from "../meta-edge";
+import { FilterUnfilter } from "./filter-unfilter";
 export class Auxiliary {
 
   static lastID = 0;
@@ -40,13 +41,10 @@ export class Auxiliary {
       visibleGM.edgesMap.forEach((visibleEdge) => {
         if (visibleEdge instanceof MetaEdge) {
           // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-          updatedOrignalEdges = this.updateMetaEdge(
-            visibleEdge.originalEdges(),
-            incidentEdge.ID
-          );
+          let updatedOrignalEdges = FilterUnfilter.updateMetaEdge(visibleEdge.originalEdges, incidentEdge.ID);
           // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-          if (updatedOrignalEdges != visibleEdge.originalEdges()) {
-            visibleEdge.originalEdges(updatedOrignalEdges);
+          if (updatedOrignalEdges != visibleEdge.originalEdges) {
+            visibleEdge.originalEdges = updatedOrignalEdges;
             found = true;
           }
           //update handled but incident edge should be created in the visible graph.

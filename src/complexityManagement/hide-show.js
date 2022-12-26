@@ -53,8 +53,10 @@ export class HideShow {
         //remove edge from the visible graph
         nodeToHideDescendants.edges.forEach((nodeToHideEdge) => {
           edgeIDListPostProcess.push(nodeToHideEdge.ID);
-          let nodeToHideEdgeInvisible = invisibleGM.edgesMap.get(nodeToHideEdge.ID);
-          nodeToHideEdgeInvisible.isVisible = false;
+          if(!(nodeToHideEdge instanceof MetaEdge)) {
+            let nodeToHideEdgeInvisible = invisibleGM.edgesMap.get(nodeToHideEdge.ID);
+            nodeToHideEdgeInvisible.isVisible = false;
+          }
           visibleGM.edgesMap.delete(nodeToHideEdge.ID);
           Auxiliary.removeEdgeFromGraph(nodeToHideEdge);
         });

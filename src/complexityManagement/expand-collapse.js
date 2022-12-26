@@ -39,7 +39,7 @@ export class ExpandCollapse {
       childrenNodes.forEach(child => {
         nodeIDListForInvisible.push(child.ID)
         child.edges.forEach(childEdge => {
-          if(!(childEdge instanceof MetaEdge)) {
+          if (!(childEdge instanceof MetaEdge)) {
             edgeIDListForInvisible.push(childEdge.ID);
           }
           else {
@@ -50,13 +50,13 @@ export class ExpandCollapse {
             if (childEdge.source == child) {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM)
               if (metaEdgeToBeCreated) {
-                Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);                
+                Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
               }
-              else {
-                metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM)
-                if (metaEdgeToBeCreated) {
-                  Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, visibleGM, invisibleGM);
-                }
+            }
+            else {
+              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM)
+              if (metaEdgeToBeCreated) {
+                Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, visibleGM, invisibleGM);
               }
             }
           }
@@ -102,13 +102,13 @@ export class ExpandCollapse {
            if (metaEdgeToBeCreated) {
              Topology.addEdge(childEdge.ID, node.ID, childEdge.target.ID, visibleGM, invisibleGM);
            }
-           else {
-             metaEdgeToBeCreated = [...descendantNodes, node].includes(childEdge.source);
-             if (metaEdgeToBeCreated) {
-               Topology.addEdge(childEdge.ID, childEdge.source.ID, node.ID, visibleGM, invisibleGM);
-             }
-           }
-         }
+          }
+          else {
+            metaEdgeToBeCreated = [...descendantNodes, node].includes(childEdge.source);
+            if (metaEdgeToBeCreated) {
+              Topology.addEdge(childEdge.ID, childEdge.source.ID, node.ID, visibleGM, invisibleGM);
+            }
+          }
        }
        visibleGM.edgesMap.delete(childEdge.ID);
      });
@@ -134,19 +134,21 @@ export class ExpandCollapse {
  */
   static #expandNode(node, isRecursive, visibleGM, invisibleGM) {
     let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
-    let newVisibleGraph = visibleGM.addGraph(new Graph(node, visibleGM), node);
+    let newVisibleGraph = visibleGM.addGraph(new Graph(null, visibleGM), node);
     nodeInInvisible.child.siblingGraph = newVisibleGraph;
     newVisibleGraph.siblingGraph = nodeInInvisible.child;
+    nodeInInvisible.isCollapsed = false;
     let childrenNodes = nodeInInvisible.child.nodes;
     childrenNodes.forEach(child => {
       if ((child.isCollapsed && isRecursive && (!child.isFiltered) && (!child.isHidden)) || ((!child.isCollapsed) && (!child.isFiltered) && (!child.isHidden))) {
-        Auxiliary.moveNodeToVisible(child);
+        Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM);
         if (child.child) {
-          this.#expandNode(child, isRecursive, visibleGM, invisibleGM);
+          let newNode = visibleGM.nodesMap.get(child.ID);
+          this.#expandNode(newNode, isRecursive, visibleGM, invisibleGM);
         }
       }
       else if (child.isCollapsed && (!isRecursive) && (!child.isFiltered) && (!child.isHidden)) {
-        Auxiliary.moveNodeToVisible(child);
+        Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM);
       }
     });
   }
@@ -167,13 +169,17 @@ export class ExpandCollapse {
     if (isRecursive) {
       nodeIDList.forEach(nodeID => {
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
-        this.collapseCompoundDescendantNodes(nodeInVisible, visibleGM, invisibleGM);
-        this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+        if (nodeInVisible.child) {
+          this.collapseCompoundDescendantNodes(nodeInVisible, visibleGM, invisibleGM);
+          this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+        }
       });
     } else {
       nodeIDList.forEach(nodeID => {
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
-        this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+        if (nodeInVisible.child) {
+          this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+        }
       });
     }
   }

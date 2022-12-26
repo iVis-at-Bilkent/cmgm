@@ -245,6 +245,7 @@ export class GraphManager {
     this.#graphs.splice(index, 1);
 
     // also reset the parent of the graph
+    graph.parent.child = null;
     graph.parent = null;
   }
 
