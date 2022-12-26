@@ -1658,17 +1658,17 @@
     }
 
     static collapseAllNodes(visibleGM, invisibleGM) {
-      let nodesIDList = [];
+      let nodeIDList = [];
       visibleGM.rootGraph.nodes.forEach(rootNode => {
         if (rootNode.child) {
-          nodesIDList.push(rootNode.ID);
+          nodeIDList.push(rootNode.ID);
         }
       });
       this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM);
     }
 
     static expandAllNodes(visibleGM, invisibleGM) {
-      let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(visibleGM.rootGraph.parent);
+      let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(invisibleGM.rootGraph.parent);
       this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM);
     }
 
@@ -1677,10 +1677,10 @@
       if (node.child) {
         node.child.nodes.forEach(childNode => {
           if (childNode.child && childNode.isCollapsed) {
-            descendantNodes.push(childNode);
+            descendantNodes.push(childNode.ID);
           }
           else if (childNode.child && (!childNode.isCollapsed)) {
-            descendantNodes.push(childNode);
+            descendantNodes.push(childNode.ID);
             let nodesReturned = this.getDescendantNodes(childNode);
             descendantNodes = [...descendantNodes, ...nodesReturned];
           }
