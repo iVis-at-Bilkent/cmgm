@@ -201,8 +201,8 @@ export class ComplexityManager {
     ExpandCollapse.expandAllEdges(visibleGM, invisibleGM);
   }
 
-  getNeighborhoodElements(nodeID) {
+  getHiddenNeighbors(nodeID) {
     let invisibleGM = this.#invisibleGraphManager;
-    return Auxiliary.getNeighborhoodElements(nodeID, invisibleGM);
+    return Auxiliary.getTargetNeighborhoodElements(nodeID, invisibleGM);
   }
 }

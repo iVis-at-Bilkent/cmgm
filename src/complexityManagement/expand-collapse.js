@@ -198,7 +198,10 @@ export class ExpandCollapse {
   static expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
     nodeIDList.forEach(nodeID => {
       let nodeInVisible = visibleGM.nodesMap.get(nodeID);
-      this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
+      let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
+      if (nodeInInvisible.child && nodeInInvisible.isCollapsed) {
+        this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
+      }
     });
   }
 

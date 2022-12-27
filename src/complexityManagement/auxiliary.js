@@ -72,104 +72,109 @@ export class Auxiliary {
     visibleGM.edgesMap.set(newEdge.ID, newEdge);
   }
 
-  static getTargetNeighbourhoodElements(nodeID, invisibleGM) {
+  static getTargetNeighborhoodElements(nodeID, invisibleGM) {
     let node = invisibleGM.nodesMap.get(nodeID);
-    //get zero distance Neighbourhood
-    let neighbourHood = this.getZeroDistanceNeighbours(node,invisibleGM)
+    //get zero distance Neighborhood
+    let neighborhood = this.getZeroDistanceNeighbors(node, invisibleGM);
     let neighborElements = {
       nodes: [],
       edges: []
-    }
-    //for each 0 distance neighbourhood node get 1 distance nodes and edges
-    neighbourHood['nodes'].forEach((neighborNodeID) => {
-      neighborNode = invisibleGM.nodesMap.get(neighborNodeID);
+    };
+    //for each 0 distance neighborhood node get 1 distance nodes and edges
+    neighborhood['nodes'].forEach((neighborNodeID) => {
+      let neighborNode = invisibleGM.nodesMap.get(neighborNodeID);
       neighborNode.edges.forEach((edge) => {
-      if (edge.source.ID == neighborNode.ID) {
-        neighborElements['nodes'].push(edge.target.ID)
-      } else {
-        neighborElements['nodes'].push(edge.source.ID)
-      }
-      neighborElements['edges'].push(edge.ID)
+        if (edge.source.ID == neighborNode.ID) {
+          neighborElements['nodes'].push(edge.target.ID);
+        } else {
+          neighborElements['nodes'].push(edge.source.ID);
+        }
+        neighborElements['edges'].push(edge.ID);
       })
     })
     // append elements from 1 distance to orignal dictionary
-    neighborElements['nodes'] = [...new Set([...neighborElements['nodes']])]
-    neighborElements['edges'] = [...new Set([...neighborElements['edges']])]
-    
-    //for each 1 distance node, calculate individual zero distance neighbourhood and append it to the orignal dictionary
+    neighborElements['nodes'] = [...new Set([...neighborElements['nodes']])];
+    neighborElements['edges'] = [...new Set([...neighborElements['edges']])];
+
+    //for each 1 distance node, calculate individual zero distance neighborhood and append it to the orignal dictionary
     neighborElements['nodes'].forEach((neighborElementID) => {
       let targetNeighborNode = invisibleGM.nodesMap.get(neighborElementID);
-      let targetNeighbourHood = this.getZeroDistanceNeighbours(targetNeighborNode,invisibleGM)
-      neighbourHood['nodes'] = [...new Set([...neighbourHood['nodes'],...targetNeighbourHood['nodes']])]
-      neighbourHood['edges'] = [...new Set([...neighbourHood['edges'],...targetNeighbourHood['edges']])]
+      let targetNeighborhood = this.getZeroDistanceNeighbors(targetNeighborNode, invisibleGM);
+      neighborhood['nodes'] = [...new Set([...neighborhood['nodes'], ...targetNeighborhood['nodes']])];
+      neighborhood['edges'] = [...new Set([...neighborhood['edges'], ...targetNeighborhood['edges']])];
     })
-    
+
     //remove duplications
-    neighbourHood['nodes'] = [...new Set([...neighbourHood['nodes'],...neighborElements['nodes']])]
-    neighbourHood['edges'] = [...new Set([...neighbourHood['edges'],...neighborElements['edges']])]
+    neighborhood['nodes'] = [...new Set([...neighborhood['nodes'], ...neighborElements['nodes']])];
+    neighborhood['edges'] = [...new Set([...neighborhood['edges'], ...neighborElements['edges']])];
 
     //remove all visible nodes
-    neighbourHood['nodes'] = neighbourHood['nodes'].filter((itemID)=>{
+    neighborhood['nodes'] = neighborhood['nodes'].filter((itemID) => {
       let itemNode = invisibleGM.nodesMap.get(itemID);
-      return !(itemNode.isVisible)
+      return !(itemNode.isVisible);
     })
 
     //remove all visible nodes
-    neighbourHood['edges'] = neighbourHood['edges'].filter((itemID)=>{
-      let itemEdge = invisibleGM.nodesMap.get(itemID);
-      return !(itemEdge.isVisible)
+    neighborhood['edges'] = neighborhood['edges'].filter((itemID) => {
+      let itemEdge = invisibleGM.edgesMap.get(itemID);
+      return !(itemEdge.isVisible);
     })
 
-    return neighbourHood;
+    return neighborhood;
   }
 
-  static getZeroDistanceNeighbours(node,invisibleGM){
-    let neighbours = {
-      nodes:[],
-      edges:[]
-    }
-    let descendantNeighbourHood = getDescendantNeighbours(node)
-    let predecessorsNeighbourHood = getPredecessorNeighbours(node,invisibleGM);
-    neighbours['nodes'] = [...new Set([...descendantNeighbourHood['nodes'],...predecessorsNeighbourHood['nodes']])]
-    neighbours['edges'] = [...new Set([...descendantNeighbourHood['edges'],...predecessorsNeighbourHood['edges']])]
-    return neighbours;
+  static getZeroDistanceNeighbors(node, invisibleGM) {
+    let neighbors = {
+      nodes: [],
+      edges: []
+    };
+    let descendantNeighborhood = this.getDescendantNeighbors(node);
+    let predecessorsNeighborhood = this.getPredecessorNeighbors(node, invisibleGM);
+    neighbors['nodes'] = [...new Set([...descendantNeighborhood['nodes'], ...predecessorsNeighborhood['nodes']])];
+    neighbors['edges'] = [...new Set([...descendantNeighborhood['edges'], ...predecessorsNeighborhood['edges']])];
+
+    return neighbors;
   }
-  static getDescendantNeighbours(node){
-    let neighbours = {
-      nodes:[],
-      edges:[]
-    }
-    if(node.child){
-      let children = node.child.nodes
+
+  static getDescendantNeighbors(node) {
+    let neighbors = {
+      nodes: [],
+      edges: []
+    };
+    if (node.child) {
+      let children = node.child.nodes;
       children.forEach(childNode => {
-        neighbours.nodes.push(childNode.ID)
+        neighbors.nodes.push(childNode.ID);
         childNode.edges.forEach(element => {
-          neighbours.edges.push(element.ID)          
+          neighbors.edges.push(element.ID);
         });
-        let nodesReturned = this.getDescendantNeighbours(childNode);
-        neighbours['nodes'] = [...neighbours['nodes'],...nodesReturned['nodes']]
-        neighbours['edges'] = [...neighbours['edges'],...nodesReturned['edges']]
+        let nodesReturned = this.getDescendantNeighbors(childNode);
+        neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
+        neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
       });
     }
-    return neighbours
+
+    return neighbors;
   }
-  static getPredecessorNeighbours(node,invisibleGM){
-    let neighbours = {
-      nodes:[],
-      edges:[]
-    }
-    if(node.owner != invisibleGM.rootGraph){
-      let predecessors = node.owner.nodes
+
+  static getPredecessorNeighbors(node, invisibleGM) {
+    let neighbors = {
+      nodes: [],
+      edges: []
+    };
+    if (node.owner != invisibleGM.rootGraph) {
+      let predecessors = node.owner.nodes;
       predecessors.forEach(pNode => {
-        neighbours['nodes'].push(pNode.ID);
+        neighbors['nodes'].push(pNode.ID);
         pNode.edges.forEach(element => {
-          neighbours.edges.push(element.ID)          
+          neighbors.edges.push(element.ID);
         });
       });
-      let nodesReturned = this.getPredecessorNeighbours(node.owner.parent);
-      neighbours['nodes'] = [...neighbours['nodes'],...nodesReturned['nodes']]
-      neighbours['edges'] = [...neighbours['edges'],...nodesReturned['edges']]
+      let nodesReturned = this.getPredecessorNeighbors(node.owner.parent, invisibleGM);
+      neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
+      neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
     }
-    return neighbours
+
+    return neighbors;
   }
 }
