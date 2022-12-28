@@ -22,9 +22,6 @@ export class ExpandCollapse {
     edgeIDListForInvisible.forEach(edgeID => {
       visibleGM.edgesMap.delete(edgeID);
     });
-    metaEdgeIDListForVisible.forEach(edgeID => {
-      visibleGM.edgesMap.delete(edgeID);
-    });
     let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
     nodeInInvisible.isCollapsed = true;
     nodeIDListForInvisible.forEach(nodeIDInvisible => {
@@ -38,7 +35,7 @@ export class ExpandCollapse {
 
     nodeIDListForInvisible.forEach(item => this.removedElements.nodeIDListForInvisible.add(item));
     edgeIDListForInvisible.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
-    metaEdgeIDListForVisible.forEach(item => this.removedElements.metaEdgeIDListForVisible.add(item));
+    this.removedElements.metaEdgeIDListForVisible.add(metaEdgeIDListForVisible);
   }
 
   static traverseDescendants(node, nodeToBeCollapsed, visibleGM, invisibleGM) {
@@ -187,6 +184,18 @@ export class ExpandCollapse {
         if (nodeInVisible.child) {
           this.collapseCompoundDescendantNodes(nodeInVisible, visibleGM, invisibleGM);
           this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+          
+          this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
+            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
+              edgeIDList.forEach(element => {
+                visibleGM.edgesMap.delete(edgeID);
+              });
+            }
+          });
+          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          this.removedElements.metaEdgeIDListForVisible = new Set()
+          temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+
         }
       });
     } else {
@@ -194,6 +203,18 @@ export class ExpandCollapse {
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
         if (nodeInVisible.child) {
           this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+          
+          this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
+            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
+              edgeIDList.forEach(element => {
+                visibleGM.edgesMap.delete(edgeID);
+              });
+            }
+          });
+          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          this.removedElements.metaEdgeIDListForVisible = new Set()
+          temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+
         }
       });
     }
@@ -207,6 +228,18 @@ export class ExpandCollapse {
         if (childNode.child) {
           this.collapseCompoundDescendantNodes(childNode);
           this.#collapseNode(childNode, visibleGM, invisibleGM);
+          
+          this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
+            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
+              edgeIDList.forEach(element => {
+                visibleGM.edgesMap.delete(edgeID);
+              });
+            }
+          });
+          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          this.removedElements.metaEdgeIDListForVisible = new Set()
+          temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+          
         }
       });
     }
