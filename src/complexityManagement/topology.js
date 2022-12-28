@@ -115,6 +115,8 @@ export class Topology {
     if (sourceNode != undefined && targetNode != undefined) {
       visibleGM.edgesMap.set(metaEdge.ID, metaEdge);
     }
+
+    return metaEdge;
   }
 
   removeNestedEdges(nestedEdges, invisibleGM) {

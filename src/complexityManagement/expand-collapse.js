@@ -4,6 +4,13 @@ import { Auxiliary } from "./auxiliary";
 import { Topology } from "./topology";
 
 export class ExpandCollapse {
+
+  static removedElements = {
+    nodeIDListForInvisible: new Set(),
+    edgeIDListForInvisible: new Set(),
+    metaEdgeIDListForVisible: new Set()
+  };
+
   //Double Recursive Solution 
   static #collapseNode(node, visibleGM, invisibleGM) {
     //first process the visible graph
@@ -28,6 +35,10 @@ export class ExpandCollapse {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
       edgeInInvisible.isVisible = false;
     });
+
+    nodeIDListForInvisible.forEach(item => this.removedElements.nodeIDListForInvisible.add(item));
+    edgeIDListForInvisible.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+    metaEdgeIDListForVisible.forEach(item => this.removedElements.metaEdgeIDListForVisible.add(item));
   }
 
   static traverseDescendants(node, nodeToBeCollapsed, visibleGM, invisibleGM) {
@@ -42,21 +53,20 @@ export class ExpandCollapse {
           if (!(childEdge instanceof MetaEdge)) {
             edgeIDListForInvisible.push(childEdge.ID);
           }
-          else {
-            metaEdgeIDListForVisible.push(childEdge.ID);
-          }
           if (childEdge.isInterGraph) {
             let metaEdgeToBeCreated;
             if (childEdge.source == child) {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM)
               if (metaEdgeToBeCreated) {
-                Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
             else {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM)
               if (metaEdgeToBeCreated) {
-                Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
           }
@@ -166,6 +176,11 @@ export class ExpandCollapse {
   }
 
   static collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+    this.removedElements = {
+      nodeIDListForInvisible: new Set(),
+      edgeIDListForInvisible: new Set(),
+      metaEdgeIDListForVisible: new Set()
+    };
     if (isRecursive) {
       nodeIDList.forEach(nodeID => {
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
@@ -182,6 +197,8 @@ export class ExpandCollapse {
         }
       });
     }
+
+    return this.removedElements;
   }
 
   static collapseCompoundDescendantNodes(node, visibleGM, invisibleGM) {
@@ -199,7 +216,7 @@ export class ExpandCollapse {
     nodeIDList.forEach(nodeID => {
       let nodeInVisible = visibleGM.nodesMap.get(nodeID);
       let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
-      if (nodeInInvisible.child && nodeInInvisible.isCollapsed) {
+      if (nodeInInvisible.child && nodeInInvisible.isCollapsed && !nodeInInvisible.isFiltered && !nodeInInvisible.isHidden) {
         this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
       }
     });
@@ -212,7 +229,7 @@ export class ExpandCollapse {
         nodeIDList.push(rootNode.ID)
       }
     });
-    this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)
+    return this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)
   }
 
   static expandAllNodes(visibleGM, invisibleGM) {

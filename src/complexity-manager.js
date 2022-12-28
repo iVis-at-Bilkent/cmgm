@@ -144,7 +144,7 @@ export class ComplexityManager {
   collapseNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
   }
 
   expandNodes(nodeIDList, isRecursive) {
@@ -156,7 +156,7 @@ export class ComplexityManager {
   collapseAllNodes() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
+    return ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
   }
 
   expandAllNodes() {

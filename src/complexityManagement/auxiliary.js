@@ -76,6 +76,11 @@ export class Auxiliary {
     let node = invisibleGM.nodesMap.get(nodeID);
     //get zero distance Neighborhood
     let neighborhood = this.getZeroDistanceNeighbors(node, invisibleGM);
+
+    if (!neighborhood.nodes.includes(nodeID)) {
+      neighborhood.nodes.push(nodeID);
+    }
+
     let neighborElements = {
       nodes: [],
       edges: []
@@ -173,6 +178,9 @@ export class Auxiliary {
       let nodesReturned = this.getPredecessorNeighbors(node.owner.parent, invisibleGM);
       neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
       neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
+    }
+    else {
+      neighbors['nodes'].push(node.ID);
     }
 
     return neighbors;

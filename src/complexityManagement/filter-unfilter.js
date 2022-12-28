@@ -59,6 +59,7 @@ export class FilterUnfilter {
             if (nodeToFilterCompoundNode.child.nodes.length == 0) {
               nodeToFilterCompoundNode.child.siblingGraph.siblingGraph = null;
             }
+            visibleGM.removeGraph(nodeToFilterCompoundNode.child);
             nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
             visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
           }
@@ -66,6 +67,7 @@ export class FilterUnfilter {
         if (nodeToFilter.child && nodeToFilter.child.nodes.length == 0) {
           nodeToFilter.child.siblingGraph.siblingGraph = null;
         }
+        visibleGM.removeGraph(nodeToFilter.child);
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);

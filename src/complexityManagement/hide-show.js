@@ -81,6 +81,7 @@ export class HideShow {
             if (nodeToHideCompoundNode.child.nodes.length == 0) {
               nodeToHideCompoundNode.child.siblingGraph.siblingGraph = null;
             }
+            visibleGM.removeGraph(nodeToHideCompoundNode.child);
             nodeToHideCompoundNode.owner.removeNode(nodeToHideCompoundNode);
             visibleGM.nodesMap.delete(nodeToHideCompoundNode.ID);
           }
@@ -89,7 +90,8 @@ export class HideShow {
         if (nodeToHide.child && nodeToHide.child.nodes.length == 0) {
           nodeToHide.child.siblingGraph.siblingGraph = null;
         }
-        //remove node owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
+        //remove node from owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
+        visibleGM.removeGraph(nodeToHide.child);
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);

@@ -836,6 +836,7 @@ class FilterUnfilter {
             if (nodeToFilterCompoundNode.child.nodes.length == 0) {
               nodeToFilterCompoundNode.child.siblingGraph.siblingGraph = null;
             }
+            visibleGM.removeGraph(nodeToFilterCompoundNode.child);
             nodeToFilterCompoundNode.owner.removeNode(nodeToFilterCompoundNode);
             visibleGM.nodesMap.delete(nodeToFilterCompoundNode.ID);
           }
@@ -843,6 +844,7 @@ class FilterUnfilter {
         if (nodeToFilter.child && nodeToFilter.child.nodes.length == 0) {
           nodeToFilter.child.siblingGraph.siblingGraph = null;
         }
+        visibleGM.removeGraph(nodeToFilter.child);
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);
@@ -1047,6 +1049,11 @@ class Auxiliary {
     let node = invisibleGM.nodesMap.get(nodeID);
     //get zero distance Neighborhood
     let neighborhood = this.getZeroDistanceNeighbors(node, invisibleGM);
+
+    if (!neighborhood.nodes.includes(nodeID)) {
+      neighborhood.nodes.push(nodeID);
+    }
+
     let neighborElements = {
       nodes: [],
       edges: []
@@ -1144,6 +1151,9 @@ class Auxiliary {
       let nodesReturned = this.getPredecessorNeighbors(node.owner.parent, invisibleGM);
       neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
       neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
+    }
+    else {
+      neighbors['nodes'].push(node.ID);
     }
 
     return neighbors;
@@ -1262,6 +1272,8 @@ class Topology {
     if (sourceNode != undefined && targetNode != undefined) {
       visibleGM.edgesMap.set(metaEdge.ID, metaEdge);
     }
+
+    return metaEdge;
   }
 
   removeNestedEdges(nestedEdges, invisibleGM) {
@@ -1542,6 +1554,13 @@ class Topology {
 }
 
 class ExpandCollapse {
+
+  static removedElements = {
+    nodeIDListForInvisible: new Set(),
+    edgeIDListForInvisible: new Set(),
+    metaEdgeIDListForVisible: new Set()
+  };
+
   //Double Recursive Solution 
   static #collapseNode(node, visibleGM, invisibleGM) {
     //first process the visible graph
@@ -1566,6 +1585,10 @@ class ExpandCollapse {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
       edgeInInvisible.isVisible = false;
     });
+
+    nodeIDListForInvisible.forEach(item => this.removedElements.nodeIDListForInvisible.add(item));
+    edgeIDListForInvisible.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+    metaEdgeIDListForVisible.forEach(item => this.removedElements.metaEdgeIDListForVisible.add(item));
   }
 
   static traverseDescendants(node, nodeToBeCollapsed, visibleGM, invisibleGM) {
@@ -1580,21 +1603,20 @@ class ExpandCollapse {
           if (!(childEdge instanceof MetaEdge)) {
             edgeIDListForInvisible.push(childEdge.ID);
           }
-          else {
-            metaEdgeIDListForVisible.push(childEdge.ID);
-          }
           if (childEdge.isInterGraph) {
             let metaEdgeToBeCreated;
             if (childEdge.source == child) {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM);
               if (metaEdgeToBeCreated) {
-                Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
             else {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM);
               if (metaEdgeToBeCreated) {
-                Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
           }
@@ -1704,6 +1726,11 @@ class ExpandCollapse {
   }
 
   static collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+    this.removedElements = {
+      nodeIDListForInvisible: new Set(),
+      edgeIDListForInvisible: new Set(),
+      metaEdgeIDListForVisible: new Set()
+    };
     if (isRecursive) {
       nodeIDList.forEach(nodeID => {
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
@@ -1720,6 +1747,8 @@ class ExpandCollapse {
         }
       });
     }
+
+    return this.removedElements;
   }
 
   static collapseCompoundDescendantNodes(node, visibleGM, invisibleGM) {
@@ -1737,7 +1766,7 @@ class ExpandCollapse {
     nodeIDList.forEach(nodeID => {
       let nodeInVisible = visibleGM.nodesMap.get(nodeID);
       let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
-      if (nodeInInvisible.child && nodeInInvisible.isCollapsed) {
+      if (nodeInInvisible.child && nodeInInvisible.isCollapsed && !nodeInInvisible.isFiltered && !nodeInInvisible.isHidden) {
         this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
       }
     });
@@ -1750,7 +1779,7 @@ class ExpandCollapse {
         nodeIDList.push(rootNode.ID);
       }
     });
-    this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM);
+    return this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)
   }
 
   static expandAllNodes(visibleGM, invisibleGM) {
@@ -1886,6 +1915,7 @@ class HideShow {
             if (nodeToHideCompoundNode.child.nodes.length == 0) {
               nodeToHideCompoundNode.child.siblingGraph.siblingGraph = null;
             }
+            visibleGM.removeGraph(nodeToHideCompoundNode.child);
             nodeToHideCompoundNode.owner.removeNode(nodeToHideCompoundNode);
             visibleGM.nodesMap.delete(nodeToHideCompoundNode.ID);
           }
@@ -1894,7 +1924,8 @@ class HideShow {
         if (nodeToHide.child && nodeToHide.child.nodes.length == 0) {
           nodeToHide.child.siblingGraph.siblingGraph = null;
         }
-        //remove node owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
+        //remove node from owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
+        visibleGM.removeGraph(nodeToHide.child);
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);
@@ -2136,7 +2167,7 @@ class ComplexityManager {
   collapseNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
   }
 
   expandNodes(nodeIDList, isRecursive) {
@@ -2148,7 +2179,7 @@ class ComplexityManager {
   collapseAllNodes() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
+    return ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
   }
 
   expandAllNodes() {
