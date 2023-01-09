@@ -67,7 +67,9 @@ export class FilterUnfilter {
         if (nodeToFilter.child && nodeToFilter.child.nodes.length == 0) {
           nodeToFilter.child.siblingGraph.siblingGraph = null;
         }
+        if(nodeToFilter.child){
         visibleGM.removeGraph(nodeToFilter.child);
+        }
         nodeToFilter.owner.removeNode(nodeToFilter);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);
