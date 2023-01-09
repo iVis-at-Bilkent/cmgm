@@ -91,7 +91,9 @@ export class HideShow {
           nodeToHide.child.siblingGraph.siblingGraph = null;
         }
         //remove node from owner graph, delete it from visible graph and change hidden and visbile flags in invisible graph
-        visibleGM.removeGraph(nodeToHide.child);
+        if(nodeToHide.child){
+          visibleGM.removeGraph(nodeToHide.child);
+        }
         nodeToHide.owner.removeNode(nodeToHide);
         visibleGM.nodesMap.delete(nodeID);
         nodeIDListPostProcess.push(nodeID);

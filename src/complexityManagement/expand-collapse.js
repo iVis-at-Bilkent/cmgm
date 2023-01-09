@@ -11,7 +11,10 @@ export class ExpandCollapse {
     edgeIDListForInvisible: new Set(),
     metaEdgeIDListForVisible: new Set()
   };
-
+  static addedElements = {
+    nodeIDListForVisible: new Set(),
+    edgeIDListForVisible: new Set(),
+  };
   //Double Recursive Solution 
   static #collapseNode(node, visibleGM, invisibleGM) {
     //first process the visible graph
@@ -149,14 +152,19 @@ export class ExpandCollapse {
     let childrenNodes = nodeInInvisible.child.nodes;
     childrenNodes.forEach(child => {
       if ((child.isCollapsed && isRecursive && (!child.isFiltered) && (!child.isHidden)) || ((!child.isCollapsed) && (!child.isFiltered) && (!child.isHidden))) {
-        Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM);
+        //return list of edges brought back to visible graph
+        let tempList = Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM)
+        tempList.forEach(item => this.addedElements.edgeIDListForVisible.add(item))
+        this.addedElements.nodeIDListForVisible.add(child.ID)
         if (child.child) {
           let newNode = visibleGM.nodesMap.get(child.ID);
           this.#expandNode(newNode, isRecursive, visibleGM, invisibleGM);
         }
       }
       else if (child.isCollapsed && (!isRecursive) && (!child.isFiltered) && (!child.isHidden)) {
-        Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM);
+        this.addedElements.nodeIDListForVisible.add(child.ID)
+        let tempList = Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM)
+        tempList.forEach(item => this.addedElements.edgeIDListForVisible.add(item))
       }
     });
   }
@@ -187,13 +195,14 @@ export class ExpandCollapse {
           this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
           
           this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
-            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
-              edgeIDList.forEach(element => {
+            if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
+              edgeIDList.forEach(edgeID => {
                 visibleGM.edgesMap.delete(edgeID);
               });
             }
           });
-          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          let temp1 = [...this.removedElements.metaEdgeIDListForVisible]
+          let temp = [...temp1[temp1.length-1]]
           this.removedElements.metaEdgeIDListForVisible = new Set()
           temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
 
@@ -207,12 +216,13 @@ export class ExpandCollapse {
           
           this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
             if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
-              edgeIDList.forEach(element => {
+              edgeIDList.forEach(edgeID => {
                 visibleGM.edgesMap.delete(edgeID);
               });
             }
           });
-          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          let temp1 = [...this.removedElements.metaEdgeIDListForVisible]
+          let temp = [...temp1[temp1.length-1]]
           this.removedElements.metaEdgeIDListForVisible = new Set()
           temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
 
@@ -231,13 +241,14 @@ export class ExpandCollapse {
           this.#collapseNode(childNode, visibleGM, invisibleGM);
           
           this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList,index) => {
-            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
-              edgeIDList.forEach(element => {
+            if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
+              edgeIDList.forEach(edgeID => {
                 visibleGM.edgesMap.delete(edgeID);
               });
             }
           });
-          let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
+          let temp1 = [...this.removedElements.metaEdgeIDListForVisible]
+          let temp = [...temp1[temp1.length-1]]
           this.removedElements.metaEdgeIDListForVisible = new Set()
           temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
 
@@ -247,6 +258,10 @@ export class ExpandCollapse {
   }
 
   static expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+    this.addedElements = {
+      nodeIDListForVisible: new Set(),
+      edgeIDListForVisible: new Set(),
+    }
     nodeIDList.forEach(nodeID => {
       let nodeInVisible = visibleGM.nodesMap.get(nodeID);
       let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
@@ -254,6 +269,7 @@ export class ExpandCollapse {
         this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
       }
     });
+    return this.addedElements
   }
 
   static collapseAllNodes(visibleGM, invisibleGM) {
@@ -268,7 +284,7 @@ export class ExpandCollapse {
 
   static expandAllNodes(visibleGM, invisibleGM) {
     let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(invisibleGM.rootGraph.parent);
-    this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM);
+    return this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM);
   }
 
   static getTopCollapsedCompoundNodes(node) {

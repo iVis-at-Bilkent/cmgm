@@ -24,6 +24,9 @@ export class Auxiliary {
   }
 
   static moveNodeToVisible(node, visibleGM, invisibleGM) {
+
+    var edgeIDList = []
+
     node.isVisible = true;
     let nodeForVisible = new Node(node.ID);
     let newNode = node.owner.siblingGraph.addNode(nodeForVisible);
@@ -53,8 +56,10 @@ export class Auxiliary {
       });
       if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
         Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+        edgeIDList.push(incidentEdge.ID)
       }
     });
+    return edgeIDList
   }
 
   static moveEdgeToVisible(edge, visibleGM, invisibleGM) {
