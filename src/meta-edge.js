@@ -16,10 +16,10 @@ export class MetaEdge extends Edge {
    * @param {Node} source - source node of the meta edge 
    * @param {*} target - target node of the meta edge
    */
-  constructor(source, target) {
+  constructor(source, target, originalEdges) {
     let ID = Auxiliary.createUniqueID();
     super(ID, source, target);
-    this.#originalEdges = [];
+    this.#originalEdges = originalEdges;
   }
 
   // get methods

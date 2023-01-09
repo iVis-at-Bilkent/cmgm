@@ -1,3 +1,4 @@
+import { Edge } from "../edge";
 import { Graph } from "../graph";
 import { MetaEdge } from "../meta-edge";
 import { Auxiliary } from "./auxiliary";
@@ -55,14 +56,14 @@ export class ExpandCollapse {
             if (childEdge.source == child) {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM)
               if (metaEdgeToBeCreated) {
-                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, [childEdge.ID],visibleGM, invisibleGM);
                 metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
             else {
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM)
               if (metaEdgeToBeCreated) {
-                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, visibleGM, invisibleGM);
+                let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, [childEdge.ID], visibleGM, invisibleGM);
                 metaEdgeIDListForVisible.push(newMetaEdge.ID);
               }
             }
@@ -239,7 +240,7 @@ export class ExpandCollapse {
           let temp = [...this.removedElements.metaEdgeIDListForVisible[this.removedElements.metaEdgeIDListForVisible.length - 1]]
           this.removedElements.metaEdgeIDListForVisible = new Set()
           temp.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
-          
+
         }
       });
     }
@@ -299,14 +300,67 @@ export class ExpandCollapse {
   }
 
   static collapseEdges(edgeIDList, visibleGM, invisibleGM) {
+    let firstEdge = visibleGM.edgesMap.get(edgeIDList[0]);
+    let sourceNode = firstEdge.source;
+    let targetNode = firstEdge.target;
+    let newMetaEdge = Topology.addMetaEdge(sourceNode.ID, targetNode.ID, edgeIDList,visibleGM, invisibleGM);
+    let edgeIDListForInvisible = []
+    edgeIDList.forEach(edgeID => {
+      let edge = visibleGM.edgesMap.get(edgeID);
+      if( edge instanceof MetaEdge ){
+        edgeIDListForInvisible.push(edgeID);
+      }
+      Auxiliary.removeEdgeFromGraph(edge);
+    });
+    edgeIDListForInvisible.forEach(edgeForInvisibleID => {
+      let edgeInInvisible = invisibleGM.edgesMap(edgeForInvisibleID);
+      edgeIDListForInvisible.isVisible(false);
+    });
+    // may be return the new meta edge.
+    // require consultation
 
   }
 
-  static expandEdges(edgeIDList, visibleGM, invisibleGM) {
+  static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
+    edgeIDList.forEach(edgeID => {
+      let metaEdge = visibleGM.metaEdgeMap.get(edgeID);
+      let sourceNode = metaEdge.source;
+      let targetNode = metaEdge.target;
+      metaEdge.originalEdges.forEach(originalEdgeID => {
+        if(visibleGM.metaEdgesMap.has(originalEdgeID)){
+          let originalEdge = visibleGM.metaEdgesMap.get(originalEdgeID);
+          if(originalEdge.source.owner == originalEdge.target.owner){
+            originalEdge.source.addEdge(originalEdge,originalEdge.source,originalEdge.target);
+          }else{
+            visibleGM.addInterGraphEdge(originalEdge,)
+          }
+          visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
+        }else{
+          let edgeInInvisible = invisibleGM.edgesMap.get(originalEdgeID);
+          if (edgeInInvisible.isFiltered == false && edgeInInvisible.isHidden == false){
+            edgeInInvisible.isVisible = true;
+            let newEdge = new Edge(edgeInInvisible.ID,sourceNode,targetNode)
+            if (sourceNode.owner = targetNode.owner ){
+              sourceNode.owner.addEdge(newEdge,sourceNode,targetNode);
+            }else{
+              visibleGM.addInterGraphEdge(newEdge,sourceNode,targetNode);
+            }
+            visibleGM.edgesMap.set(newEdge.ID,newEdge);
+            // creating recursion to expand recursively
+            if(isRecursive){
+              this.expandEdges(originalEdgeID, isRecursive, visibleGM, invisibleGM);
+            }
+          }
 
+        }
+      });
+      visibleGM.metaEdgesMap.delete(edgeID);
+    });
+    // something to return.
   }
 
   static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
+    // node pairs?
 
   }
 

@@ -91,14 +91,15 @@ export class Topology {
     invisibleGM.edgesMap.set(edgeID, edgeInvisible);
   }
   
-  static addMetaEdge(sourceID, targetID, visibleGM, invisibleGM) {
+  static addMetaEdge(sourceID, targetID, orignalEnds, visibleGM, invisibleGM) {
     //get nodes from visible graph manager
     let sourceNode = visibleGM.nodesMap.get(sourceID);
     let targetNode = visibleGM.nodesMap.get(targetID);
     let metaEdge;
     //create edge for visible and invisible Graph Managers
     if (sourceNode != undefined && targetNode != undefined) {
-      metaEdge = new MetaEdge(sourceNode, targetNode);
+      metaEdge = new MetaEdge(sourceNode, targetNode, orignalEnds);
+      visibleGM.metaEdgesMap.set(metaEdge.ID, metaEdge);
     }
     //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
     if (sourceNode.owner === targetNode.owner) {
