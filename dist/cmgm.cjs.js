@@ -767,7 +767,7 @@ class MetaEdge extends Edge {
    * Constructor
    * @param {Stirng} ID - ID of the meta edge 
    * @param {Node} source - source node of the meta edge 
-   * @param {*} target - target node of the meta edge
+   * @param {Node} target - target node of the meta edge
    */
   constructor(source, target, originalEdges) {
     let ID = Auxiliary.createUniqueID();
@@ -1886,7 +1886,7 @@ class ExpandCollapse {
     let firstEdge = visibleGM.edgesMap.get(edgeIDList[0]);
     let sourceNode = firstEdge.source;
     let targetNode = firstEdge.target;
-    Topology.addMetaEdge(sourceNode.ID, targetNode.ID, edgeIDList,visibleGM, invisibleGM);
+    let newMetaEdge = Topology.addMetaEdge(sourceNode.ID, targetNode.ID, edgeIDList,visibleGM, invisibleGM);
     let edgeIDListForInvisible = [];
     edgeIDList.forEach(edgeID => {
       let edge = visibleGM.edgesMap.get(edgeID);
@@ -1894,14 +1894,14 @@ class ExpandCollapse {
         edgeIDListForInvisible.push(edgeID);
       }
       Auxiliary.removeEdgeFromGraph(edge);
+      visibleGM.edgesMap.delete(edge.ID);
     });
     edgeIDListForInvisible.forEach(edgeForInvisibleID => {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
-      edgeInInvisible.isVisible(false);
+      edgeInInvisible.isVisible = false;
     });
-    // may be return the new meta edge.
-    // require consultation
 
+    return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID}];
   }
 
   static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
@@ -2313,7 +2313,7 @@ class ComplexityManager {
   collapseEdges(edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
   }
 
   expandEdges(edgeIDList, isRecursive) {

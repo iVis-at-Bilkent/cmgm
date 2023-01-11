@@ -326,14 +326,14 @@ export class ExpandCollapse {
         edgeIDListForInvisible.push(edgeID);
       }
       Auxiliary.removeEdgeFromGraph(edge);
+      visibleGM.edgesMap.delete(edge.ID);
     });
     edgeIDListForInvisible.forEach(edgeForInvisibleID => {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
-      edgeInInvisible.isVisible(false);
+      edgeInInvisible.isVisible = false;
     });
-    // may be return the new meta edge.
-    // require consultation
 
+    return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID}];
   }
 
   static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {

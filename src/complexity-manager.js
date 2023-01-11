@@ -168,7 +168,7 @@ export class ComplexityManager {
   collapseEdges(edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
   }
 
   expandEdges(edgeIDList, isRecursive) {

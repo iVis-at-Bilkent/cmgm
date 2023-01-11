@@ -14,7 +14,7 @@ export class MetaEdge extends Edge {
    * Constructor
    * @param {Stirng} ID - ID of the meta edge 
    * @param {Node} source - source node of the meta edge 
-   * @param {*} target - target node of the meta edge
+   * @param {Node} target - target node of the meta edge
    */
   constructor(source, target, originalEdges) {
     let ID = Auxiliary.createUniqueID();
