@@ -1905,23 +1905,33 @@ class ExpandCollapse {
   }
 
   static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
+    let originalEdgeIDList = [];
     edgeIDList.forEach(edgeID => {
-      let metaEdge = visibleGM.metaEdgeMap.get(edgeID);
+      let metaEdge = visibleGM.metaEdgesMap.get(edgeID);
       let sourceNode = metaEdge.source;
       let targetNode = metaEdge.target;
       metaEdge.originalEdges.forEach(originalEdgeID => {
         if(visibleGM.metaEdgesMap.has(originalEdgeID)){
           let originalEdge = visibleGM.metaEdgesMap.get(originalEdgeID);
-          if(originalEdge.source.owner == originalEdge.target.owner){
-            originalEdge.source.addEdge(originalEdge,originalEdge.source,originalEdge.target);
+          if(isRecursive){
+            let returnedList = this.expandEdges([originalEdge.ID], isRecursive, visibleGM, invisibleGM);
+            originalEdgeIDList = [...originalEdgeIDList, ...returnedList];
           }else {
-            visibleGM.addInterGraphEdge(originalEdge,);
+
+            if(originalEdge.source.owner == originalEdge.target.owner){
+              originalEdge.source.owner.addEdge(originalEdge,originalEdge.source,originalEdge.target);
+            }else {
+              visibleGM.addInterGraphEdge(originalEdge,originalEdge.source,originalEdge.target);
+            }
+            visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
+            
           }
-          visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
         }else {
           let edgeInInvisible = invisibleGM.edgesMap.get(originalEdgeID);
           if (edgeInInvisible.isFiltered == false && edgeInInvisible.isHidden == false){
             edgeInInvisible.isVisible = true;
+            sourceNode = visibleGM.nodesMap.get(edgeInInvisible.source.ID);
+            targetNode = visibleGM.nodesMap.get(edgeInInvisible.target.ID);
             let newEdge = new Edge(edgeInInvisible.ID,sourceNode,targetNode);
             if (sourceNode.owner = targetNode.owner ){
               sourceNode.owner.addEdge(newEdge,sourceNode,targetNode);
@@ -1930,16 +1940,18 @@ class ExpandCollapse {
             }
             visibleGM.edgesMap.set(newEdge.ID,newEdge);
             // creating recursion to expand recursively
-            if(isRecursive){
-              this.expandEdges(originalEdgeID, isRecursive, visibleGM, invisibleGM);
-            }
+            
           }
 
         }
+        visibleGM.edgeToMetaEdgeMap.delete(originalEdgeID);
+        originalEdgeIDList.push(originalEdgeID);
       });
       visibleGM.metaEdgesMap.delete(edgeID);
+      visibleGM.edgesMap.delete(edgeID);
+
     });
-    // something to return.
+    return originalEdgeIDList
   }
 
   static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
