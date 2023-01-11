@@ -1924,8 +1924,10 @@ class ExpandCollapse {
               visibleGM.addInterGraphEdge(originalEdge,originalEdge.source,originalEdge.target);
             }
             visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
+            originalEdgeIDList.push(originalEdgeID);
             
           }
+
         }else {
           let edgeInInvisible = invisibleGM.edgesMap.get(originalEdgeID);
           if (edgeInInvisible.isFiltered == false && edgeInInvisible.isHidden == false){
@@ -1942,10 +1944,9 @@ class ExpandCollapse {
             // creating recursion to expand recursively
             
           }
-
+        originalEdgeIDList.push(originalEdgeID);
         }
         visibleGM.edgeToMetaEdgeMap.delete(originalEdgeID);
-        originalEdgeIDList.push(originalEdgeID);
       });
       visibleGM.metaEdgesMap.delete(edgeID);
       visibleGM.edgesMap.delete(edgeID);
@@ -2331,7 +2332,7 @@ class ComplexityManager {
   expandEdges(edgeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM);
+    return ExpandCollapse.expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM);
   }
 
   collapseEdgesBetweenNodes(nodeIDList) {
