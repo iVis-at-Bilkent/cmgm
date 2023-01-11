@@ -295,8 +295,7 @@ export class ExpandCollapse {
           descendantNodes.push(childNode.ID);
         }
         else if (childNode.child && (!childNode.isCollapsed)) {
-          descendantNodes.push(childNode.ID);
-          let nodesReturned = this.getDescendantNodes(childNode);
+          let nodesReturned = this.getTopCollapsedCompoundNodes(childNode);
           descendantNodes = [...descendantNodes, ...nodesReturned];
         }
       });
