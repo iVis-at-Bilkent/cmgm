@@ -323,14 +323,14 @@ export class ExpandCollapse {
     let edgeIDListForInvisible = []
     edgeIDList.forEach(edgeID => {
       let edge = visibleGM.edgesMap.get(edgeID);
-      if( edge instanceof MetaEdge ){
+      if( !(edge instanceof MetaEdge )){
         edgeIDListForInvisible.push(edgeID);
       }
       Auxiliary.removeEdgeFromGraph(edge);
     });
     edgeIDListForInvisible.forEach(edgeForInvisibleID => {
-      let edgeInInvisible = invisibleGM.edgesMap(edgeForInvisibleID);
-      edgeIDListForInvisible.isVisible(false);
+      let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
+      edgeInInvisible.isVisible(false);
     });
     // may be return the new meta edge.
     // require consultation

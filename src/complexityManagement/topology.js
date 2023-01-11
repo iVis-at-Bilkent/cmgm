@@ -100,6 +100,9 @@ export class Topology {
     if (sourceNode != undefined && targetNode != undefined) {
       metaEdge = new MetaEdge(sourceNode, targetNode, orignalEnds);
       visibleGM.metaEdgesMap.set(metaEdge.ID, metaEdge);
+      orignalEnds.forEach(edgeID => {
+        visibleGM.edgeToMetaEdgeMap.set(edgeID,metaEdge)
+      });
     }
     //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
     if (sourceNode.owner === targetNode.owner) {

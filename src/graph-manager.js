@@ -34,7 +34,8 @@ export class GraphManager {
   // NodeId to NodeObject map.
   nodesMap;
   edgesMap;
-  metaEdgesList;
+  metaEdgesMap;
+  edgeToMetaEdgeMap;
   /**
    * Constructor
    * @param {ComplexityManager} owner - owner complexity manager 
@@ -50,6 +51,7 @@ export class GraphManager {
     this.nodesMap = new Map();
     this.edgesMap = new Map();
     this.metaEdgesMap = new Map();
+    this.edgeToMetaEdgeMap = new Map();
     this.addRoot(); // Add root graph
   }
 
