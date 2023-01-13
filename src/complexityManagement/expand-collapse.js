@@ -389,7 +389,7 @@ export class ExpandCollapse {
   }
 
   static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
-    let originalEdgeIDList = []
+    let originalEdgeIDList = [[],[]]
     edgeIDList.forEach(edgeID => {
       let metaEdge = visibleGM.metaEdgesMap.get(edgeID);
       let sourceNode = metaEdge.source;
@@ -397,9 +397,10 @@ export class ExpandCollapse {
       metaEdge.originalEdges.forEach(originalEdgeID => {
         if(visibleGM.metaEdgesMap.has(originalEdgeID)){
           let originalEdge = visibleGM.metaEdgesMap.get(originalEdgeID);
-          if(isRecursive){
+          if(isRecursive && originalEdge.originalEdges.length!=1){
             let returnedList = this.expandEdges([originalEdge.ID], isRecursive, visibleGM, invisibleGM);
-            originalEdgeIDList = [...originalEdgeIDList, ...returnedList];
+            originalEdgeIDList[0] = [...originalEdgeIDList[0], ...returnedList[0]];
+            originalEdgeIDList[1] = [...originalEdgeIDList[1], ...returnedList[1]];
           }else{
 
             if(originalEdge.source.owner == originalEdge.target.owner){
@@ -408,7 +409,13 @@ export class ExpandCollapse {
               visibleGM.addInterGraphEdge(originalEdge,originalEdge.source,originalEdge.target)
             }
             visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
-            originalEdgeIDList.push(originalEdgeID);
+            originalEdgeIDList[1].push(
+              {
+                ID:originalEdge.ID,
+                sourceID: originalEdge.source.ID,
+                targetID:originalEdge.target.ID
+              }
+              );
             
           }
 
@@ -426,9 +433,8 @@ export class ExpandCollapse {
             }
             visibleGM.edgesMap.set(newEdge.ID,newEdge);
             // creating recursion to expand recursively
-            
+            originalEdgeIDList[0].push(originalEdgeID);
           }
-        originalEdgeIDList.push(originalEdgeID);
         }
         visibleGM.edgeToMetaEdgeMap.delete(originalEdgeID);
       });

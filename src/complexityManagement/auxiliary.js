@@ -22,7 +22,20 @@ export class Auxiliary {
       edgeToRemove.owner.removeEdge(edgeToRemove);
     }
   }
-
+  static recursiveMetaEdgeUpdate(edge,visibleGM){
+    let metaEdge = visibleGM.edgeToMetaEdgeMap.get(edge.ID);
+    visibleGM.edgeToMetaEdgeMap.delete(edge.ID);
+    if(visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
+      this.recursiveMetaEdgeUpdate(metaEdge,visibleGM);
+    }
+    let orignalEnds = [...visibleGM.metaEdgesMap.get(metaEdge.ID).originalEdges];
+    orignalEnds = orignalEnds.filter((i)=>i==edge.ID?false:true);
+    if(orignalEnds.length==0){
+      visibleGM.metaEdgesMap.delete(metaEdge.ID)
+    }else{
+      visibleGM.metaEdgesMap.get(metaEdge.ID).originalEdges = orignalEnds
+    }
+  }
   static moveNodeToVisible(node, visibleGM, invisibleGM) {
 
     var edgeIDList = []
@@ -41,22 +54,44 @@ export class Auxiliary {
     node.edges.forEach(incidentEdge => {
       //edge is part of a meta edge in visible graph
       let found = false;
-      visibleGM.edgesMap.forEach((visibleEdge) => {
-        if (visibleEdge instanceof MetaEdge) {
-          // this.updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-          let updatedOrignalEdges = FilterUnfilter.updateMetaEdge(visibleEdge.originalEdges, incidentEdge.ID);
-          // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-          if (updatedOrignalEdges != visibleEdge.originalEdges) {
-            visibleEdge.originalEdges = updatedOrignalEdges;
-            found = true;
+      if (visibleGM.edgeToMetaEdgeMap.has(incidentEdge.ID)) {
+        let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(incidentEdge.ID)
+        if(visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length == 1){
+          visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+          Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
+          if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
+            Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+            edgeIDList.push(incidentEdge.ID)
           }
-          //update handled but incident edge should be created in the visible graph.
-          //..........THINK........
+        }else if(visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length != 1){
+          //do nothing
         }
-      });
-      if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
-        Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
-        edgeIDList.push(incidentEdge.ID)
+        else{
+          if(visibleMetaEdge.originalEdges.length == 1){
+            if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
+              Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+              edgeIDList.push(incidentEdge.ID)
+              this.recursiveMetaEdgeUpdate(incidentEdge,visibleGM)
+            }
+          }else{
+          let sourceInVisible = visibleGM.nodesMap.get(visibleMetaEdge.source.ID);
+          let targetInVisible = visibleGM.nodesMap.get(visibleMetaEdge.target.ID);
+          if (sourceInVisible && targetInVisible) {
+            if (incidentEdge.source.owner == incidentEdge.target.owner) {
+            let newEdge = incidentEdge.source.owner.siblingGraph.addEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
+            }
+            else {
+            let newEdge = visibleGM.addInterGraphEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
+            }
+            visibleGM.edgesMap.set(visibleMetaEdge.ID, visibleMetaEdge);
+            edgeIDList.push(visibleMetaEdge.ID);
+          }
+        }}
+      }else{
+        if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
+          Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+          edgeIDList.push(incidentEdge.ID)
+        }
       }
     });
     return edgeIDList
