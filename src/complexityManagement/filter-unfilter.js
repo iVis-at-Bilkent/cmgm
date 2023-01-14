@@ -112,7 +112,7 @@ export class FilterUnfilter {
         canNodeToUnfilterBeVisible = false;
       }
       if (canNodeToUnfilterBeVisible) {
-        Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        let tempList = Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
         let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
         nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
         edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
@@ -164,7 +164,7 @@ export class FilterUnfilter {
       let nodeToUnfilterDescendants = nodeToUnfilter.child.nodes;
       nodeToUnfilterDescendants.forEach((descendantNode) => {
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
-          Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
+          let tempList = Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
           if (descendantNode.isCollapsed == false) {
             let childDescendents = this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
             for (var id in childDescendents) {
@@ -193,7 +193,7 @@ export class FilterUnfilter {
     });
     return descendants;
   }
-
+//check if any orignal edge is not filtered and not hidden other than target itself if yes keep meta edge else remove meta edge
   static updateMetaEdge(nestedEdges, targetEdgeID,visibleGM,invisibleGM) {
     let status = true;
     nestedEdges.forEach((nestedEdgeID, index) => {

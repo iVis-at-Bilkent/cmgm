@@ -175,7 +175,7 @@ export class GraphManager {
 
     if (sourceGraph == targetGraph) {
       newEdge.isInterGraph = false;
-      return sourceGraph.add(newEdge, sourceNode, targetNode);
+      return sourceGraph.addEdge(newEdge, sourceNode, targetNode);
     }
     else {
       newEdge.isInterGraph = true;
