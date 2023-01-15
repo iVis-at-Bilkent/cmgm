@@ -383,8 +383,10 @@ export class ExpandCollapse {
       if( !(edge instanceof MetaEdge )){
         edgeIDListForInvisible.push(edgeID);
       }
-      Auxiliary.removeEdgeFromGraph(edge);
-      visibleGM.edgesMap.delete(edge.ID);
+      if(visibleGM.edgesMap.has(edgeID)){
+        Auxiliary.removeEdgeFromGraph(edge);
+        visibleGM.edgesMap.delete(edge.ID);
+      }
     });
     edgeIDListForInvisible.forEach(edgeForInvisibleID => {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);

@@ -798,10 +798,12 @@ class FilterUnfilter {
       let edgeToFilter = visibleGM.edgesMap.get(edgeID);
       // if visible
       if (edgeToFilter) {
-        // delete from visible map
-          visibleGM.edgesMap.delete(edgeToFilter.ID);
-          // remove edge from graph of visibleGM
-          Auxiliary.removeEdgeFromGraph(edgeToFilter);
+          if(visibleGM.edgesMap.has(edgeID)){
+            // delete from visible map
+            visibleGM.edgesMap.delete(edgeToFilter.ID);
+            // remove edge from graph of visibleGM
+            Auxiliary.removeEdgeFromGraph(edgeToFilter);
+          }
           //report edge as processed
           edgeIDListPostProcess.push(edgeID);
       }else {
@@ -815,10 +817,12 @@ class FilterUnfilter {
             let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
             // if yes remove said meta edge from visible graph
             if (status) {
-              // delete meta edge from visibleGM's map
-              visibleGM.edgesMap.delete(visibleMetaEdge.ID);
-              // Remove meta edge from graph
-              Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
+              if(visibleGM.edgesMap.has(edgeID)){
+                // delete meta edge from visibleGM's map
+                visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+                // Remove meta edge from graph
+                Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
+              }
               // Report meta edge as processed
               edgeIDListPostProcess.push(visibleMetaEdge.ID);
             }
@@ -853,10 +857,12 @@ class FilterUnfilter {
             let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
             nodeToFilterEdgeInvisible.isVisible = false;
           }
-          // delete edge from visible side
-          visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
-          // delete edge from grpah
-          Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
+          if(visibleGM.edgesMap.has(edgeID)){
+            // delete edge from visible side
+            visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
+            // delete edge from grpah
+            Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
+          }
         });
         // loop through descendant simple nodes
         nodeToFilterDescendants.simpleNodes.forEach((nodeToFilterSimpleNode) => {
@@ -2172,8 +2178,10 @@ class ExpandCollapse {
       if( !(edge instanceof MetaEdge )){
         edgeIDListForInvisible.push(edgeID);
       }
-      Auxiliary.removeEdgeFromGraph(edge);
-      visibleGM.edgesMap.delete(edge.ID);
+      if(visibleGM.edgesMap.has(edgeID)){
+        Auxiliary.removeEdgeFromGraph(edge);
+        visibleGM.edgesMap.delete(edge.ID);
+      }
     });
     edgeIDListForInvisible.forEach(edgeForInvisibleID => {
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
