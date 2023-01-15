@@ -131,15 +131,19 @@ export class FilterUnfilter {
           
           let sourceInVisible = visibleGM.nodesMap.get(visibleMetaEdge.source.ID);
           let targetInVisible = visibleGM.nodesMap.get(visibleMetaEdge.target.ID);
-          let invisibleEdge = invisibleGM.edgesMap.get(edgeID);
-          if (invisibleEdge.source.owner == invisibleEdge.target.owner) {
-            let newEdge = invisibleEdge.source.owner.siblingGraph.addEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
+          if(sourceInVisible!=undefined && targetInVisible!=undefined){
+
+            let invisibleEdge = invisibleGM.edgesMap.get(edgeID);
+            if (invisibleEdge.source.owner == invisibleEdge.target.owner) {
+              let newEdge = invisibleEdge.source.owner.siblingGraph.addEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
+            }
+            else {
+              let newEdge = visibleGM.addInterGraphEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
+            }
+            visibleGM.edgesMap.set(visibleMetaEdge.ID, visibleMetaEdge);
+            edgeIDListPostProcess.push(visibleMetaEdge.ID);
+          
           }
-          else {
-            let newEdge = visibleGM.addInterGraphEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
-          }
-          visibleGM.edgesMap.set(visibleMetaEdge.ID, visibleMetaEdge);
-          edgeIDListPostProcess.push(visibleMetaEdge.ID);
         }
         }else{
           if (edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
