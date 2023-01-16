@@ -123,17 +123,19 @@ export class Topology {
     return metaEdge;
   }
 
-  removeNestedEdges(nestedEdges, invisibleGM) {
+  static removeNestedEdges(nestedEdges, visibleGM,invisibleGM) {
     //loop through the list of nested edges
     nestedEdges.forEach((edgeInInvisibleItem) => {
       // nested edge is an id and not a another meta edge
-      if (typeof edgeInInvisibleItem === "string") {
-        let edgeInInvisible = invisibleGM.edgesMap.get(edgeInInvisibleItem);
-        invisibleGM.edgesMap.delete(edgeInInvisible);
-        Auxiliary.removeEdgeFromGraph(edgeInInvisible);
-      } else {
+      if (visibleGM.metaEdgesMap.has(edgeInInvisibleItem)) {
         //recursively passing the nested edge
-        removeNestedEdges(edgeInInvisibleItem, invisibleGM);
+        let metaEdge =visibleGM.metaEdgesMap.get(edgeInInvisibleItem)
+        Topology.removeNestedEdges(metaEdge.originalEdges, visibleGM,invisibleGM);   
+        visibleGM.metaEdgesMap.delete(edgeInInvisibleItem)
+      } else {
+        let edgeInInvisible = invisibleGM.edgesMap.get(edgeInInvisibleItem);
+        invisibleGM.edgesMap.delete(edgeInInvisible.ID);
+        Auxiliary.removeEdgeFromGraph(edgeInInvisible);
       }
     });
   }
@@ -168,10 +170,11 @@ export class Topology {
       // meta edges
       if (edgeToRemove instanceof MetaEdge) {
         // Returns the array of edge IDs. Needs more investigation on structure.
-        actualEdgesInInvisble = edgeToRemove.originalEdges();
+        let actualEdgesInInvisble = edgeToRemove.originalEdges;
         visibleGM.edgesMap.delete(edgeToRemove.ID);
+        visibleGM.metaEdgesMap.delete(edgeToRemove.ID)
         Auxiliary.removeEdgeFromGraph(edgeToRemove);
-        removeNestedEdges(actualEdgesInInvisble, invisibleGM);
+        Topology.removeNestedEdges(actualEdgesInInvisble, visibleGM,invisibleGM);
       } else {
         // Go through each meta edge and update the orignal ends if updatedoriginalEdges does not match.
         let found = false;
@@ -179,11 +182,11 @@ export class Topology {
           if (visibleEdge instanceof MetaEdge) {
             // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
             updatedOrignalEdges = this.updateMetaEdge(
-              visibleEdge.originalEdges(),
+              visibleEdge.originalEdges,
               edgeToRemove
             );
             // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-            if (updatedOrignalEdges != visibleEdge.originalEdges()) {
+            if (updatedOrignalEdges != visibleEdge.originalEdges) {
               visibleEdge.originalEdges(updatedOrignalEdges);
               found = true;
             }
