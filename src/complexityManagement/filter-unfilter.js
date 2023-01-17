@@ -71,7 +71,7 @@ export class FilterUnfilter {
             let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
             nodeToFilterEdgeInvisible.isVisible = false;
           }
-          if(visibleGM.edgesMap.has(edgeID)){
+          if(visibleGM.edgesMap.has(nodeToFilterEdge.ID)){
             // delete edge from visible side
             visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
             // delete edge from grpah

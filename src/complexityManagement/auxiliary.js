@@ -118,8 +118,11 @@ export class Auxiliary {
         let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(incidentEdge.ID)
         // check if meta edge is visible and meta edge's orignal edges length is 1 (meaning meta edge is created by node collapse and is visible) 
         if(visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length == 1){
-          // delete meta edge from edges map
+          // delete meta edge from edges map and meta edge map
           visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+          visibleGM.metaEdgesMap.delete(visibleMetaEdge.ID);
+          // dlete incident edge from edgeToMetaEdgemap
+          visibleGM.edgeToMetaEdgeMap.delete(incidentEdge.ID);
           // report meta edge as processed (to be removed)
           // Structure  = {ID,sourceID,targetID}
           edgeIDList[1].push({ID:visibleMetaEdge.ID,sourceID:visibleMetaEdge.source.ID,targetID:visibleMetaEdge.target.ID});
@@ -163,6 +166,9 @@ export class Auxiliary {
               if(visibleMetaEdge.originalEdges.length == 1){
                 // if yes deleted top meta edge
                 visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+                visibleGM.metaEdgesMap.delete(visibleMetaEdge.ID);
+                // dlete incident edge from edgeToMetaEdgemap
+                visibleGM.edgeToMetaEdgeMap.delete(incidentEdge.ID);
                 // report top meta edge as processed (to be removed)
                 // Structure = {ID,sourceID,targetID}
                 edgeIDList[1].push({ID:visibleMetaEdge.ID,sourceID:visibleMetaEdge.source.ID,targetID:visibleMetaEdge.target.ID});
@@ -306,61 +312,99 @@ export class Auxiliary {
     return neighborhood;
   }
 
+  // function to get zero neighbourhood element of given node
   static getZeroDistanceNeighbors(node, invisibleGM) {
+    // initialize neighbourhood object
+    // Structure = {[nodes],[edges]} 
     let neighbors = {
       nodes: [],
       edges: []
     };
+    // function to get the descendant of given node
+    // Structure = {[nodes],[edges]} 
     let descendantNeighborhood = this.getDescendantNeighbors(node);
+    // function to get the parents of the given ndoe
+    // Structure = {[nodes],[edges]} 
     let predecessorsNeighborhood = this.getPredecessorNeighbors(node, invisibleGM);
+    // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
     neighbors['nodes'] = [...new Set([...descendantNeighborhood['nodes'], ...predecessorsNeighborhood['nodes']])];
     neighbors['edges'] = [...new Set([...descendantNeighborhood['edges'], ...predecessorsNeighborhood['edges']])];
 
+    // return neighbourhood object
+    // Structure = {[nodes],[edges]} 
     return neighbors;
   }
 
+  // function to get descendants of a given node
   static getDescendantNeighbors(node) {
+    // initialize neighbourhood object
+    // Structure = {[nodes],[edges]} 
     let neighbors = {
       nodes: [],
       edges: []
     };
+    // if given node is compound node
     if (node.child) {
+      // get nodes of children graph
       let children = node.child.nodes;
+      // loop through children nodes
       children.forEach(childNode => {
+        // report child node as processed 
         neighbors.nodes.push(childNode.ID);
+        // loop through incident edges of child node
         childNode.edges.forEach(element => {
+          // report incident edge as processed
           neighbors.edges.push(element.ID);
         });
+        // function to get the descendant of given node
+        // Structure = {[nodes],[edges]} 
         let nodesReturned = this.getDescendantNeighbors(childNode);
+        // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
         neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
         neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
       });
     }
-
+    // return neighbourhood object
+    // Structure = {[nodes],[edges]} 
     return neighbors;
   }
 
+  // function to get predecessors of a given node
   static getPredecessorNeighbors(node, invisibleGM) {
+    // initialize neighbourhood object
+    // Structure = {[nodes],[edges]} 
     let neighbors = {
       nodes: [],
       edges: []
     };
+    // check if owner graph of given node is not root graph
     if (node.owner != invisibleGM.rootGraph) {
+      // get nodes of the owner graph
       let predecessors = node.owner.nodes;
+      // loop through predecessor nodes
       predecessors.forEach(pNode => {
+        // report predecessor node as processed
         neighbors['nodes'].push(pNode.ID);
+        // loop through edges of the predecessor node
         pNode.edges.forEach(element => {
+          // report edge as processed
           neighbors.edges.push(element.ID);
         });
       });
+      // function to get the parents of the given ndoe
+      // Structure = {[nodes],[edges]} 
       let nodesReturned = this.getPredecessorNeighbors(node.owner.parent, invisibleGM);
+      // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
       neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
       neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
     }
     else {
+    // if owner graph of given node is the root graph
+    // report the given node as processed
       neighbors['nodes'].push(node.ID);
     }
-
+    // return neighbourhood object
+    // Structure = {[nodes],[edges]} 
     return neighbors;
   }
 }

@@ -598,6 +598,8 @@ export class ExpandCollapse {
           if(isRecursive && originalEdge.originalEdges.length!=1){
             // expand the orignal meta edge (returns edges brought back to visible graph  and meta edges to be removed)
             let returnedList = this.expandEdges([originalEdge.ID], isRecursive, visibleGM, invisibleGM);
+            // remove this meta edge from meta edge map
+            visibleGM.metaEdgesMap.delete(originalEdge.ID);
             // combine returned list to the cureent edge list
             originalEdgeIDList[0] = [...originalEdgeIDList[0], ...returnedList[0]];
             originalEdgeIDList[1] = [...originalEdgeIDList[1], ...returnedList[1]];
@@ -672,7 +674,7 @@ export class ExpandCollapse {
   }
 
   static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
-    // node pairs?
+    
 
   }
 
