@@ -672,17 +672,100 @@ export class ExpandCollapse {
     // Structure = [ [edges to be added] , [meta edges to be removed]]
     return originalEdgeIDList
   }
-
+  // function to collapse edge between selected nodes
   static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
-    
-
+    // initalize list to report meta edge
+    let EdgeIDList = [[],[]]
+    // loop through all the nodes in the list
+    for (let i = 0; i < nodeIDList.length; i++) {
+      // loop through each pair onece (a-b and b-a are same so ignore one)
+      for (let j = i+1; j < nodeIDList.length; j++) {
+        // get nodes
+        let nodeA = visibleGM.nodesMap.get(nodeIDList[i])
+        let nodeB = visibleGM.nodesMap.get(nodeIDList[j])
+        let edgeIDList = []
+        // loop throught edges of first Node A and check if source or target of that edge is Node B and is not already in the edge list , add it.
+        nodeA.edges.forEach(edge => {
+          if(edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID){
+            if(!edgeIDList.includes(edge.ID)){
+              edgeIDList.push(edge.ID);
+            }
+          }
+        });      
+        // call collapse edges function and pass edge list if edge list is not empty
+        // function returns array containing one object 
+        // Structure = [{ID,sourceID,targetID}]
+        if(edgeIDList.length>1){
+          let newMetaEge = this.collapseEdges(edgeIDList,visibleGM,invisibleGM);
+          // append it to the edge list to report.
+          EdgeIDList[0] = [...EdgeIDList[0], ...edgeIDList];
+          // append it to the meta edge list to report.
+          EdgeIDList[1] = [...EdgeIDList[1], ...newMetaEge];
+        }
+      }  
+    }
+    return EdgeIDList;
   }
 
   static expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
-
+    // initalize list to report meta edge
+    let EdgeIDList = [[],[],[]]
+    // loop through all the nodes in the list
+    for (let i = 0; i < nodeIDList.length; i++) {
+      // loop through each pair onece (a-b and b-a are same so ignore one)
+      for (let j = i+1; j < nodeIDList.length; j++) {
+        // get nodes
+        let nodeA = visibleGM.nodesMap.get(nodeIDList[i])
+        let nodeB = visibleGM.nodesMap.get(nodeIDList[j])
+        let edgeIDs = []
+        // loop throught edges of first Node A and check if source or target of that edge is Node B and is not already in the edge list , add it.
+        nodeA.edges.forEach(edge => {
+          if(edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID){
+            if(visibleGM.metaEdgesMap.has(edge.ID)){
+              if(!edgeIDs.includes(edge.ID) && edge.originalEdges.length!=1){
+                edgeIDs.push(edge.ID);
+              }
+            }
+          }
+        });      
+        // call collapse edges function and pass edge list if edge list is not empty
+        // function returns array containing one object 
+        // Structure = [{ID,sourceID,targetID}]
+        if(edgeIDs.length!=0){
+          let returnedEdgeList = this.expandEdges(edgeIDs, isRecursive, visibleGM, invisibleGM);
+          // append it to the edge list to report.
+          EdgeIDList[0] = [...EdgeIDList[0], ...returnedEdgeList[0]];
+          // append it to the meta edge list to report.
+          EdgeIDList[1] = [...EdgeIDList[1], ...returnedEdgeList[1]];
+          // append it to the meta edge list to remove.
+          EdgeIDList[2] = [...EdgeIDList[2], ...edgeIDs];
+        }
+      }  
+    }
+    return EdgeIDList;
   }
 
   static collapseAllEdges(visibleGM, invisibleGM) {
+        // create list for nodes to collapse
+    let nodeIDList = [];
+    // loop through nodes of root graph (rootNodes)
+    visibleGM.nodesMap.forEach((node,ID) => {
+        nodeIDList.push(ID)
+    });
+    // call the collapsedNodes function and pass list of nodes to be collapsed
+    return this.collapseEdgesBetweenNodes(nodeIDList,visibleGM, invisibleGM)
+
+  }
+  
+  static expandAllEdges(visibleGM, invisibleGM) {
+    // create list for nodes to collapse
+    let nodeIDList = [];
+    // loop through nodes of root graph (rootNodes)
+    visibleGM.nodesMap.forEach((node,ID) => {
+        nodeIDList.push(ID)
+    });
+    // call the collapsedNodes function and pass list of nodes to be collapsed
+    return this.expandEdgesBetweenNodes(nodeIDList, true,visibleGM, invisibleGM)
 
   }
 }

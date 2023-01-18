@@ -31,7 +31,7 @@ export class FilterUnfilter {
             let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
             // if yes remove said meta edge from visible graph
             if (status) {
-              if(visibleGM.edgesMap.has(edgeID)){
+              if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
                 // delete meta edge from visibleGM's map
                 visibleGM.edgesMap.delete(visibleMetaEdge.ID);
                 // Remove meta edge from graph

@@ -180,25 +180,25 @@ export class ComplexityManager {
   collapseEdgesBetweenNodes(nodeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM);
   }
 
   expandEdgesBetweenNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    return ExpandCollapse.expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
   }
 
   collapseAllEdges() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.collapseAllEdges(visibleGM, invisibleGM);
+    return ExpandCollapse.collapseAllEdges(visibleGM, invisibleGM);
   }
 
   expandAllEdges() {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    ExpandCollapse.expandAllEdges(visibleGM, invisibleGM);
+    return ExpandCollapse.expandAllEdges(visibleGM, invisibleGM);
   }
 
   getHiddenNeighbors(nodeID) {
