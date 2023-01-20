@@ -971,12 +971,25 @@ class FilterUnfilter {
       // if node is allowed to be unfiltered
       if (canNodeToUnfilterBeVisible) {
         // move node to visible along with all the associated edges that can be brought to visible side
-        Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        let tempList = Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
         // make all the descendants of the node to unfilter,visible. 
-        let descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        //loop though edges returned
+        tempList[0].forEach(item => {
+          // report edge as processed (to be added)
+          if(visibleGM.edgeToMetaEdgeMap.has(item)){
+            Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(item),visibleGM);
+            edgeIDListPostProcess.push(item);
+          }else {
+            edgeIDListPostProcess.push(item);
+          }
+        });
+        let descendants = [];
+        if(!nodeToUnfilter.isCollapsed){
+          descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
         // report all descendant edges, simple nodes and compound nodes as processed
         nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
         edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
+        }
         // report node its self as processed.
         nodeIDListPostProcess.push(nodeToUnfilter.ID);
       }
@@ -1056,7 +1069,11 @@ class FilterUnfilter {
         // check if decendant node is not filterted and not hidden 
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
           // move descendant node to visible and all its incident edges
-          Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
+          let tempList = Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
+          tempList[0].forEach(item => {
+            // report edge as processed (to be added)
+            descendants.edges.add(item);
+          });
           // check if desndant node is not collapsed
           if (descendantNode.isCollapsed == false) {
             // recall this function for decendant node to get all its descendants (recursion goes until there are not more descendants) 
