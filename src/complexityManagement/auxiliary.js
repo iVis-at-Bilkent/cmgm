@@ -54,7 +54,8 @@ export class Auxiliary {
       // if meta edge is visible
       if(visibleGM.edgesMap.has(metaEdge.ID)){
         // delete meta edge from visible edge map
-        visibleGM.edgesMap.delete(metaEdge.ID);
+        Auxiliary.removeEdgeFromGraph(metaEdge);
+        visibleGM.edgesMap.delete(metaEdge);
         // report meta edge as processed (to be removed)
         // structure {ID,sourceID,TargetID}
         deletedMetaEdges.push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});

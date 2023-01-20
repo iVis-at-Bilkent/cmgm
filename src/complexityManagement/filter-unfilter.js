@@ -196,7 +196,7 @@ export class FilterUnfilter {
           // report edge as processed (to be added)
           if(visibleGM.edgeToMetaEdgeMap.has(item)){
             let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(item),visibleGM);
-            edgeIDListPostProcess.push(item)
+            edgeIDListPostProcess.push(topMetaEdge.ID)
           }else{
             edgeIDListPostProcess.push(item)
           }
@@ -208,6 +208,20 @@ export class FilterUnfilter {
         nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
         edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
         }
+
+        let nodeToFilterDescendants =
+          visibleGM.getDescendantsInorder(nodeToUnfilter);
+          // loop through descendant edges
+        nodeToFilterDescendants.edges.forEach((nodeTounFilterEdge) => {
+          if (visibleGM.edgeToMetaEdgeMap.has(nodeTounFilterEdge.ID)) {
+            let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(nodeTounFilterEdge.ID),visibleGM);
+            if(topMetaEdge.source.ID == nodeToUnfilter.ID || topMetaEdge.target.ID == nodeToUnfilter.ID){
+              edgeIDList.push(nodeTounFilterEdge.ID)
+            }
+            
+          }
+        });
+
         // report node its self as processed.
         nodeIDListPostProcess.push(nodeToUnfilter.ID);
       }
