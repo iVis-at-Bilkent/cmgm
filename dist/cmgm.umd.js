@@ -1223,7 +1223,7 @@
         if(visibleGM.edgesMap.has(metaEdge.ID)){
           // delete meta edge from visible edge map
           Auxiliary.removeEdgeFromGraph(metaEdge);
-          visibleGM.edgesMap.delete(metaEdge);
+          visibleGM.edgesMap.delete(metaEdge.ID);
           // report meta edge as processed (to be removed)
           // structure {ID,sourceID,TargetID}
           deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
@@ -1244,7 +1244,7 @@
           if(visibleGM.edgesMap.has(metaEdge.ID)){
             // delete meta edge from visible edge map
             Auxiliary.removeEdgeFromGraph(metaEdge);
-            visibleGM.edgesMap.delete(metaEdge);
+            visibleGM.edgesMap.delete(metaEdge.ID);
             // report meta edge as processed (to be removed)
             // structure {ID,sourceID,TargetID}
             deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
@@ -3206,7 +3206,14 @@
     collapseEdges(edgeIDList) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+      if(edgeIDList.length==0){
+        return [[],[]]
+      }else {
+        if(!visibleGM.edgesMap.has(edgeIDList[0])){
+          edgeIDList.shift();
+        }
+        return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+      }
     }
 
     expandEdges(edgeIDList, isRecursive) {
