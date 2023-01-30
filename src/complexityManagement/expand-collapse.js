@@ -15,6 +15,7 @@ export class ExpandCollapse {
   static addedElements = {
     nodeIDListForVisible: new Set(),
     edgeIDListForVisible: new Set(),
+    metaEdgeIDListForVisible: new Set(),
     edgeIDListToRemove: new Set(),
   };
   //Double Recursive Solution 
@@ -48,7 +49,9 @@ export class ExpandCollapse {
     edgeIDListForInvisible.forEach(edgeIDInvisible => {
     // get corresponding edge from invisible graph and set is visible flag false
       let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
-      edgeInInvisible.isVisible = false;
+      if(edgeInInvisible){
+        edgeInInvisible.isVisible = false;
+      }
     });
     // loop through descendant nodes and report node to be removed
     nodeIDListForInvisible.forEach(item => this.removedElements.nodeIDListForInvisible.add(item));
@@ -91,6 +94,32 @@ export class ExpandCollapse {
             if (childEdge.source == child) {
               // check if meta edge needs to be created or not
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM)
+              if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
+                if(childEdge.originalEdges.length == 1){
+                  metaEdgeToBeCreated = false
+                  let originalEnds = [...childEdge.originalEdges]
+                  let target = childEdge.target
+                  // report child edge (to be removed) as processed
+                  edgeIDListForInvisible.push(childEdge.ID);
+                  if(visibleGM.edgesMap.has(childEdge.ID)){
+                      visibleGM.edgesMap.delete(childEdge.ID)
+                      // remove edge from visible graph and visible edges map
+                      Auxiliary.removeEdgeFromGraph(childEdge);
+                  }
+                  visibleGM.metaEdgesMap.delete(childEdge.ID)
+                  originalEnds.forEach((end) => {
+                    visibleGM.edgeToMetaEdgeMap.delete(end);
+                  })
+                  let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, target.ID, originalEnds,visibleGM, invisibleGM);
+                  // report meta edge as processed in the form of object with ID, sourceID, targetID
+                  metaEdgeIDListForVisible.push({
+                    ID:newMetaEdge.ID,
+                    sourceID:newMetaEdge.source.ID,
+                    targetID:newMetaEdge.target.ID
+                  });
+                  
+                }
+              }
               // if meta edge is to be created
               if (metaEdgeToBeCreated) {
                 // create new meta edge between node to collapse and the other target of child edge (because child is the source so we replce it with node to be collapsed)
@@ -107,6 +136,32 @@ export class ExpandCollapse {
              // if child  is the target of child edge.
               // check if meta edge needs to be created or not
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM)
+              if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
+                if(childEdge.originalEdges.length == 1){
+                  metaEdgeToBeCreated = false
+                  let originalEnds = [...childEdge.originalEdges]
+                  let source = childEdge.source
+                  // report child edge (to be removed) as processed
+                  edgeIDListForInvisible.push(childEdge.ID);
+                  if(visibleGM.edgesMap.has(childEdge.ID)){
+                      visibleGM.edgesMap.delete(childEdge.ID)
+                      // remove edge from visible graph and visible edges map
+                      Auxiliary.removeEdgeFromGraph(childEdge);
+                  }
+                  visibleGM.metaEdgesMap.delete(childEdge.ID)
+                  originalEnds.forEach((end) => {
+                    visibleGM.edgeToMetaEdgeMap.delete(end);
+                  })
+                let newMetaEdge = Topology.addMetaEdge(source.ID, nodeToBeCollapsed.ID, originalEnds, visibleGM, invisibleGM);
+                  // report meta edge as processed in the form of object with ID, sourceID, targetID
+                  metaEdgeIDListForVisible.push({
+                    ID:newMetaEdge.ID,
+                    sourceID:newMetaEdge.source.ID,
+                    targetID:newMetaEdge.target.ID
+                  });
+                  
+                }
+              }
               // if meta edge is to be created
               if (metaEdgeToBeCreated) {
                 // create new meta edge between node to collapse and the other source of child edge (because child is the target so we replce it with node to be collapsed)
@@ -136,7 +191,7 @@ export class ExpandCollapse {
   //function to check of two given nodes are part of the different graph structure or not.
   // if yes return true else false
   static incidentEdgeIsOutOfScope(interGraphEdgeTarget, nodeToBeCollapsed, visibleGM) {
-    // check if given traget node is in root graph then return true.
+    // check if given target node is in root graph then return true.
     if (interGraphEdgeTarget.owner == visibleGM.rootGraph) {
       return true;
     }//if parent of given node is node to be collapsed then false
@@ -228,10 +283,15 @@ export class ExpandCollapse {
           // report edge as processed (to be added)
           this.addedElements.edgeIDListForVisible.add(item)
         })
-        // loop through meta edges
+        // loop through meta edges to be removed
         tempList[1].forEach(item => {
           // report meta edge as parocessed (to be removed)
           this.addedElements.edgeIDListToRemove.add(item.ID)
+        })
+        // loop through meta edges to be added
+        tempList[2].forEach(item => {
+          // report meta edge as parocessed (to be removed)
+          this.addedElements.metaEdgeIDListForVisible.add(item)
         })
         //  report child node as processed (to be added)
         this.addedElements.nodeIDListForVisible.add(child.ID)
@@ -467,8 +527,9 @@ export class ExpandCollapse {
     this.addedElements = {
       nodeIDListForVisible: new Set(),
       edgeIDListForVisible: new Set(),
+      metaEdgeIDListForVisible: new Set(),
       edgeIDListToRemove: new Set(),
-    }
+    };
     // loop through nodes list
     nodeIDList.forEach(nodeID => {
       // get node from visible graph (visibleNode)
