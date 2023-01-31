@@ -354,6 +354,8 @@ export class FilterUnfilter {
   // Function to check how to update the meta edge (wether to keep it or not)
 //check if orignal edges, has an egde who is is not filtered and not hidden other than target itself 
 // if yes keep meta edge else remove meta edge
+// Return False to report meta edge to be kept,
+// Returns True to  report meta edge to be removed,
   static updateMetaEdge(nestedEdges, targetEdgeID,visibleGM,invisibleGM) {
     // initally assuming all orignal edges are either filtered or hidden and meta edge needs to be deleted
     let status = true;
