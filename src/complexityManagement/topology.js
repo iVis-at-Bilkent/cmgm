@@ -3,6 +3,7 @@ import { Graph } from "../graph";
 import { MetaEdge } from "../meta-edge";
 import { Node } from "../node";
 import { Auxiliary } from "./auxiliary";
+import { FilterUnfilter } from "./filter-unfilter";
 export class Topology {
   static addNode(nodeID, parentID, visibleGM, invisibleGM) {
     let graphToAdd;
@@ -139,70 +140,41 @@ export class Topology {
       }
     });
   }
-  static updateMetaEdge(nestedEdges, targetEdge) {
-    //list to store updated list of edges
-    let updatedMegaEdges = [];
-    //looping thorugh the nested edges array
-    nestedEdges.forEach((nestedEdge, index) => {
-      if (typeof nestedEdge === "string") {
-        //edge is an id
-        if (nestedEdge != targetEdge.ID) {
-          //if id == target skip it
-          updatedMegaEdges.push(nestedEdge);
-        }
-      } else {
-        //edge is an array i.e its enclosed meta edge
-        update = this.updateMetaEdge(nestedEdge, targetEdge);
-        updatedMegaEdges.push(update);
-      }
-    });
-    //return the updateMetaEdges if length is more than 1 else return the actual ID inside the array
-    return updatedMegaEdges.length == 1
-      ? updatedMegaEdges[0]
-      : updatedMegaEdges;
-  }
+
   static removeEdge(edgeID, visibleGM, invisibleGM) {
     //get edges
     let edgeToRemove = visibleGM.edgesMap.get(edgeID);
     let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
     if (edgeToRemove) {
       //if edge exisit in the visible graph
-      // meta edges
-      if (edgeToRemove instanceof MetaEdge) {
-        // Returns the array of edge IDs. Needs more investigation on structure.
-        let actualEdgesInInvisble = edgeToRemove.originalEdges;
+      if(visibleGM.metaEdgesMap.has(edgeID)){
+        edgeToRemove = Auxiliary.getTopMetaEdge(edgeToRemove,visibleGM);
+        // delete from visible map
         visibleGM.edgesMap.delete(edgeToRemove.ID);
         visibleGM.metaEdgesMap.delete(edgeToRemove.ID)
+        // remove edge from graph of visibleGM
         Auxiliary.removeEdgeFromGraph(edgeToRemove);
-        Topology.removeNestedEdges(actualEdgesInInvisble, visibleGM,invisibleGM);
-      } else {
-        // Go through each meta edge and update the orignal ends if updatedoriginalEdges does not match.
-        let found = false;
-        visibleGM.edgesMap.forEach((visibleEdge) => {
-          if (visibleEdge instanceof MetaEdge) {
-            // updateMetaEdge function returns updated version of originalEdges without key of edgeTo Remove
-            updatedOrignalEdges = this.updateMetaEdge(
-              visibleEdge.originalEdges,
-              edgeToRemove
-            );
-            // updatedOrignalEdges will be same as originalEdges if edge to remove is not part of the meta edge
-            if (updatedOrignalEdges != visibleEdge.originalEdges) {
-              visibleEdge.originalEdges(updatedOrignalEdges);
-              found = true;
-            }
-          }
-        });
-        //if edge is not part of any meta edge
-        if (!found) {
-          //remove edge from the visible graph
-          visibleGM.edgesMap.delete(edgeToRemove.ID);
-          Auxiliary.removeEdgeFromGraph(edgeToRemove);
+        if(visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)){
+          visibleGM.edgeToMetaEdgeMap.delete(edgeToRemove.ID)
         }
+        edgeToRemove.originalEdges.forEach((edgeID) => {
+          this.removeEdge(edgeID, visibleGM, invisibleGM)
+        })
+      }
+      else if(visibleGM.edgesMap.has(edgeID)){
+        // delete from visible map
+        visibleGM.edgesMap.delete(edgeToRemove.ID);
+        // remove edge from graph of visibleGM
+        Auxiliary.removeEdgeFromGraph(edgeToRemove);
+        
         //remove edge from the invisible graph
         invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
         Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
       }
     } else {
+      if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
+        let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(edgeToRemoveInvisible,visibleGM)
+      }
       //remove edge from the invisible graph
       invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
       Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);

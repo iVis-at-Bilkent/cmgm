@@ -47,34 +47,14 @@ export class Auxiliary {
       deletedMetaEdges[0] = [...deletedMetaEdges[0],...returnedList[0]]
       deletedMetaEdges[1] = [...deletedMetaEdges[1],...returnedList[1]]
     }
-    // get the orignal edges of our newMetaEdge as new list ( orignalEnds)
-    let orignalEnds = [...visibleGM.metaEdgesMap.get(metaEdge.ID)?.originalEdges];
-    // remove given edgeID from the orignalEnds list (filter out EdgeID)
-    orignalEnds = orignalEnds.filter((i)=>i==edge.ID?false:true);
-    // if filtered list is not empty
-    if(orignalEnds.length==0){
-      // delete meta edge from the metaEdgeMap
-      visibleGM.metaEdgesMap.delete(metaEdge.ID)
-      // if meta edge is visible
-      if(visibleGM.edgesMap.has(metaEdge.ID)){
-        // delete meta edge from visible edge map
-        Auxiliary.removeEdgeFromGraph(metaEdge);
-        visibleGM.edgesMap.delete(metaEdge.ID);
-        // report meta edge as processed (to be removed)
-        // structure {ID,sourceID,TargetID}
-        deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
-      }
-    }else if(orignalEnds.length==1){
-        visibleGM.edgeToMetaEdgeMap.delete(orignalEnds[0]);
-        if( visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
-          let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
-          pMetaEdge.originalEdges.push(orignalEnds[0]);
-          let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i)=>i==metaEdge.ID?false:true);
-          pMetaEdge.originalEdges = updatedPOrignalEnds;
-        }else{
-          deletedMetaEdges[1].push(orignalEnds[0])
-        }
-          // delete meta edge from the metaEdgeMap
+    if(visibleGM.metaEdgesMap.has(metaEdge.ID)){
+      // get the orignal edges of our newMetaEdge as new list ( orignalEnds)
+      let orignalEnds = [...visibleGM.metaEdgesMap.get(metaEdge.ID)?.originalEdges];
+      // remove given edgeID from the orignalEnds list (filter out EdgeID)
+      orignalEnds = orignalEnds.filter((i)=>i==edge.ID?false:true);
+      // if filtered list is not empty
+      if(orignalEnds.length==0){
+        // delete meta edge from the metaEdgeMap
         visibleGM.metaEdgesMap.delete(metaEdge.ID)
         // if meta edge is visible
         if(visibleGM.edgesMap.has(metaEdge.ID)){
@@ -85,11 +65,34 @@ export class Auxiliary {
           // structure {ID,sourceID,TargetID}
           deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
         }
-    }
-    else{
-      // if filtered list is not empty (there are other edges present in orignal edges list of meta edge)
-      // set orignal edges list of meta edge to the filtered version (so edgeID gets removed from the orignal ends)
-      visibleGM.metaEdgesMap.get(metaEdge.ID).originalEdges = orignalEnds
+      }else if(orignalEnds.length==1){
+          visibleGM.edgeToMetaEdgeMap.delete(orignalEnds[0]);
+          if( visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
+            let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
+            pMetaEdge.originalEdges.push(orignalEnds[0]);
+            let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i)=>i==metaEdge.ID?false:true);
+            pMetaEdge.originalEdges = updatedPOrignalEnds;
+          }else{
+            deletedMetaEdges[1].push(orignalEnds[0])
+          }
+            // delete meta edge from the metaEdgeMap
+          visibleGM.metaEdgesMap.delete(metaEdge.ID)
+          // if meta edge is visible
+          if(visibleGM.edgesMap.has(metaEdge.ID)){
+            // delete meta edge from visible edge map
+            Auxiliary.removeEdgeFromGraph(metaEdge);
+            visibleGM.edgesMap.delete(metaEdge.ID);
+            // report meta edge as processed (to be removed)
+            // structure {ID,sourceID,TargetID}
+            deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
+          }
+      }
+      else{
+        // if filtered list is not empty (there are other edges present in orignal edges list of meta edge)
+        // set orignal edges list of meta edge to the filtered version (so edgeID gets removed from the orignal ends)
+        visibleGM.metaEdgesMap.get(metaEdge.ID).originalEdges = orignalEnds
+      }
+
     }
     // reprot the list of meta edges to be deleted
     return deletedMetaEdges
