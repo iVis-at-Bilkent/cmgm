@@ -46,8 +46,10 @@ export class FilterUnfilter {
       // get corresponding edge in invisible side
       let edgeToFilterInvisible = invisibleGM.edgesMap.get(edgeID);
       // set filtered status to tru and visible status to false.
-      edgeToFilterInvisible.isFiltered = true;
-      edgeToFilterInvisible.isVisible = false;
+      if(edgeToFilterInvisible){
+        edgeToFilterInvisible.isFiltered = true;
+        edgeToFilterInvisible.isVisible = false;
+      }
     });
     // loop through list of nodes to filter
     nodeIDList.forEach((nodeID) => {

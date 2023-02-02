@@ -832,8 +832,10 @@ class FilterUnfilter {
       // get corresponding edge in invisible side
       let edgeToFilterInvisible = invisibleGM.edgesMap.get(edgeID);
       // set filtered status to tru and visible status to false.
-      edgeToFilterInvisible.isFiltered = true;
-      edgeToFilterInvisible.isVisible = false;
+      if(edgeToFilterInvisible){
+        edgeToFilterInvisible.isFiltered = true;
+        edgeToFilterInvisible.isVisible = false;
+      }
     });
     // loop through list of nodes to filter
     nodeIDList.forEach((nodeID) => {
@@ -2101,7 +2103,7 @@ class ExpandCollapse {
       }
     });
     // call the collapsedNodes function and pass list of nodes to be collapsed
-    return this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)
+    return {collapsedNodes: nodeIDList, ...this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)}
   }
 
   //expand all nodes function
@@ -2109,7 +2111,7 @@ class ExpandCollapse {
     //  get list of all the top level collapsed compound nodes  (takes invisible root node root node)
     let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(invisibleGM.rootGraph.parent);
     // all the expandNodes function will the list of all top level collapsed compound nodes
-    return this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM);
+    return {expandedNodes: topCollapsedCompoundNodes, ...this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM)}
   }
 
   // function to get thae list of all the top level collapsed compound nodes, (takes invisible root node root node) 
@@ -3397,6 +3399,29 @@ class ComplexityManager {
     let invisibleGM = this.#invisibleGraphManager;
     return Auxiliary.getTargetNeighborhoodElements(nodeID, invisibleGM);
   }
+
+  isCollapsible(nodeID){
+    let invisibleGM = this.#invisibleGraphManager;
+    let node = invisibleGM.nodesMap.get(nodeID);
+    if(node.child && node.isCollapsed == false){
+      return true;
+    }
+    else {
+      return false
+    }
+  }
+
+  isExpandable(nodeID){
+    let invisibleGM = this.#invisibleGraphManager;
+    let node = invisibleGM.nodesMap.get(nodeID);
+    if(node.child && node.isCollapsed){
+      return true;
+    }
+    else {
+      return false
+    }
+  }
+
 }
 
 exports.ComplexityManager = ComplexityManager;

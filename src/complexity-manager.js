@@ -212,4 +212,27 @@ export class ComplexityManager {
     let invisibleGM = this.#invisibleGraphManager;
     return Auxiliary.getTargetNeighborhoodElements(nodeID, invisibleGM);
   }
+
+  isCollapsible(nodeID){
+    let invisibleGM = this.#invisibleGraphManager;
+    let node = invisibleGM.nodesMap.get(nodeID);
+    if(node.child && node.isCollapsed == false){
+      return true;
+    }
+    else{
+      return false
+    }
+  }
+
+  isExpandable(nodeID){
+    let invisibleGM = this.#invisibleGraphManager;
+    let node = invisibleGM.nodesMap.get(nodeID);
+    if(node.child && node.isCollapsed){
+      return true;
+    }
+    else{
+      return false
+    }
+  }
+
 }

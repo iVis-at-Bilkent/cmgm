@@ -563,7 +563,7 @@ export class ExpandCollapse {
       }
     });
     // call the collapsedNodes function and pass list of nodes to be collapsed
-    return this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)
+    return {collapsedNodes: nodeIDList, ...this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)}
   }
 
   //expand all nodes function
@@ -571,7 +571,7 @@ export class ExpandCollapse {
     //  get list of all the top level collapsed compound nodes  (takes invisible root node root node)
     let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(invisibleGM.rootGraph.parent);
     // all the expandNodes function will the list of all top level collapsed compound nodes
-    return this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM);
+    return {expandedNodes: topCollapsedCompoundNodes, ...this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM)}
   }
 
   // function to get thae list of all the top level collapsed compound nodes, (takes invisible root node root node) 
