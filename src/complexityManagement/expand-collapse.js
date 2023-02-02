@@ -261,13 +261,17 @@ export class ExpandCollapse {
   static #expandNode(node, isRecursive, visibleGM, invisibleGM, nodeToBeExpanded = undefined) {
     // get node from invisible graph
     let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
-    // create new grah in visible  graph as child of given node
-    let newVisibleGraph = visibleGM.addGraph(new Graph(null, visibleGM), node);
-    // set sibling graph pointers, pointing each other
-    nodeInInvisible.child.siblingGraph = newVisibleGraph;
-    newVisibleGraph.siblingGraph = nodeInInvisible.child;
-    // set is collapsed flag fro invisible node false
-    nodeInInvisible.isCollapsed = false;
+
+    if(nodeInInvisible.isCollapsed){
+      // create new grah in visible  graph as child of given node
+      let newVisibleGraph = visibleGM.addGraph(new Graph(null, visibleGM), node);
+      // set sibling graph pointers, pointing each other
+      nodeInInvisible.child.siblingGraph = newVisibleGraph;
+      newVisibleGraph.siblingGraph = nodeInInvisible.child;
+      // set is collapsed flag fro invisible node false
+      nodeInInvisible.isCollapsed = false;
+    }
+
     // get childre from invisible node's child graph.
     let childrenNodesTemp = nodeInInvisible.child.nodes;
     let childrenNodesCompound = childrenNodesTemp.filter((child)=> child.child?true:false);
@@ -324,6 +328,25 @@ export class ExpandCollapse {
           // report meta edge as parocessed (to be removed)
           this.addedElements.edgeIDListToRemove.add(item.ID)
         })
+        // loop through meta edges to be added
+        tempList[2].forEach(item => {
+          // report meta edge as parocessed (to be removed)
+          this.addedElements.metaEdgeIDListForVisible.add(item)
+        })
+
+        let nodeDescendants =
+          visibleGM.getDescendantsInorder(child);
+          // loop through descendant edges
+          nodeDescendants.edges.forEach((nodeDescendantEdge) => {
+          if (visibleGM.edgeToMetaEdgeMap.has(nodeDescendantEdge.ID)) {
+            let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(nodeDescendantEdge.ID),visibleGM);
+            if(topMetaEdge.source.ID == child.ID || topMetaEdge.target.ID == child.ID){
+              visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
+              this.addedElements.edgeIDListForVisible.add(topMetaEdge.ID)
+            }
+            
+          }
+        });
       }
     });
   }
@@ -436,7 +459,7 @@ export class ExpandCollapse {
           // strucute [[{meta edge object},{meta edge object}],[{meta edge object},{meta edge object}]]
           this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList) => {
             // check if current meta edge list is not the last one
-            if(index!=this.removedElements.metaEdgeIDListForVisible.length-1){
+            if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
               // loop through current meta edge if list
               edgeIDList.forEach(edgeID => {
                 // delete meta edge from the visible graph
@@ -456,6 +479,7 @@ export class ExpandCollapse {
           temp.forEach(item => {
             //  get meta edge from visible graph's meta edge map
             let metaEdge = visibleGM.metaEdgesMap.get(item.ID);
+            
             // add meta edge to  set of meta edges to keep 
             this.removedElements.metaEdgeIDListForVisible.add({
               ID:metaEdge.ID,
