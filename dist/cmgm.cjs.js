@@ -1574,7 +1574,14 @@ class ExpandCollapse {
     // loop through descendant edges
     edgeIDListForInvisible.forEach(edgeID => {
       // delete each descendant edge from edges map of visible graph.
+      let tempEdge = visibleGM.edgesMap.get(edgeID);
       visibleGM.edgesMap.delete(edgeID);
+      try{
+      Auxiliary.removeEdgeFromGraph(tempEdge);
+      }catch(e){
+        console.log(e);
+      }
+
     });
     // get corresponding node from invisible graph and set is collapsed flag true
     let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
@@ -1621,6 +1628,7 @@ class ExpandCollapse {
           if (!(childEdge instanceof MetaEdge)) {
             // report child edge as edge (to be removed) as processed
             edgeIDListForInvisible.push(childEdge.ID);
+
           }else {
             // report child edge as meta edge (to be added) as processed
             visibleGM.edgesMap.delete(childEdge.ID);
@@ -1633,7 +1641,8 @@ class ExpandCollapse {
             // if child  is the source of child edge.
             if (childEdge.source == child) {
               // check if meta edge needs to be created or not
-              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.target.ID), nodeToBeCollapsed, visibleGM);
+              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.target.ID), invisibleGM.nodesMap.get(nodeToBeCollapsed.ID), invisibleGM);
+              
               if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
                 if(childEdge.originalEdges.length == 1){
                   metaEdgeToBeCreated = false;
@@ -1675,7 +1684,7 @@ class ExpandCollapse {
             else {
              // if child  is the target of child edge.
               // check if meta edge needs to be created or not
-              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.source.ID), nodeToBeCollapsed, visibleGM);
+              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.source.ID), invisibleGM.nodesMap.get(nodeToBeCollapsed.ID), invisibleGM);
               if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
                 if(childEdge.originalEdges.length == 1){
                   metaEdgeToBeCreated = false;
@@ -1714,6 +1723,7 @@ class ExpandCollapse {
                 });
               }
             }
+
           }
         });
         // pass child back to the function to go through its descendants and report all the elements
@@ -1730,9 +1740,9 @@ class ExpandCollapse {
 
   //function to check of two given nodes are part of the different graph structure or not.
   // if yes return true else false
-  static incidentEdgeIsOutOfScope(interGraphEdgeTarget, nodeToBeCollapsed, visibleGM) {
+  static incidentEdgeIsOutOfScope(interGraphEdgeTarget, nodeToBeCollapsed, invisibleGM) {
     // check if given target node is in root graph then return true.
-    if (interGraphEdgeTarget.owner == visibleGM.rootGraph) {
+    if (interGraphEdgeTarget.owner == invisibleGM.rootGraph) {
       return true;
     }//if parent of given node is node to be collapsed then false
     else if (interGraphEdgeTarget.owner.parent == nodeToBeCollapsed) {
@@ -1740,7 +1750,7 @@ class ExpandCollapse {
     }// last check parent and node to be collapsed are not in same structure, can be sibling or not  
     else {
       // recall the fuction and pass parent of target and node to be collapsed.
-      return this.incidentEdgeIsOutOfScope(interGraphEdgeTarget.owner.parent, nodeToBeCollapsed, visibleGM);
+      return this.incidentEdgeIsOutOfScope(interGraphEdgeTarget.owner.parent, nodeToBeCollapsed, invisibleGM);
     }
   }
 
@@ -3391,14 +3401,10 @@ class ComplexityManager {
   collapseEdges(edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
     let invisibleGM = this.#invisibleGraphManager;
-    if(edgeIDList.length==0){
-      return [[],[]]
-    }else {
-      if(!visibleGM.edgesMap.has(edgeIDList[0])){
-        edgeIDList.shift();
-      }
-      return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+    if(!visibleGM.edgesMap.has(edgeIDList[0])){
+      edgeIDList.shift();
     }
+    return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
   }
 
   expandEdges(edgeIDList, isRecursive) {
