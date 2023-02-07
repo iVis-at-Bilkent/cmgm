@@ -1629,7 +1629,7 @@ class ExpandCollapse {
             // if child  is the source of child edge.
             if (childEdge.source == child) {
               // check if meta edge needs to be created or not
-              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.target, nodeToBeCollapsed, visibleGM);
+              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.target.ID), nodeToBeCollapsed, visibleGM);
               if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
                 if(childEdge.originalEdges.length == 1){
                   metaEdgeToBeCreated = false;
@@ -1671,7 +1671,7 @@ class ExpandCollapse {
             else {
              // if child  is the target of child edge.
               // check if meta edge needs to be created or not
-              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(childEdge.source, nodeToBeCollapsed, visibleGM);
+              metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.source.ID), nodeToBeCollapsed, visibleGM);
               if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
                 if(childEdge.originalEdges.length == 1){
                   metaEdgeToBeCreated = false;
