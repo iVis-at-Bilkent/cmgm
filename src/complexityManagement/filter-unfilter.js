@@ -371,7 +371,7 @@ export class FilterUnfilter {
         let update = this.updateMetaEdge(nestedEdge.originalEdges, targetEdgeID,visibleGM,invisibleGM);
         // combine the result from above with current one.
         // if one of them is false at any point it will become false
-        status = (update==status)
+        status = (update==false?update:status)
 
       } else {
         // if edge ID is not a meta edge
