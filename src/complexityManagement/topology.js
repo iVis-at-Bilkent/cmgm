@@ -141,6 +141,50 @@ export class Topology {
     });
   }
 
+  static recursivelyRemoveDescendantEdges(originalEdges,visibleGM,invisibleGM){
+
+    originalEdges.forEach((edgeID) => {
+      let edgeToRemove = visibleGM.edgesMap.get(edgeID);
+      let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
+      if(visibleGM.metaEdgesMap.has(edgeID)){
+        edgeToRemove = visibleGM.metaEdgesMap.get(edgeID)
+        // delete from visible map
+        visibleGM.edgesMap.delete(edgeToRemove.ID);
+        visibleGM.metaEdgesMap.delete(edgeToRemove.ID)
+        // remove edge from graph of visibleGM
+        try{
+          Auxiliary.removeEdgeFromGraph(edgeToRemove);
+        }catch(e){console.log(e)}
+        if(visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)){
+          visibleGM.edgeToMetaEdgeMap.delete(edgeToRemove.ID)
+        }
+        this.recursivelyRemoveDescendantEdges(edgeToRemove.originalEdges,visibleGM,invisibleGM);
+      }
+      else if(visibleGM.edgesMap.has(edgeID)){
+        // delete from visible map
+        visibleGM.edgesMap.delete(edgeToRemove.ID);
+        // remove edge from graph of visibleGM
+        try{
+          Auxiliary.removeEdgeFromGraph(edgeToRemove);
+        }catch(e){console.log(e)}
+        //remove edge from the invisible graph
+        invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
+        try{
+          Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
+        }catch(e){console.log(e)}
+      }else{
+        if(visibleGM.edgeToMetaEdgeMap.has(edgeID)){
+          visibleGM.edgeToMetaEdgeMap.delete(edgeID)
+        }
+        //remove edge from the invisible graph
+        invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
+        try{
+          Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
+        }catch(e){console.log(e)}
+      }
+    })
+  }
+
   static removeEdge(edgeID, visibleGM, invisibleGM) {
     //get edges
     let edgeToRemove = visibleGM.edgesMap.get(edgeID);
@@ -157,9 +201,7 @@ export class Topology {
         if(visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)){
           visibleGM.edgeToMetaEdgeMap.delete(edgeToRemove.ID)
         }
-        edgeToRemove.originalEdges.forEach((edgeID) => {
-          this.removeEdge(edgeID, visibleGM, invisibleGM)
-        })
+        this.recursivelyRemoveDescendantEdges(edgeToRemove.originalEdges,visibleGM,invisibleGM);
       }
       else if(visibleGM.edgesMap.has(edgeID)){
         // delete from visible map

@@ -378,7 +378,7 @@ export class FilterUnfilter {
         // get the simple edge from invisible graph (as this edge is part of a meta edge it will not be on visible graph)
         let nestedEdge = invisibleGM.edgesMap.get(nestedEdgeID);
         //  check if invisible edge is not filtered and not hidded and is not the given target.
-        if (nestedEdge.isFiltered == false && nestedEdge.isHidden == false && nestedEdgeID!=targetEdgeID) {
+        if (nestedEdge?.isFiltered == false && nestedEdge?.isHidden == false && nestedEdgeID!=targetEdgeID) {
           // report meta edge to be kept. (there is an edge which fulfil requirement so we keep initial meta edge)
           status = false;
         }

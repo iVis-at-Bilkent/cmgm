@@ -83,7 +83,8 @@ export class ExpandCollapse {
         // report child node as processed
         nodeIDListForInvisible.push(child.ID)
         // loop thorugh incident edges of child Nodes
-        child.edges.forEach(childEdge => {
+        let edgesToBeProcessed = [...child.edges]
+        edgesToBeProcessed.forEach(childEdge => {
           //  check if child edge is not a meta edge
           if (!(childEdge instanceof MetaEdge)) {
             // report child edge as edge (to be removed) as processed
@@ -131,6 +132,9 @@ export class ExpandCollapse {
               }
               // if meta edge is to be created
               if (metaEdgeToBeCreated) {
+                if(visibleGM.metaEdgesMap.get(childEdge.ID)){
+                  Auxiliary.removeEdgeFromGraph(childEdge);
+                }
                 // create new meta edge between node to collapse and the other target of child edge (because child is the source so we replce it with node to be collapsed)
                 let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, [childEdge.ID],visibleGM, invisibleGM);
                 // report meta edge as processed in the form of object with ID, sourceID, targetID
@@ -173,6 +177,9 @@ export class ExpandCollapse {
               }
               // if meta edge is to be created
               if (metaEdgeToBeCreated) {
+                if(visibleGM.metaEdgesMap.get(childEdge.ID)){
+                  Auxiliary.removeEdgeFromGraph(childEdge);
+                }
                 // create new meta edge between node to collapse and the other source of child edge (because child is the target so we replce it with node to be collapsed)
                 let newMetaEdge = Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, [childEdge.ID], visibleGM, invisibleGM);
                 // report meta edge as processed in the form of object with ID, sourceID, targetID
@@ -287,7 +294,7 @@ export class ExpandCollapse {
     let childrenNodesCompound = childrenNodesTemp.filter((child)=> child.child?true:false);
     let childrenNodesSimple = childrenNodesTemp.filter((child)=> child.child?false:true);
     let childrenNodes = [...childrenNodesCompound,...childrenNodesSimple];
-    
+    let markCollapsedCompoundChildren =[];
     // loop through children
     childrenNodes.forEach(child => {
       // if child is collapsed and not filtered and not hidden and recussion is true (meaning collapsed child with recusion)
@@ -344,21 +351,27 @@ export class ExpandCollapse {
           this.addedElements.metaEdgeIDListForVisible.add(item)
         })
 
-        let nodeDescendants =
-          visibleGM.getDescendantsInorder(child);
+        markCollapsedCompoundChildren.push(child)
+        
+      }
+    });
+
+    markCollapsedCompoundChildren.forEach((makredChild) => {
+      let nodeDescendants =
+          visibleGM.getDescendantsInorder(makredChild);
           // loop through descendant edges
           nodeDescendants.edges.forEach((nodeDescendantEdge) => {
           if (visibleGM.edgeToMetaEdgeMap.has(nodeDescendantEdge.ID)) {
             let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(nodeDescendantEdge.ID),visibleGM);
-            if(topMetaEdge.source.ID == child.ID || topMetaEdge.target.ID == child.ID){
+            if(topMetaEdge.source.ID == makredChild.ID || topMetaEdge.target.ID == makredChild.ID){
               visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
-              this.addedElements.edgeIDListForVisible.add(topMetaEdge.ID)
+              this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID})
             }
             
           }
         });
-      }
-    });
+    })
+
   }
 
   // function to get lis of all the nodes and their descendants  and their descendants 
