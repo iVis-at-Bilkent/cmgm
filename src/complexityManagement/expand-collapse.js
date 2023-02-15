@@ -308,10 +308,20 @@ export class ExpandCollapse {
           // report edge as processed (to be added)
           this.addedElements.edgeIDListForVisible.add(item)
         })
+        let tempArr = [...this.addedElements.edgeIDListForVisible].filter(edgeID => visibleGM.edgesMap.has(edgeID))
+        this.addedElements.edgeIDListForVisible = new Set(tempArr);
         // loop through meta edges to be removed
         tempList[1].forEach(item => {
           // report meta edge as parocessed (to be removed)
           this.addedElements.edgeIDListToRemove.add(item.ID)
+          let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(mEdge => {
+            if(mEdge.ID == item.ID){
+              return false
+            }else{
+              return true
+            }
+          })
+          this.addedElements.metaEdgeIDListForVisible = new Set(tempArr);
         })
         // loop through meta edges to be added
         tempList[2].forEach(item => {
@@ -363,11 +373,25 @@ export class ExpandCollapse {
           nodeDescendants.edges.forEach((nodeDescendantEdge) => {
           if (visibleGM.edgeToMetaEdgeMap.has(nodeDescendantEdge.ID)) {
             let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(nodeDescendantEdge.ID),visibleGM);
-            if(topMetaEdge.source.ID == makredChild.ID || topMetaEdge.target.ID == makredChild.ID){
-              visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
-              this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID})
+            let sourceNode = visibleGM.nodesMap.get(topMetaEdge.source.ID);
+            let targetNode = visibleGM.nodesMap.get(topMetaEdge.target.ID);
+            if(!ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(topMetaEdge.source.ID),invisibleGM.nodesMap.get(node.ID),invisibleGM) && !ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(topMetaEdge.target.ID),invisibleGM.nodesMap.get(node.ID),invisibleGM)){
+              if(topMetaEdge.source.ID == makredChild.ID || topMetaEdge.target.ID == makredChild.ID){
+                visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
+                //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
+                if (sourceNode.owner === targetNode.owner) {
+                  if (sourceNode != undefined && targetNode != undefined) {
+                    sourceNode.owner.addEdge(topMetaEdge, sourceNode, targetNode);
+                  }
+                } else {
+                  //add inter graph edges
+                  if (sourceNode != undefined && targetNode != undefined) {
+                    visibleGM.addInterGraphEdge(topMetaEdge, sourceNode, targetNode);
+                  }
+                }
+                this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID})
+              }
             }
-            
           }
         });
     })
