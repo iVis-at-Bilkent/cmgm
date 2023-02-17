@@ -450,6 +450,12 @@ class Graph {
       throw "Both owners must be this graph!";
     }
 
+    this.#edges.forEach(e => {
+      if(e.ID == newEdge.ID){
+        throw "Edge Already Exist"
+      }
+    });
+
     if (sourceNode.owner != targetNode.owner)
     {
       return null;
@@ -1888,14 +1894,19 @@ class ExpandCollapse {
         //loop though edges returned
         tempList[0].forEach(item => {
           // report edge as processed (to be added)
-          this.addedElements.edgeIDListForVisible.add(item);
+          try{
+            this.addedElements.edgeIDListForVisible.add(item);
+          }catch(e){console.log(e);}
         });
         let tempArr = [...this.addedElements.edgeIDListForVisible].filter(edgeID => visibleGM.edgesMap.has(edgeID));
         this.addedElements.edgeIDListForVisible = new Set(tempArr);
         // loop through meta edges to be removed
         tempList[1].forEach(item => {
           // report meta edge as parocessed (to be removed)
+          try{
           this.addedElements.edgeIDListToRemove.add(item.ID);
+          }catch(e){console.log(e);}
+
           let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(mEdge => {
             if(mEdge.ID == item.ID){
               return false
@@ -1973,12 +1984,18 @@ class ExpandCollapse {
                 //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
                 if (sourceNode.owner === targetNode.owner) {
                   if (sourceNode != undefined && targetNode != undefined) {
-                    sourceNode.owner.addEdge(topMetaEdge, sourceNode, targetNode);
+                    try{
+                      sourceNode.owner.addEdge(topMetaEdge, sourceNode, targetNode);
+                    }catch(e){console.log(e);}
+
                   }
                 } else {
                   //add inter graph edges
                   if (sourceNode != undefined && targetNode != undefined) {
-                    visibleGM.addInterGraphEdge(topMetaEdge, sourceNode, targetNode);
+                    try{
+                      visibleGM.addInterGraphEdge(topMetaEdge, sourceNode, targetNode);
+                    }catch(e){console.log(e);}
+
                   }
                 }
                 this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID});
@@ -2333,6 +2350,8 @@ class ExpandCollapse {
         if(visibleGM.metaEdgesMap.has(originalEdgeID)){
           //  get meta edge of the orignal edge
           let originalEdge = visibleGM.metaEdgesMap.get(originalEdgeID);
+          let sourceNode = visibleGM.nodesMap.get(originalEdge.source.ID);
+          let targetNode = visibleGM.nodesMap.get(originalEdge.target.ID);
           //  check if recursive and orignal meta edge is not created by node collapse
           if(isRecursive && originalEdge.originalEdges.length!=1){
             // expand the orignal meta edge (returns edges brought back to visible graph  and meta edges to be removed)
@@ -2346,13 +2365,13 @@ class ExpandCollapse {
           }else {
             //  check if its not recursive or orignal meta edge is created by node collapse
             // if orignalEdge source and target have same owner (not inter graph edge)
-            if(originalEdge.source.owner == originalEdge.target.owner){
+            if(sourceNode.owner == targetNode.owner){
               // add orignal edge to the graph
-              originalEdge.source.owner.addEdge(originalEdge,originalEdge.source,originalEdge.target);
+              sourceNode.owner.addEdge(originalEdge,sourceNode,targetNode);
             }else {
               // if orignalEdge source and target does not have same owner (is inter graph edge)
               // add orignal edge as inter graph edge
-              visibleGM.addInterGraphEdge(originalEdge,originalEdge.source,originalEdge.target);
+              visibleGM.addInterGraphEdge(originalEdge,sourceNode,targetNode);
             }
             // add orignal edge to visible edges map
             visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
@@ -2360,8 +2379,8 @@ class ExpandCollapse {
             originalEdgeIDList[1].push(
               {
                 ID:originalEdge.ID,
-                sourceID: originalEdge.source.ID,
-                targetID:originalEdge.target.ID
+                sourceID: sourceNode.ID,
+                targetID: targetNode.ID
               }
               );
             
@@ -2573,6 +2592,7 @@ class Auxiliary {
           if( visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
             let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
             pMetaEdge.originalEdges.push(orignalEnds[0]);
+            visibleGM.edgeToMetaEdgeMap.set(orignalEnds[0],pMetaEdge);
             let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i)=>i==metaEdge.ID?false:true);
             pMetaEdge.originalEdges = updatedPOrignalEnds;
           }else {

@@ -117,6 +117,12 @@ export class Graph {
       throw "Both owners must be this graph!";
     }
 
+    this.#edges.forEach(e => {
+      if(e.ID == newEdge.ID){
+        throw "Edge Already Exist"
+      }
+    })
+
     if (sourceNode.owner != targetNode.owner)
     {
       return null;

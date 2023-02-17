@@ -70,6 +70,7 @@ export class Auxiliary {
           if( visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
             let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
             pMetaEdge.originalEdges.push(orignalEnds[0]);
+            visibleGM.edgeToMetaEdgeMap.set(orignalEnds[0],pMetaEdge);
             let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i)=>i==metaEdge.ID?false:true);
             pMetaEdge.originalEdges = updatedPOrignalEnds;
           }else{
