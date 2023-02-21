@@ -125,7 +125,8 @@ export class ExpandCollapse {
                   metaEdgeIDListForVisible.push({
                     ID:newMetaEdge.ID,
                     sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID
+                    targetID:newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length
                   });
                   
                 }
@@ -141,7 +142,8 @@ export class ExpandCollapse {
                 metaEdgeIDListForVisible.push({
                   ID:newMetaEdge.ID,
                   sourceID:newMetaEdge.source.ID,
-                  targetID:newMetaEdge.target.ID
+                  targetID:newMetaEdge.target.ID,
+                  size: newMetaEdge.originalEdges.length
                 });
               }
             }
@@ -170,7 +172,8 @@ export class ExpandCollapse {
                   metaEdgeIDListForVisible.push({
                     ID:newMetaEdge.ID,
                     sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID
+                    targetID:newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length
                   });
                   
                 }
@@ -186,7 +189,8 @@ export class ExpandCollapse {
                 metaEdgeIDListForVisible.push({
                   ID:newMetaEdge.ID,
                   sourceID:newMetaEdge.source.ID,
-                  targetID:newMetaEdge.target.ID
+                  targetID:newMetaEdge.target.ID,
+                  size: newMetaEdge.originalEdges.length
                 });
               }
             }
@@ -410,7 +414,8 @@ export class ExpandCollapse {
 
                   }
                 }
-                this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID})
+                this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID,
+                  size: topMetaEdge.originalEdges.length})
               }
             }
           }
@@ -492,7 +497,8 @@ export class ExpandCollapse {
             metaEdgeIDListToKeep.add({
               ID:metaEdge.ID,
               sourceID:metaEdge.source.ID,
-              targetID:metaEdge.target.ID
+              targetID:metaEdge.target.ID,
+              size: metaEdge.originalEdges.length
             })
           });
           
@@ -552,7 +558,8 @@ export class ExpandCollapse {
             this.removedElements.metaEdgeIDListForVisible.add({
               ID:metaEdge.ID,
               sourceID:metaEdge.source.ID,
-              targetID:metaEdge.target.ID
+              targetID:metaEdge.target.ID,
+              size: metaEdge.originalEdges.length
             })
           });
         }
@@ -607,7 +614,8 @@ export class ExpandCollapse {
             tempArr.push({
               ID:metaEdge.ID,
               sourceID:metaEdge.source.ID,
-              targetID:metaEdge.target.ID
+              targetID:metaEdge.target.ID,
+              size: metaEdge.originalEdges.length
             })
           });
           // add tempArr to the metaEdgeIDListForVisible
@@ -729,7 +737,7 @@ export class ExpandCollapse {
     });
     // return list of object with new meta edge infromation 
     // Structure = [{ID,sourceID,targetID}]
-    return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID}];
+    return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length}];
   }
 
   // function to expand edges (takes list of edges to expand)
@@ -792,7 +800,8 @@ export class ExpandCollapse {
               {
                 ID:originalEdge.ID,
                 sourceID: sourceNode.ID,
-                targetID: targetNode.ID
+                targetID: targetNode.ID,
+                size: originalEdge.originalEdges.length
               }
               );
             

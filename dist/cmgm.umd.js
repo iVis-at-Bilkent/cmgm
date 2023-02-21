@@ -1715,7 +1715,8 @@
                     metaEdgeIDListForVisible.push({
                       ID:newMetaEdge.ID,
                       sourceID:newMetaEdge.source.ID,
-                      targetID:newMetaEdge.target.ID
+                      targetID:newMetaEdge.target.ID,
+                      size: newMetaEdge.originalEdges.length
                     });
                     
                   }
@@ -1731,7 +1732,8 @@
                   metaEdgeIDListForVisible.push({
                     ID:newMetaEdge.ID,
                     sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID
+                    targetID:newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length
                   });
                 }
               }
@@ -1760,7 +1762,8 @@
                     metaEdgeIDListForVisible.push({
                       ID:newMetaEdge.ID,
                       sourceID:newMetaEdge.source.ID,
-                      targetID:newMetaEdge.target.ID
+                      targetID:newMetaEdge.target.ID,
+                      size: newMetaEdge.originalEdges.length
                     });
                     
                   }
@@ -1776,7 +1779,8 @@
                   metaEdgeIDListForVisible.push({
                     ID:newMetaEdge.ID,
                     sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID
+                    targetID:newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length
                   });
                 }
               }
@@ -2000,7 +2004,8 @@
 
                     }
                   }
-                  this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID});
+                  this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID,
+                    size: topMetaEdge.originalEdges.length});
                 }
               }
             }
@@ -2082,7 +2087,8 @@
               metaEdgeIDListToKeep.add({
                 ID:metaEdge.ID,
                 sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID
+                targetID:metaEdge.target.ID,
+                size: metaEdge.originalEdges.length
               });
             });
             
@@ -2142,7 +2148,8 @@
               this.removedElements.metaEdgeIDListForVisible.add({
                 ID:metaEdge.ID,
                 sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID
+                targetID:metaEdge.target.ID,
+                size: metaEdge.originalEdges.length
               });
             });
           }
@@ -2197,7 +2204,8 @@
               tempArr.push({
                 ID:metaEdge.ID,
                 sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID
+                targetID:metaEdge.target.ID,
+                size: metaEdge.originalEdges.length
               });
             });
             // add tempArr to the metaEdgeIDListForVisible
@@ -2319,7 +2327,7 @@
       });
       // return list of object with new meta edge infromation 
       // Structure = [{ID,sourceID,targetID}]
-      return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID}];
+      return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length}];
     }
 
     // function to expand edges (takes list of edges to expand)
@@ -2382,7 +2390,8 @@
                 {
                   ID:originalEdge.ID,
                   sourceID: sourceNode.ID,
-                  targetID: targetNode.ID
+                  targetID: targetNode.ID,
+                  size: originalEdge.originalEdges.length
                 }
                 );
               
@@ -2757,7 +2766,6 @@
       // Structure [[edges],[metaedges (to be deleted)],[meta edges to be added]]
       let markedMetaEdges = [[],[],[]];
       let addedMetaEdges = [];
-      console.log(edgesToBeProcessed);
       node.edges.forEach(nodeDescendantEdge => {
         if (invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID).isVisible && invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID).isVisible) {
           edgesToBeProcessed.push(nodeDescendantEdge);
@@ -2804,14 +2812,14 @@
                   let target = visibleGM.nodesMap.get(targetID);
                   let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                   // report incident edge as processed (to be added)
-                  edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                  edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                   }
                   else if (incidentEdge.target.isVisible) {
                     let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
                     let source = visibleGM.nodesMap.get(sourceID);
                     let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                     // report incident edge as processed (to be added)
-                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                   }else {
                     let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
                     let source = visibleGM.nodesMap.get(sourceID);
@@ -2819,7 +2827,7 @@
                     let target = visibleGM.nodesMap.get(targetID);
                     let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                     // report incident edge as processed (to be added)
-                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                   }
               }
             }
@@ -2860,7 +2868,7 @@
                       let target = visibleGM.nodesMap.get(targetID);
                       let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                       // report incident edge as processed (to be added)
-                      edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                      edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                     }
                     }
                     else if(incidentEdge.target.isVisible){
@@ -2875,7 +2883,7 @@
                         let source = visibleGM.nodesMap.get(sourceID);
                         let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                         // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                       }
                     }
                     else {
@@ -2892,7 +2900,7 @@
                         let target = visibleGM.nodesMap.get(targetID);
                         let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
                         // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                       }
                     }
                 }
@@ -2984,7 +2992,7 @@
                         let target = visibleGM.nodesMap.get(targetID);
                         let newMetaEdge = Topology.addMetaEdge(visibleMetaEdge.source.ID, target.ID, [visibleMetaEdge.ID],visibleGM, invisibleGM);
                         // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                       }
                     }
                     else {
@@ -2993,7 +3001,7 @@
                           let source = visibleGM.nodesMap.get(sourceID);
                           let newMetaEdge = Topology.addMetaEdge(source.ID, visibleMetaEdge.target.ID, [visibleMetaEdge.ID],visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
-                          edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+                          edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
                         }
                     }
                   }
@@ -3033,7 +3041,7 @@
             if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.source.ID),invisibleGM.nodesMap.get(targetID),invisibleGM)){
               let newMetaEdge = Topology.addMetaEdge(edge.source.ID, target.ID, [edge.ID],visibleGM, invisibleGM);
               // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
             }
           }
           else if (edge.target.isVisible) {
@@ -3042,7 +3050,7 @@
             if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.target.ID),invisibleGM.nodesMap.get(sourceID),invisibleGM)){
               let newMetaEdge = Topology.addMetaEdge(source.ID, edge.target.ID, [edge.ID],visibleGM, invisibleGM);
               // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
             }
           }else {
             let sourceID = this.getVisibleParent(edge.source.ID, invisibleGM);
@@ -3052,7 +3060,7 @@
             if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID),invisibleGM.nodesMap.get(targetID),invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID),invisibleGM.nodesMap.get(sourceID),invisibleGM)){
               let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [edge.ID],visibleGM, invisibleGM);
               // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID});
+              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length});
             }
           }
         
