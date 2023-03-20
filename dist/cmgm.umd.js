@@ -946,6 +946,7 @@
       // lists to report processed nodes and edges.
       let nodeIDListPostProcess = [];
       let edgeIDListPostProcess = [];
+      let metaEdgeIDListPostProcess = [];
       // loop through nodes to unfilter
       nodeIDList.forEach((nodeID) => {
         // get node from invisible graph and set filter status to false
@@ -996,6 +997,10 @@
             }else {
               edgeIDListPostProcess.push(item);
             }
+          });
+          // loop through meta edges to be added
+          tempList[2].forEach((item) => {
+            metaEdgeIDListPostProcess.push(item);
           });
           let descendants = [];
           if(!nodeToUnfilter.isCollapsed){
@@ -1077,7 +1082,7 @@
       // combine node and edge list.
       // report nodes first then edges
       // (if edges are reported first they will be added first and without source and target nodes present cytoscpae will give error) 
-      return nodeIDListPostProcess.concat(edgeIDListPostProcess);
+      return [nodeIDListPostProcess.concat(edgeIDListPostProcess),metaEdgeIDListPostProcess];
     }
 
     // function to make all descendants of a compound node visible and report all the procesed descendants.
@@ -1268,7 +1273,7 @@
       }
       invisibleGM.edgesMap.set(edgeID, edgeInvisible);
     }
-    
+
     static addMetaEdge(sourceID, targetID, orignalEnds, visibleGM, invisibleGM) {
       //get nodes from visible graph manager
       let sourceNode = visibleGM.nodesMap.get(sourceID);
@@ -1278,8 +1283,8 @@
       if (sourceNode != undefined && targetNode != undefined) {
         metaEdge = new MetaEdge(sourceNode, targetNode, orignalEnds);
         visibleGM.metaEdgesMap.set(metaEdge.ID, metaEdge);
-        orignalEnds.forEach(edgeID => {
-          visibleGM.edgeToMetaEdgeMap.set(edgeID,metaEdge);
+        orignalEnds.forEach((edgeID) => {
+          visibleGM.edgeToMetaEdgeMap.set(edgeID, metaEdge);
         });
       }
       //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
@@ -1301,14 +1306,18 @@
       return metaEdge;
     }
 
-    static removeNestedEdges(nestedEdges, visibleGM,invisibleGM) {
+    static removeNestedEdges(nestedEdges, visibleGM, invisibleGM) {
       //loop through the list of nested edges
       nestedEdges.forEach((edgeInInvisibleItem) => {
         // nested edge is an id and not a another meta edge
         if (visibleGM.metaEdgesMap.has(edgeInInvisibleItem)) {
           //recursively passing the nested edge
-          let metaEdge =visibleGM.metaEdgesMap.get(edgeInInvisibleItem);
-          Topology.removeNestedEdges(metaEdge.originalEdges, visibleGM,invisibleGM);   
+          let metaEdge = visibleGM.metaEdgesMap.get(edgeInInvisibleItem);
+          Topology.removeNestedEdges(
+            metaEdge.originalEdges,
+            visibleGM,
+            invisibleGM
+          );
           visibleGM.metaEdgesMap.delete(edgeInInvisibleItem);
         } else {
           let edgeInInvisible = invisibleGM.edgesMap.get(edgeInInvisibleItem);
@@ -1318,46 +1327,60 @@
       });
     }
 
-    static recursivelyRemoveDescendantEdges(originalEdges,visibleGM,invisibleGM){
-
+    static recursivelyRemoveDescendantEdges(
+      originalEdges,
+      visibleGM,
+      invisibleGM
+    ) {
       originalEdges.forEach((edgeID) => {
         let edgeToRemove = visibleGM.edgesMap.get(edgeID);
         let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
-        if(visibleGM.metaEdgesMap.has(edgeID)){
+        if (visibleGM.metaEdgesMap.has(edgeID)) {
           edgeToRemove = visibleGM.metaEdgesMap.get(edgeID);
           // delete from visible map
           visibleGM.edgesMap.delete(edgeToRemove.ID);
           visibleGM.metaEdgesMap.delete(edgeToRemove.ID);
           // remove edge from graph of visibleGM
-          try{
+          try {
             Auxiliary.removeEdgeFromGraph(edgeToRemove);
-          }catch(e){console.log(e);}
-          if(visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)){
+          } catch (e) {
+            //console.log(e);
+          }
+          if (visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)) {
             visibleGM.edgeToMetaEdgeMap.delete(edgeToRemove.ID);
           }
-          this.recursivelyRemoveDescendantEdges(edgeToRemove.originalEdges,visibleGM,invisibleGM);
-        }
-        else if(visibleGM.edgesMap.has(edgeID)){
+          this.recursivelyRemoveDescendantEdges(
+            edgeToRemove.originalEdges,
+            visibleGM,
+            invisibleGM
+          );
+        } else if (visibleGM.edgesMap.has(edgeID)) {
           // delete from visible map
           visibleGM.edgesMap.delete(edgeToRemove.ID);
           // remove edge from graph of visibleGM
-          try{
+          try {
             Auxiliary.removeEdgeFromGraph(edgeToRemove);
-          }catch(e){console.log(e);}
+          } catch (e) {
+            //console.log(e);
+          }
           //remove edge from the invisible graph
           invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
-          try{
+          try {
             Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
-          }catch(e){console.log(e);}
-        }else {
-          if(visibleGM.edgeToMetaEdgeMap.has(edgeID)){
+          } catch (e) {
+            //console.log(e);
+          }
+        } else {
+          if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
             visibleGM.edgeToMetaEdgeMap.delete(edgeID);
           }
           //remove edge from the invisible graph
           invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
-          try{
+          try {
             Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
-          }catch(e){console.log(e);}
+          } catch (e) {
+            //console.log(e);
+          }
         }
       });
     }
@@ -1368,31 +1391,37 @@
       let edgeToRemoveInvisible = invisibleGM.edgesMap.get(edgeID);
       if (edgeToRemove) {
         //if edge exisit in the visible graph
-        if(visibleGM.metaEdgesMap.has(edgeID)){
-          edgeToRemove = Auxiliary.getTopMetaEdge(edgeToRemove,visibleGM);
+        if (visibleGM.metaEdgesMap.has(edgeID)) {
+          edgeToRemove = Auxiliary.getTopMetaEdge(edgeToRemove, visibleGM);
           // delete from visible map
           visibleGM.edgesMap.delete(edgeToRemove.ID);
           visibleGM.metaEdgesMap.delete(edgeToRemove.ID);
           // remove edge from graph of visibleGM
           Auxiliary.removeEdgeFromGraph(edgeToRemove);
-          if(visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)){
+          if (visibleGM.edgeToMetaEdgeMap.has(edgeToRemove.ID)) {
             visibleGM.edgeToMetaEdgeMap.delete(edgeToRemove.ID);
           }
-          this.recursivelyRemoveDescendantEdges(edgeToRemove.originalEdges,visibleGM,invisibleGM);
-        }
-        else if(visibleGM.edgesMap.has(edgeID)){
+          this.recursivelyRemoveDescendantEdges(
+            edgeToRemove.originalEdges,
+            visibleGM,
+            invisibleGM
+          );
+        } else if (visibleGM.edgesMap.has(edgeID)) {
           // delete from visible map
           visibleGM.edgesMap.delete(edgeToRemove.ID);
           // remove edge from graph of visibleGM
           Auxiliary.removeEdgeFromGraph(edgeToRemove);
-          
+
           //remove edge from the invisible graph
           invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
           Auxiliary.removeEdgeFromGraph(edgeToRemoveInvisible);
         }
       } else {
         if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
-          Auxiliary.recursiveMetaEdgeUpdate(edgeToRemoveInvisible,visibleGM);
+          Auxiliary.recursiveMetaEdgeUpdate(
+            edgeToRemoveInvisible,
+            visibleGM
+          );
         }
         //remove edge from the invisible graph
         invisibleGM.edgesMap.delete(edgeToRemoveInvisible.ID);
@@ -1586,7 +1615,7 @@
           visibleGM,
           invisibleGM
         );
-        if (edge.source.isVisible && edge.target.isVisible ) {
+        if (edge.source.isVisible && edge.target.isVisible) {
           let newEdge = invisibleGM.edgesMap.get(edge.ID);
           newEdge.isVisible = false;
         }
@@ -1599,7 +1628,7 @@
     static removedElements = {
       nodeIDListForInvisible: new Set(),
       edgeIDListForInvisible: new Set(),
-      metaEdgeIDListForVisible: new Set()
+      metaEdgeIDListForVisible: new Set(),
     };
     // create static objects to report elements to be added
     static addedElements = {
@@ -1608,52 +1637,59 @@
       metaEdgeIDListForVisible: new Set(),
       edgeIDListToRemove: new Set(),
     };
-    //Double Recursive Solution 
+    //Double Recursive Solution
     // collpase node function
     static #collapseNode(node, visibleGM, invisibleGM) {
       //first process the visible graph
       // traverse descdents and get list of nodes, edges and meta edges
-      let [nodeIDListForInvisible, edgeIDListForInvisible, metaEdgeIDListForVisible] = this.traverseDescendants(node, node, visibleGM, invisibleGM);
-      //  remove child graph of given node 
+      let [
+        nodeIDListForInvisible,
+        edgeIDListForInvisible,
+        metaEdgeIDListForVisible,
+      ] = this.traverseDescendants(node, node, visibleGM, invisibleGM);
+      //  remove child graph of given node
       visibleGM.removeGraph(node.child);
       // loop through descendant nodes
-      nodeIDListForInvisible.forEach(nodeID => {
+      nodeIDListForInvisible.forEach((nodeID) => {
         // delete each descendant node from nodes map of visible graph.
         visibleGM.nodesMap.delete(nodeID);
       });
       // loop through descendant edges
-      edgeIDListForInvisible.forEach(edgeID => {
+      edgeIDListForInvisible.forEach((edgeID) => {
         // delete each descendant edge from edges map of visible graph.
         let tempEdge = visibleGM.edgesMap.get(edgeID);
         visibleGM.edgesMap.delete(edgeID);
-        try{
-        Auxiliary.removeEdgeFromGraph(tempEdge);
-        }catch(e){
-          console.log(e);
+        try {
+          Auxiliary.removeEdgeFromGraph(tempEdge);
+        } catch (e) {
+          //console.log(e);
         }
-
       });
       // get corresponding node from invisible graph and set is collapsed flag true
       let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
       nodeInInvisible.isCollapsed = true;
       // loop through descendant nodes
-      nodeIDListForInvisible.forEach(nodeIDInvisible => {
-      // get corresponding node from invisible graph and set is visible flag false
+      nodeIDListForInvisible.forEach((nodeIDInvisible) => {
+        // get corresponding node from invisible graph and set is visible flag false
         nodeInInvisible = invisibleGM.nodesMap.get(nodeIDInvisible);
         nodeInInvisible.isVisible = false;
       });
       // loop through descendant edges
-      edgeIDListForInvisible.forEach(edgeIDInvisible => {
-      // get corresponding edge from invisible graph and set is visible flag false
+      edgeIDListForInvisible.forEach((edgeIDInvisible) => {
+        // get corresponding edge from invisible graph and set is visible flag false
         let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
-        if(edgeInInvisible){
+        if (edgeInInvisible) {
           edgeInInvisible.isVisible = false;
         }
       });
       // loop through descendant nodes and report node to be removed
-      nodeIDListForInvisible.forEach(item => this.removedElements.nodeIDListForInvisible.add(item));
+      nodeIDListForInvisible.forEach((item) =>
+        this.removedElements.nodeIDListForInvisible.add(item)
+      );
       // loop through descendant edges and report edge to be removed
-      edgeIDListForInvisible.forEach(item => this.removedElements.edgeIDListForInvisible.add(item));
+      edgeIDListForInvisible.forEach((item) =>
+        this.removedElements.edgeIDListForInvisible.add(item)
+      );
       // loop through descendant meta edge and report meta edge to be added (brought back to visible)
       this.removedElements.metaEdgeIDListForVisible.add(metaEdgeIDListForVisible);
     }
@@ -1669,153 +1705,212 @@
         // get nodes from child graph, call them childrenNodes
         let childrenNodes = node.child.nodes;
         // loop through childrenNodes
-        childrenNodes.forEach(child => {
+        childrenNodes.forEach((child) => {
           // report child node as processed
           nodeIDListForInvisible.push(child.ID);
           // loop thorugh incident edges of child Nodes
           let edgesToBeProcessed = [...child.edges];
-          edgesToBeProcessed.forEach(childEdge => {
+          edgesToBeProcessed.forEach((childEdge) => {
             //  check if child edge is not a meta edge
             if (!(childEdge instanceof MetaEdge)) {
               // report child edge as edge (to be removed) as processed
               edgeIDListForInvisible.push(childEdge.ID);
-
-            }else {
+            } else {
               // report child edge as meta edge (to be added) as processed
               visibleGM.edgesMap.delete(childEdge.ID);
-
             }
             // if child Edge is an inter graph edge
             if (childEdge.isInterGraph) {
-              //initalize flag for meta edge to be created 
+              //initalize flag for meta edge to be created
               let metaEdgeToBeCreated;
               // if child  is the source of child edge.
               if (childEdge.source == child) {
                 // check if meta edge needs to be created or not
-                metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.target.ID), invisibleGM.nodesMap.get(nodeToBeCollapsed.ID), invisibleGM);
-                
-                if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
-                  if(childEdge.originalEdges.length == 1){
+                metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(
+                  invisibleGM.nodesMap.get(childEdge.target.ID),
+                  invisibleGM.nodesMap.get(nodeToBeCollapsed.ID),
+                  invisibleGM
+                );
+
+                if (
+                  metaEdgeToBeCreated &&
+                  visibleGM.metaEdgesMap.has(childEdge.ID)
+                ) {
+                  if (childEdge.originalEdges.length == 1) {
                     metaEdgeToBeCreated = false;
                     let originalEnds = [...childEdge.originalEdges];
                     let target = childEdge.target;
                     // report child edge (to be removed) as processed
                     edgeIDListForInvisible.push(childEdge.ID);
-                    if(visibleGM.edgesMap.has(childEdge.ID)){
-                        visibleGM.edgesMap.delete(childEdge.ID);
-                        // remove edge from visible graph and visible edges map
-                        Auxiliary.removeEdgeFromGraph(childEdge);
+                    if (visibleGM.edgesMap.has(childEdge.ID)) {
+                      visibleGM.edgesMap.delete(childEdge.ID);
+                      // remove edge from visible graph and visible edges map
+                      Auxiliary.removeEdgeFromGraph(childEdge);
                     }
                     visibleGM.metaEdgesMap.delete(childEdge.ID);
                     originalEnds.forEach((end) => {
                       visibleGM.edgeToMetaEdgeMap.delete(end);
                     });
-                    let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, target.ID, originalEnds,visibleGM, invisibleGM);
+                    let newMetaEdge = Topology.addMetaEdge(
+                      nodeToBeCollapsed.ID,
+                      target.ID,
+                      originalEnds,
+                      visibleGM,
+                      invisibleGM
+                    );
                     // report meta edge as processed in the form of object with ID, sourceID, targetID
                     metaEdgeIDListForVisible.push({
-                      ID:newMetaEdge.ID,
-                      sourceID:newMetaEdge.source.ID,
-                      targetID:newMetaEdge.target.ID,
+                      ID: newMetaEdge.ID,
+                      sourceID: newMetaEdge.source.ID,
+                      targetID: newMetaEdge.target.ID,
                       size: newMetaEdge.originalEdges.length,
-                      compound: 'T'
+                      compound: "T",
                     });
-                    
                   }
                 }
                 // if meta edge is to be created
                 if (metaEdgeToBeCreated) {
-                  if(visibleGM.metaEdgesMap.get(childEdge.ID)){
+                  if (visibleGM.metaEdgesMap.get(childEdge.ID)) {
                     Auxiliary.removeEdgeFromGraph(childEdge);
                   }
                   // create new meta edge between node to collapse and the other target of child edge (because child is the source so we replce it with node to be collapsed)
-                  let newMetaEdge = Topology.addMetaEdge(nodeToBeCollapsed.ID, childEdge.target.ID, [childEdge.ID],visibleGM, invisibleGM);
+                  let newMetaEdge = Topology.addMetaEdge(
+                    nodeToBeCollapsed.ID,
+                    childEdge.target.ID,
+                    [childEdge.ID],
+                    visibleGM,
+                    invisibleGM
+                  );
                   // report meta edge as processed in the form of object with ID, sourceID, targetID
                   metaEdgeIDListForVisible.push({
-                    ID:newMetaEdge.ID,
-                    sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID,
+                    ID: newMetaEdge.ID,
+                    sourceID: newMetaEdge.source.ID,
+                    targetID: newMetaEdge.target.ID,
                     size: newMetaEdge.originalEdges.length,
-                    compound: 'T'
+                    compound: "T",
                   });
                 }
-              }
-              else {
-               // if child  is the target of child edge.
+              } else {
+                // if child  is the target of child edge.
                 // check if meta edge needs to be created or not
-                metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(childEdge.source.ID), invisibleGM.nodesMap.get(nodeToBeCollapsed.ID), invisibleGM);
-                if(metaEdgeToBeCreated && visibleGM.metaEdgesMap.has(childEdge.ID)){
-                  if(childEdge.originalEdges.length == 1){
+                metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(
+                  invisibleGM.nodesMap.get(childEdge.source.ID),
+                  invisibleGM.nodesMap.get(nodeToBeCollapsed.ID),
+                  invisibleGM
+                );
+                if (
+                  metaEdgeToBeCreated &&
+                  visibleGM.metaEdgesMap.has(childEdge.ID)
+                ) {
+                  if (childEdge.originalEdges.length == 1) {
                     metaEdgeToBeCreated = false;
                     let originalEnds = [...childEdge.originalEdges];
                     let source = childEdge.source;
                     // report child edge (to be removed) as processed
                     edgeIDListForInvisible.push(childEdge.ID);
-                    if(visibleGM.edgesMap.has(childEdge.ID)){
-                        visibleGM.edgesMap.delete(childEdge.ID);
-                        // remove edge from visible graph and visible edges map
-                        Auxiliary.removeEdgeFromGraph(childEdge);
+                    if (visibleGM.edgesMap.has(childEdge.ID)) {
+                      visibleGM.edgesMap.delete(childEdge.ID);
+                      // remove edge from visible graph and visible edges map
+                      Auxiliary.removeEdgeFromGraph(childEdge);
                     }
                     visibleGM.metaEdgesMap.delete(childEdge.ID);
                     originalEnds.forEach((end) => {
                       visibleGM.edgeToMetaEdgeMap.delete(end);
                     });
-                  let newMetaEdge = Topology.addMetaEdge(source.ID, nodeToBeCollapsed.ID, originalEnds, visibleGM, invisibleGM);
+                    let newMetaEdge = Topology.addMetaEdge(
+                      source.ID,
+                      nodeToBeCollapsed.ID,
+                      originalEnds,
+                      visibleGM,
+                      invisibleGM
+                    );
                     // report meta edge as processed in the form of object with ID, sourceID, targetID
                     metaEdgeIDListForVisible.push({
-                      ID:newMetaEdge.ID,
-                      sourceID:newMetaEdge.source.ID,
-                      targetID:newMetaEdge.target.ID,
+                      ID: newMetaEdge.ID,
+                      sourceID: newMetaEdge.source.ID,
+                      targetID: newMetaEdge.target.ID,
                       size: newMetaEdge.originalEdges.length,
-                      compound: 'T'
+                      compound: "T",
                     });
-                    
                   }
                 }
                 // if meta edge is to be created
                 if (metaEdgeToBeCreated) {
-                  if(visibleGM.metaEdgesMap.get(childEdge.ID)){
+                  if (visibleGM.metaEdgesMap.get(childEdge.ID)) {
                     Auxiliary.removeEdgeFromGraph(childEdge);
                   }
                   // create new meta edge between node to collapse and the other source of child edge (because child is the target so we replce it with node to be collapsed)
-                  let newMetaEdge = Topology.addMetaEdge(childEdge.source.ID, nodeToBeCollapsed.ID, [childEdge.ID], visibleGM, invisibleGM);
+                  let newMetaEdge = Topology.addMetaEdge(
+                    childEdge.source.ID,
+                    nodeToBeCollapsed.ID,
+                    [childEdge.ID],
+                    visibleGM,
+                    invisibleGM
+                  );
                   // report meta edge as processed in the form of object with ID, sourceID, targetID
                   metaEdgeIDListForVisible.push({
-                    ID:newMetaEdge.ID,
-                    sourceID:newMetaEdge.source.ID,
-                    targetID:newMetaEdge.target.ID,
+                    ID: newMetaEdge.ID,
+                    sourceID: newMetaEdge.source.ID,
+                    targetID: newMetaEdge.target.ID,
                     size: newMetaEdge.originalEdges.length,
-                    compound: 'T'
+                    compound: "T",
                   });
                 }
               }
-
             }
           });
           // pass child back to the function to go through its descendants and report all the elements
-          let [nodeIDsReturned, edgeIDsReturned, metaEdgeIDsReturned] = this.traverseDescendants(child, nodeToBeCollapsed, visibleGM, invisibleGM);
+          let [nodeIDsReturned, edgeIDsReturned, metaEdgeIDsReturned] =
+            this.traverseDescendants(
+              child,
+              nodeToBeCollapsed,
+              visibleGM,
+              invisibleGM
+            );
           // combine reproted nodes , edges and meta edges with the orignal ones.
-          nodeIDListForInvisible = [...nodeIDListForInvisible, ...nodeIDsReturned];
-          edgeIDListForInvisible = [...edgeIDListForInvisible, ...edgeIDsReturned];
-          metaEdgeIDListForVisible = [...metaEdgeIDListForVisible, ...metaEdgeIDsReturned];
+          nodeIDListForInvisible = [
+            ...nodeIDListForInvisible,
+            ...nodeIDsReturned,
+          ];
+          edgeIDListForInvisible = [
+            ...edgeIDListForInvisible,
+            ...edgeIDsReturned,
+          ];
+          metaEdgeIDListForVisible = [
+            ...metaEdgeIDListForVisible,
+            ...metaEdgeIDsReturned,
+          ];
         });
       }
       // return arrays of nodes, edges and meta edges processed.
-      return [nodeIDListForInvisible, edgeIDListForInvisible, metaEdgeIDListForVisible];
+      return [
+        nodeIDListForInvisible,
+        edgeIDListForInvisible,
+        metaEdgeIDListForVisible,
+      ];
     }
 
     //function to check of two given nodes are part of the different graph structure or not.
     // if yes return true else false
-    static incidentEdgeIsOutOfScope(interGraphEdgeTarget, nodeToBeCollapsed, invisibleGM) {
+    static incidentEdgeIsOutOfScope(
+      interGraphEdgeTarget,
+      nodeToBeCollapsed,
+      invisibleGM
+    ) {
       // check if given target node is in root graph then return true.
       if (interGraphEdgeTarget.owner == invisibleGM.rootGraph) {
         return true;
-      }//if parent of given node is node to be collapsed then false
+      } //if parent of given node is node to be collapsed then false
       else if (interGraphEdgeTarget.owner.parent == nodeToBeCollapsed) {
         return false;
-      }// last check parent and node to be collapsed are not in same structure, can be sibling or not  
+      } // last check parent and node to be collapsed are not in same structure, can be sibling or not
       else {
         // recall the fuction and pass parent of target and node to be collapsed.
-        return this.incidentEdgeIsOutOfScope(interGraphEdgeTarget.owner.parent, nodeToBeCollapsed, invisibleGM);
+        return this.incidentEdgeIsOutOfScope(
+          interGraphEdgeTarget.owner.parent,
+          nodeToBeCollapsed,
+          invisibleGM
+        );
       }
     }
 
@@ -1871,15 +1966,24 @@
    }
    */
 
-  //  expand node function to expand a given node
+    //  expand node function to expand a given node
 
-    static #expandNode(node, isRecursive, visibleGM, invisibleGM, nodeToBeExpanded = undefined) {
+    static #expandNode(
+      node,
+      isRecursive,
+      visibleGM,
+      invisibleGM,
+      nodeToBeExpanded = undefined
+    ) {
       // get node from invisible graph
       let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
 
-      if(nodeInInvisible.isCollapsed){
+      if (nodeInInvisible.isCollapsed) {
         // create new grah in visible  graph as child of given node
-        let newVisibleGraph = visibleGM.addGraph(new Graph(null, visibleGM), node);
+        let newVisibleGraph = visibleGM.addGraph(
+          new Graph(null, visibleGM),
+          node
+        );
         // set sibling graph pointers, pointing each other
         nodeInInvisible.child.siblingGraph = newVisibleGraph;
         newVisibleGraph.siblingGraph = nodeInInvisible.child;
@@ -1889,45 +1993,68 @@
 
       // get childre from invisible node's child graph.
       let childrenNodesTemp = nodeInInvisible.child.nodes;
-      let childrenNodesCompound = childrenNodesTemp.filter((child)=> child.child?true:false);
-      let childrenNodesSimple = childrenNodesTemp.filter((child)=> child.child?false:true);
-      let childrenNodes = [...childrenNodesCompound,...childrenNodesSimple];
-      let markCollapsedCompoundChildren =[];
+      let childrenNodesCompound = childrenNodesTemp.filter((child) =>
+        child.child ? true : false
+      );
+      let childrenNodesSimple = childrenNodesTemp.filter((child) =>
+        child.child ? false : true
+      );
+      let childrenNodes = [...childrenNodesCompound, ...childrenNodesSimple];
+      let markCollapsedCompoundChildren = [];
       // loop through children
-      childrenNodes.forEach(child => {
+      childrenNodes.forEach((child) => {
         // if child is collapsed and not filtered and not hidden and recussion is true (meaning collapsed child with recusion)
         // or if child is not collapsed and not filtered and not hidden (meaning no recurrion and child not collapsed)
-        if ((child.isCollapsed && isRecursive && (!child.isFiltered) && (!child.isHidden)) || ((!child.isCollapsed) && (!child.isFiltered) && (!child.isHidden))) {
+        if (
+          (child.isCollapsed &&
+            isRecursive &&
+            !child.isFiltered &&
+            !child.isHidden) ||
+          (!child.isCollapsed && !child.isFiltered && !child.isHidden)
+        ) {
           // bring child back to visible and all its incident edges and meta ednges
           //returns list of edges and meta edges brought back to visible graph( structure : [[edges],[meta-edges]])
-          let tempList = Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM, nodeToBeExpanded==undefined?node:nodeToBeExpanded);
+          let tempList = Auxiliary.moveNodeToVisible(
+            child,
+            visibleGM,
+            invisibleGM,
+            nodeToBeExpanded == undefined ? node : nodeToBeExpanded
+          );
           //loop though edges returned
-          tempList[0].forEach(item => {
+          tempList[0].forEach((item) => {
             // report edge as processed (to be added)
-            try{
+            try {
               this.addedElements.edgeIDListForVisible.add(item);
-            }catch(e){console.log(e);}
+            } catch (e) {
+              //console.log(e);
+            }
           });
-          let tempArr = [...this.addedElements.edgeIDListForVisible].filter(edgeID => visibleGM.edgesMap.has(edgeID));
+          let tempArr = [...this.addedElements.edgeIDListForVisible].filter(
+            (edgeID) => visibleGM.edgesMap.has(edgeID)
+          );
           this.addedElements.edgeIDListForVisible = new Set(tempArr);
           // loop through meta edges to be removed
-          tempList[1].forEach(item => {
+          tempList[1].forEach((item) => {
             // report meta edge as parocessed (to be removed)
-            try{
-            this.addedElements.edgeIDListToRemove.add(item.ID);
-            }catch(e){console.log(e);}
+            try {
+              this.addedElements.edgeIDListToRemove.add(item.ID);
+            } catch (e) {
+              //console.log(e);
+            }
 
-            let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(mEdge => {
-              if(mEdge.ID == item.ID){
-                return false
-              }else {
-                return true
+            let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(
+              (mEdge) => {
+                if (mEdge.ID == item.ID) {
+                  return false;
+                } else {
+                  return true;
+                }
               }
-            });
+            );
             this.addedElements.metaEdgeIDListForVisible = new Set(tempArr);
           });
           // loop through meta edges to be added
-          tempList[2].forEach(item => {
+          tempList[2].forEach((item) => {
             // report meta edge as parocessed (to be removed)
             this.addedElements.metaEdgeIDListForVisible.add(item);
           });
@@ -1940,93 +2067,134 @@
             //  recursively call the expansion of this child node (as it is compound node and recurssion is true)
             this.#expandNode(newNode, isRecursive, visibleGM, invisibleGM, node);
           }
-        }
-        else if (child.isCollapsed && (!isRecursive) && (!child.isFiltered) && (!child.isHidden)) {
+        } else if (
+          child.isCollapsed &&
+          !isRecursive &&
+          !child.isFiltered &&
+          !child.isHidden
+        ) {
           // child node is collapsed and there is no recussion (not filtered and not hidden)
           // report child node as processed (to be added)
           this.addedElements.nodeIDListForVisible.add(child.ID);
           // bring child back to visible and all its incident edges and meta ednges
           //returns list of edges and meta edges brought back to visible graph( structure : [[edges],[meta-edges]])
-          let tempList = Auxiliary.moveNodeToVisible(child, visibleGM, invisibleGM, nodeToBeExpanded==undefined?node:nodeToBeExpanded);
+          let tempList = Auxiliary.moveNodeToVisible(
+            child,
+            visibleGM,
+            invisibleGM,
+            nodeToBeExpanded == undefined ? node : nodeToBeExpanded
+          );
           //loop though edges returned
-          tempList[0].forEach(item => {
+          tempList[0].forEach((item) => {
             // report edge as processed (to be added)
             this.addedElements.edgeIDListForVisible.add(item);
           });
-          let tempArr = [...this.addedElements.edgeIDListForVisible].filter(edgeID => visibleGM.edgesMap.has(edgeID));
+          let tempArr = [...this.addedElements.edgeIDListForVisible].filter(
+            (edgeID) => visibleGM.edgesMap.has(edgeID)
+          );
           this.addedElements.edgeIDListForVisible = new Set(tempArr);
           // loop through meta edges
-          tempList[1].forEach(item => {
+          tempList[1].forEach((item) => {
             // report meta edge as parocessed (to be removed)
             this.addedElements.edgeIDListToRemove.add(item.ID);
-            let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(mEdge => {
-              if(mEdge.ID == item.ID){
-                return false
-              }else {
-                return true
+            let tempArr = [...this.addedElements.metaEdgeIDListForVisible].filter(
+              (mEdge) => {
+                if (mEdge.ID == item.ID) {
+                  return false;
+                } else {
+                  return true;
+                }
               }
-            });
+            );
             this.addedElements.metaEdgeIDListForVisible = new Set(tempArr);
           });
           // loop through meta edges to be added
-          tempList[2].forEach(item => {
+          tempList[2].forEach((item) => {
             // report meta edge as parocessed (to be removed)
             this.addedElements.metaEdgeIDListForVisible.add(item);
           });
 
           markCollapsedCompoundChildren.push(child);
-          
         }
       });
 
       markCollapsedCompoundChildren.forEach((makredChild) => {
-        let nodeDescendants =
-            visibleGM.getDescendantsInorder(makredChild);
-            // loop through descendant edges
-            nodeDescendants.edges.forEach((nodeDescendantEdge) => {
-            if (visibleGM.edgeToMetaEdgeMap.has(nodeDescendantEdge.ID)) {
-              let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(nodeDescendantEdge.ID),visibleGM);
-              let sourceNode = visibleGM.nodesMap.get(topMetaEdge.source.ID);
-              let targetNode = visibleGM.nodesMap.get(topMetaEdge.target.ID);
-              if(!ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(topMetaEdge.source.ID),invisibleGM.nodesMap.get(node.ID),invisibleGM) && !ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(topMetaEdge.target.ID),invisibleGM.nodesMap.get(node.ID),invisibleGM)){
-                if(topMetaEdge.source.ID == makredChild.ID || topMetaEdge.target.ID == makredChild.ID){
-                  visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
-                  //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
-                  if (sourceNode.owner === targetNode.owner) {
-                    if (sourceNode != undefined && targetNode != undefined) {
-                      try{
-                        sourceNode.owner.addEdge(topMetaEdge, sourceNode, targetNode);
-                      }catch(e){console.log(e);}
-
-                    }
-                  } else {
-                    //add inter graph edges
-                    if (sourceNode != undefined && targetNode != undefined) {
-                      try{
-                        visibleGM.addInterGraphEdge(topMetaEdge, sourceNode, targetNode);
-                      }catch(e){console.log(e);}
-
+        let nodeDescendants = visibleGM.getDescendantsInorder(makredChild);
+        // loop through descendant edges
+        nodeDescendants.edges.forEach((nodeDescendantEdge) => {
+          if (visibleGM.edgeToMetaEdgeMap.has(nodeDescendantEdge.ID)) {
+            let topMetaEdge = Auxiliary.getTopMetaEdge(
+              visibleGM.edgeToMetaEdgeMap.get(nodeDescendantEdge.ID),
+              visibleGM
+            );
+            let sourceNode = visibleGM.nodesMap.get(topMetaEdge.source.ID);
+            let targetNode = visibleGM.nodesMap.get(topMetaEdge.target.ID);
+            if (
+              !ExpandCollapse.incidentEdgeIsOutOfScope(
+                invisibleGM.nodesMap.get(topMetaEdge.source.ID),
+                invisibleGM.nodesMap.get(node.ID),
+                invisibleGM
+              ) &&
+              !ExpandCollapse.incidentEdgeIsOutOfScope(
+                invisibleGM.nodesMap.get(topMetaEdge.target.ID),
+                invisibleGM.nodesMap.get(node.ID),
+                invisibleGM
+              )
+            ) {
+              if (
+                topMetaEdge.source.ID == makredChild.ID ||
+                topMetaEdge.target.ID == makredChild.ID
+              ) {
+                visibleGM.edgesMap.set(topMetaEdge.ID, topMetaEdge);
+                //if source and target owner graph is same (its an intra graph edge), then add the viible and invisible edges to the source owner
+                if (sourceNode.owner === targetNode.owner) {
+                  if (sourceNode != undefined && targetNode != undefined) {
+                    try {
+                      sourceNode.owner.addEdge(
+                        topMetaEdge,
+                        sourceNode,
+                        targetNode
+                      );
+                    } catch (e) {
+                      //console.log(e);
                     }
                   }
-                  this.addedElements.metaEdgeIDListForVisible.add({ID:topMetaEdge.ID,sourceID:topMetaEdge.source.ID,targetID:topMetaEdge.target.ID,
-                    size: topMetaEdge.originalEdges.length,
-                    compound: 'T'});
+                } else {
+                  //add inter graph edges
+                  if (sourceNode != undefined && targetNode != undefined) {
+                    try {
+                      visibleGM.addInterGraphEdge(
+                        topMetaEdge,
+                        sourceNode,
+                        targetNode
+                      );
+                    } catch (e) {
+                      //console.log(e);
+                    }
+                  }
                 }
+                this.addedElements.metaEdgeIDListForVisible.add({
+                  ID: topMetaEdge.ID,
+                  sourceID: topMetaEdge.source.ID,
+                  targetID: topMetaEdge.target.ID,
+                  size: topMetaEdge.originalEdges.length,
+                  compound: "T",
+                });
               }
             }
-          });
+          }
+        });
       });
-
     }
 
-    // function to get lis of all the nodes and their descendants  and their descendants 
+    // function to get lis of all the nodes and their descendants  and their descendants
     static getDescendantNodes(node) {
       // initalize the list
       let descendantNodes = [];
       // if node is a compound node
       if (node.child) {
         // loop through nodes of a child graph
-        node.child.nodes.forEach(childNode => {
+        node.child.nodes.forEach((childNode) => {
           // report the child node
           descendantNodes.push(childNode);
           // call the function again on child node
@@ -2045,67 +2213,75 @@
       this.removedElements = {
         nodeIDListForInvisible: new Set(),
         edgeIDListForInvisible: new Set(),
-        metaEdgeIDListForVisible: new Set()
+        metaEdgeIDListForVisible: new Set(),
       };
       // set of meta edges to keep
-      let metaEdgeIDListToKeep = new Set(); 
+      let metaEdgeIDListToKeep = new Set();
       // if recussion is true.
       if (isRecursive) {
         // loop through the given list of the nodes
-        nodeIDList.forEach(nodeID => {
+        nodeIDList.forEach((nodeID) => {
           // clear the  meta edges set from removed Elements objects
           this.removedElements.metaEdgeIDListForVisible = new Set();
           // get node from visible graph
           let nodeInVisible = visibleGM.nodesMap.get(nodeID);
           // if node in visible graph is a compound node
           if (nodeInVisible.child) {
-            // pass node to the collapseCompoundDescendantNodes function to collapse all the descendant compound nodes 
-            this.collapseCompoundDescendantNodes(nodeInVisible, visibleGM, invisibleGM);
+            // pass node to the collapseCompoundDescendantNodes function to collapse all the descendant compound nodes
+            this.collapseCompoundDescendantNodes(
+              nodeInVisible,
+              visibleGM,
+              invisibleGM
+            );
             // collpase the node by passing it to collapseNode function
             this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
             // initialize index counter to 0
             let index = 0;
-            // loop through list of meta edge ids list 
-            // struture list of list of objects 
+            // loop through list of meta edge ids list
+            // struture list of list of objects
             // strucute [[{meta edge object},{meta edge object}],[{meta edge object},{meta edge object}]]
-            this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList) => {
-              // check if current meta edge list is not the last one
-              if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
-                // loop through current meta edge list
-                edgeIDList.forEach(edgeID => {
-                  // delete each id from visible graph's edges map
-                  visibleGM.edgesMap.delete(edgeID.ID);
-                });
+            this.removedElements.metaEdgeIDListForVisible.forEach(
+              (edgeIDList) => {
+                // check if current meta edge list is not the last one
+                if (
+                  index !=
+                  this.removedElements.metaEdgeIDListForVisible.size - 1
+                ) {
+                  // loop through current meta edge list
+                  edgeIDList.forEach((edgeID) => {
+                    // delete each id from visible graph's edges map
+                    visibleGM.edgesMap.delete(edgeID.ID);
+                  });
+                }
+                // increase index by one when one list is processed
+                index = index + 1;
               }
-              // increase index by one when one list is processed
-              index = index + 1;
-            });
+            );
             // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
             let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
             // get the last list of objects as temp
-            let temp = [...temp1[temp1.length-1]];
+            let temp = [...temp1[temp1.length - 1]];
             // loop through the temp list
-            temp.forEach(item => {
+            temp.forEach((item) => {
               //  get meta edge from visible graph's meta edge map
               let metaEdge = visibleGM.metaEdgesMap.get(item.ID);
-              // add meta edge to  set of meta edges to keep 
+              // add meta edge to  set of meta edges to keep
               metaEdgeIDListToKeep.add({
-                ID:metaEdge.ID,
-                sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID,
+                ID: metaEdge.ID,
+                sourceID: metaEdge.source.ID,
+                targetID: metaEdge.target.ID,
                 size: metaEdge.originalEdges.length,
-                compound: 'T'
+                compound: "T",
               });
             });
-            
           }
         });
-        //creating a temporary set 
+        //creating a temporary set
         let tempSet = new Set();
         //looping throught set of meta edges to keep and filter out the ones that are no longer visible. (in visibleGM.edgesMap)
-        metaEdgeIDListToKeep.forEach(item=>{
+        metaEdgeIDListToKeep.forEach((item) => {
           // if meta edge is visible
-          if(visibleGM.edgesMap.has(item.ID)){
+          if (visibleGM.edgesMap.has(item.ID)) {
             // add it to tempSet
             tempSet.add(item);
           }
@@ -2115,48 +2291,53 @@
       } else {
         // if recusion is not true
         // loop through node id list
-        nodeIDList.forEach(nodeID => {
+        nodeIDList.forEach((nodeID) => {
           // get node from visible graph
           let nodeInVisible = visibleGM.nodesMap.get(nodeID);
           // if node is compound node
           if (nodeInVisible.child) {
-            // pass node to collpaseNode function 
+            // pass node to collpaseNode function
             this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
             // initialize index to 0
             let index = 0;
-            // loop through list of meta edge ids list 
-            // struture list of list of objects 
+            // loop through list of meta edge ids list
+            // struture list of list of objects
             // strucute [[{meta edge object},{meta edge object}],[{meta edge object},{meta edge object}]]
-            this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList) => {
-              // check if current meta edge list is not the last one
-              if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
-                // loop through current meta edge if list
-                edgeIDList.forEach(edgeID => {
-                  // delete meta edge from the visible graph
-                  visibleGM.edgesMap.delete(edgeID.ID);
-                });
+            this.removedElements.metaEdgeIDListForVisible.forEach(
+              (edgeIDList) => {
+                // check if current meta edge list is not the last one
+                if (
+                  index !=
+                  this.removedElements.metaEdgeIDListForVisible.size - 1
+                ) {
+                  // loop through current meta edge if list
+                  edgeIDList.forEach((edgeID) => {
+                    // delete meta edge from the visible graph
+                    visibleGM.edgesMap.delete(edgeID.ID);
+                  });
+                }
+                // increase index by one when one list is processed
+                index = index + 1;
               }
-              // increase index by one when one list is processed
-              index = index + 1;
-            });
+            );
             // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
             let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
             // get the last list of objects as temp
-            let temp = [...temp1[temp1.length-1]];
+            let temp = [...temp1[temp1.length - 1]];
             //  set metaEdgeIDListForVisible as a new set
             this.removedElements.metaEdgeIDListForVisible = new Set();
             // loop through the temp list
-            temp.forEach(item => {
+            temp.forEach((item) => {
               //  get meta edge from visible graph's meta edge map
               let metaEdge = visibleGM.metaEdgesMap.get(item.ID);
-              
-              // add meta edge to  set of meta edges to keep 
+
+              // add meta edge to  set of meta edges to keep
               this.removedElements.metaEdgeIDListForVisible.add({
-                ID:metaEdge.ID,
-                sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID,
+                ID: metaEdge.ID,
+                sourceID: metaEdge.source.ID,
+                targetID: metaEdge.target.ID,
                 size: metaEdge.originalEdges.length,
-                compound: 'T'
+                compound: "T",
               });
             });
           }
@@ -2171,49 +2352,58 @@
       // if given node is compound node
       if (node.child) {
         // loop though children nodes of child graph
-        node.child.nodes.forEach(childNode => {
+        node.child.nodes.forEach((childNode) => {
           // if child node is a compound node
           if (childNode.child) {
-            // pass the child node to the function again to collapse all its descendants 
-            this.collapseCompoundDescendantNodes(childNode, visibleGM, invisibleGM);
+            // pass the child node to the function again to collapse all its descendants
+            this.collapseCompoundDescendantNodes(
+              childNode,
+              visibleGM,
+              invisibleGM
+            );
             // pass the child node to collapse node function to collapse child node.
             this.#collapseNode(childNode, visibleGM, invisibleGM);
             // initilaize the index to 0
             let index = 0;
-            // loop through list of meta edge ids list 
-            // struture list of list of objects 
+            // loop through list of meta edge ids list
+            // struture list of list of objects
             // strucute [[{meta edge object},{meta edge object}],[{meta edge object},{meta edge object}]]
-            this.removedElements.metaEdgeIDListForVisible.forEach((edgeIDList) => {
-              // check if current meta edge list is not the last one
-              if(index!=this.removedElements.metaEdgeIDListForVisible.size-1){
-                // loop through current meta edge if list
-                edgeIDList.forEach(edgeID => {
-                  // delete meta edge from the visible graph
-                  visibleGM.edgesMap.delete(edgeID.ID);
-                });
+            this.removedElements.metaEdgeIDListForVisible.forEach(
+              (edgeIDList) => {
+                // check if current meta edge list is not the last one
+                if (
+                  index !=
+                  this.removedElements.metaEdgeIDListForVisible.size - 1
+                ) {
+                  // loop through current meta edge if list
+                  edgeIDList.forEach((edgeID) => {
+                    // delete meta edge from the visible graph
+                    visibleGM.edgesMap.delete(edgeID.ID);
+                  });
+                }
+                // increase index by one when one list is processed
+                index = index + 1;
               }
-              // increase index by one when one list is processed
-              index = index + 1;
-            });
+            );
             // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
             let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
             // get the last list of objects as temp
-            let temp = [...temp1[temp1.length-1]];
+            let temp = [...temp1[temp1.length - 1]];
             //  set metaEdgeIDListForVisible as a new set
             this.removedElements.metaEdgeIDListForVisible = new Set();
             // create temp array
             let tempArr = [];
             // loop through the temp list
-            temp.forEach(item => {
+            temp.forEach((item) => {
               //  get meta edge from visible graph's meta edge map
               let metaEdge = visibleGM.metaEdgesMap.get(item.ID);
-              // psuh meta edge to  tempArr 
+              // psuh meta edge to  tempArr
               tempArr.push({
-                ID:metaEdge.ID,
-                sourceID:metaEdge.source.ID,
-                targetID:metaEdge.target.ID,
+                ID: metaEdge.ID,
+                sourceID: metaEdge.source.ID,
+                targetID: metaEdge.target.ID,
                 size: metaEdge.originalEdges.length,
-                compound: 'T'
+                compound: "T",
               });
             });
             // add tempArr to the metaEdgeIDListForVisible
@@ -2233,19 +2423,24 @@
         edgeIDListToRemove: new Set(),
       };
       // loop through nodes list
-      nodeIDList.forEach(nodeID => {
+      nodeIDList.forEach((nodeID) => {
         // get node from visible graph (visibleNode)
         let nodeInVisible = visibleGM.nodesMap.get(nodeID);
         // get node from invisible grap (invisibleNode)
         let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
         // check if invisibleNode is compound node and is collapsed and not filtered and not hidded
-        if (nodeInInvisible.child && nodeInInvisible.isCollapsed && !nodeInInvisible.isFiltered && !nodeInInvisible.isHidden) {
+        if (
+          nodeInInvisible.child &&
+          nodeInInvisible.isCollapsed &&
+          !nodeInInvisible.isFiltered &&
+          !nodeInInvisible.isHidden
+        ) {
           // pass invisibleNode to expand node function and recursive status
           this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
         }
       });
       // return addedElements
-      return this.addedElements
+      return this.addedElements;
     }
 
     //  collapse All Nodes function
@@ -2253,7 +2448,7 @@
       // create list for nodes to collapse
       let nodeIDList = [];
       // loop through nodes of root graph (rootNodes)
-      visibleGM.rootGraph.nodes.forEach(rootNode => {
+      visibleGM.rootGraph.nodes.forEach((rootNode) => {
         // if rootNode is a compound node
         if (rootNode.child) {
           // report it as node to be collapsed
@@ -2261,31 +2456,43 @@
         }
       });
       // call the collapsedNodes function and pass list of nodes to be collapsed
-      return {collapsedNodes: nodeIDList, ...this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM)}
+      return {
+        collapsedNodes: nodeIDList,
+        ...this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM),
+      };
     }
 
     //expand all nodes function
     static expandAllNodes(visibleGM, invisibleGM) {
       //  get list of all the top level collapsed compound nodes  (takes invisible root node root node)
-      let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(invisibleGM.rootGraph.parent);
+      let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(
+        invisibleGM.rootGraph.parent
+      );
       // all the expandNodes function will the list of all top level collapsed compound nodes
-      return {expandedNodes: topCollapsedCompoundNodes, ...this.expandNodes(topCollapsedCompoundNodes, true, visibleGM, invisibleGM)}
+      return {
+        expandedNodes: topCollapsedCompoundNodes,
+        ...this.expandNodes(
+          topCollapsedCompoundNodes,
+          true,
+          visibleGM,
+          invisibleGM
+        ),
+      };
     }
 
-    // function to get thae list of all the top level collapsed compound nodes, (takes invisible root node root node) 
+    // function to get thae list of all the top level collapsed compound nodes, (takes invisible root node root node)
     static getTopCollapsedCompoundNodes(node) {
       // initialize list of descendantNodes
       let descendantNodes = [];
       // check if node is a compound node
       if (node.child) {
         // loop through nodes of child graph of top level collapsed node (as childNode)
-        node.child.nodes.forEach(childNode => {
+        node.child.nodes.forEach((childNode) => {
           // if child node is a compound node and is collapsed
           if (childNode.child && childNode.isCollapsed) {
             // report child node as descendant node (because its collapsed)
             descendantNodes.push(childNode.ID);
-          }
-          else if (childNode.child && (!childNode.isCollapsed)) {
+          } else if (childNode.child && !childNode.isCollapsed) {
             // if childNode is compound node and is not collapsed
             // call the function again and pass childNode
             let nodesReturned = this.getTopCollapsedCompoundNodes(childNode);
@@ -2298,7 +2505,7 @@
       return descendantNodes;
     }
 
-  // function to collapse edges between 2 nodes (takes lis of edges)
+    // function to collapse edges between 2 nodes (takes lis of edges)
     static collapseEdges(edgeIDList, visibleGM, invisibleGM) {
       // get first edge from the list of edges
       let firstEdge = visibleGM.edgesMap.get(edgeIDList[0]);
@@ -2307,20 +2514,26 @@
       // get target of the first node (targetNode)
       let targetNode = firstEdge.target;
       // all add meta edge function to create meta edge between source and target
-      let newMetaEdge = Topology.addMetaEdge(sourceNode.ID, targetNode.ID, edgeIDList,visibleGM, invisibleGM);
+      let newMetaEdge = Topology.addMetaEdge(
+        sourceNode.ID,
+        targetNode.ID,
+        edgeIDList,
+        visibleGM,
+        invisibleGM
+      );
       // initailize list of edge ids list
       let edgeIDListForInvisible = [];
-      // loop throug the given edge id list 
-      edgeIDList.forEach(edgeID => {
+      // loop throug the given edge id list
+      edgeIDList.forEach((edgeID) => {
         // get edge from visible graph
         let edge = visibleGM.edgesMap.get(edgeID);
         //  check if visibleEge is not a meta edge
-        if( !(edge instanceof MetaEdge )){
+        if (!(edge instanceof MetaEdge)) {
           // report edge as processed (to be removed)
           edgeIDListForInvisible.push(edgeID);
         }
         // check if edge is visible
-        if(visibleGM.edgesMap.has(edgeID)){
+        if (visibleGM.edgesMap.has(edgeID)) {
           // remove edge from  visible graph
           Auxiliary.removeEdgeFromGraph(edge);
           // remove edge from visible edges map
@@ -2328,35 +2541,42 @@
         }
       });
       // loop through removted edges
-      edgeIDListForInvisible.forEach(edgeForInvisibleID => {
+      edgeIDListForInvisible.forEach((edgeForInvisibleID) => {
         // get corresponding edge from invisible graph and set visible flag false.
         let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
         edgeInInvisible.isVisible = false;
       });
-      // return list of object with new meta edge infromation 
+      // return list of object with new meta edge infromation
       // Structure = [{ID,sourceID,targetID}]
-      return [{ID: newMetaEdge.ID, sourceID: newMetaEdge.source.ID, targetID: newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-        compound: 'T'}];
+      return [
+        {
+          ID: newMetaEdge.ID,
+          sourceID: newMetaEdge.source.ID,
+          targetID: newMetaEdge.target.ID,
+          size: newMetaEdge.originalEdges.length,
+          compound: "T",
+        },
+      ];
     }
 
     // function to expand edges (takes list of edges to expand)
     static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
       // intialize list of 2d array with orignal edges list to report
       // Structure = [ [edges to be added] , [meta edges to be removed] , [edges to be removed]]
-      let originalEdgeIDList = [[],[],[]];
+      let originalEdgeIDList = [[], [], []];
 
       edgeIDList = edgeIDList.filter((edgeID) => {
         let metaEdge = visibleGM.metaEdgesMap.get(edgeID);
-        if(metaEdge){
-          return metaEdge.originalEdges.length ==1 ? false: true;
+        if (metaEdge) {
+          return metaEdge.originalEdges.length == 1 ? false : true;
         }
-        return false
+        return false;
       });
-      
+
       originalEdgeIDList[2] = [...edgeIDList];
 
       // loop through given list of edges
-      edgeIDList.forEach(edgeID => {
+      edgeIDList.forEach((edgeID) => {
         // get meta edge  from visibleGm
         let metaEdge = visibleGM.metaEdgesMap.get(edgeID);
         // get source of meta edge
@@ -2364,55 +2584,68 @@
         // get target of meta edge
         let targetNode = metaEdge.target;
         // loop through orignal Edges of meta edge
-        metaEdge.originalEdges.forEach(originalEdgeID => {
+        metaEdge.originalEdges.forEach((originalEdgeID) => {
           // check if orignal edge is a meta edge
-          if(visibleGM.metaEdgesMap.has(originalEdgeID)){
+          if (visibleGM.metaEdgesMap.has(originalEdgeID)) {
             //  get meta edge of the orignal edge
             let originalEdge = visibleGM.metaEdgesMap.get(originalEdgeID);
             let sourceNode = visibleGM.nodesMap.get(originalEdge.source.ID);
             let targetNode = visibleGM.nodesMap.get(originalEdge.target.ID);
             //  check if recursive and orignal meta edge is not created by node collapse
-            if(isRecursive && originalEdge.originalEdges.length!=1){
+            if (isRecursive && originalEdge.originalEdges.length != 1) {
               // expand the orignal meta edge (returns edges brought back to visible graph  and meta edges to be removed)
-              let returnedList = this.expandEdges([originalEdge.ID], isRecursive, visibleGM, invisibleGM);
+              let returnedList = this.expandEdges(
+                [originalEdge.ID],
+                isRecursive,
+                visibleGM,
+                invisibleGM
+              );
               // remove this meta edge from meta edge map
               visibleGM.metaEdgesMap.delete(originalEdge.ID);
               // combine returned list to the cureent edge list
-              originalEdgeIDList[0] = [...originalEdgeIDList[0], ...returnedList[0]];
-              originalEdgeIDList[1] = [...originalEdgeIDList[1], ...returnedList[1]];
-              originalEdgeIDList[2] = [...originalEdgeIDList[2], ...returnedList[2]];
-            }else {
+              originalEdgeIDList[0] = [
+                ...originalEdgeIDList[0],
+                ...returnedList[0],
+              ];
+              originalEdgeIDList[1] = [
+                ...originalEdgeIDList[1],
+                ...returnedList[1],
+              ];
+              originalEdgeIDList[2] = [
+                ...originalEdgeIDList[2],
+                ...returnedList[2],
+              ];
+            } else {
               //  check if its not recursive or orignal meta edge is created by node collapse
               // if orignalEdge source and target have same owner (not inter graph edge)
-              if(sourceNode.owner == targetNode.owner){
+              if (sourceNode.owner == targetNode.owner) {
                 // add orignal edge to the graph
-                sourceNode.owner.addEdge(originalEdge,sourceNode,targetNode);
-              }else {
+                sourceNode.owner.addEdge(originalEdge, sourceNode, targetNode);
+              } else {
                 // if orignalEdge source and target does not have same owner (is inter graph edge)
                 // add orignal edge as inter graph edge
-                visibleGM.addInterGraphEdge(originalEdge,sourceNode,targetNode);
+                visibleGM.addInterGraphEdge(originalEdge, sourceNode, targetNode);
               }
               // add orignal edge to visible edges map
-              visibleGM.edgesMap.set(originalEdge.ID,originalEdge);
+              visibleGM.edgesMap.set(originalEdge.ID, originalEdge);
               // report orignal edge as meta edge (to be removed)
-              originalEdgeIDList[1].push(
-                {
-                  ID:originalEdge.ID,
-                  sourceID: sourceNode.ID,
-                  targetID: targetNode.ID,
-                  size: originalEdge.originalEdges.length,
-                  compound: 'T'
-                }
-                );
-              
+              originalEdgeIDList[1].push({
+                ID: originalEdge.ID,
+                sourceID: sourceNode.ID,
+                targetID: targetNode.ID,
+                size: originalEdge.originalEdges.length,
+                compound: "T",
+              });
             }
-
-          }else {
+          } else if(invisibleGM.edgesMap.has(originalEdgeID)) {
             // if orignal edge is not a meta edge
             // get edge from invisible side
             let edgeInInvisible = invisibleGM.edgesMap.get(originalEdgeID);
             //  check if edge is not filtered and not hiddedn
-            if (edgeInInvisible.isFiltered == false && edgeInInvisible.isHidden == false){
+            if (
+              edgeInInvisible.isFiltered == false &&
+              edgeInInvisible.isHidden == false
+            ) {
               // set orignal edge visible flag true
               edgeInInvisible.isVisible = true;
               //  get source of invisible edge from visible graph
@@ -2420,17 +2653,17 @@
               //  get target of invisible edge from visible graph
               targetNode = visibleGM.nodesMap.get(edgeInInvisible.target.ID);
               // create new edge with same ID of invisible edge and source and target from visible graph
-              let newEdge = new Edge(edgeInInvisible.ID,sourceNode,targetNode);
+              let newEdge = new Edge(edgeInInvisible.ID, sourceNode, targetNode);
               // check if source and target have same owner graph (not inter graph edge)
-              if (sourceNode.owner == targetNode.owner ){
+              if (sourceNode.owner == targetNode.owner) {
                 // add new edge to the owner graph of source node
-                sourceNode.owner.addEdge(newEdge,sourceNode,targetNode);
-              }else {
-              // check if source and target does not have same owner graph (is inter graph edge)
-                visibleGM.addInterGraphEdge(newEdge,sourceNode,targetNode);
+                sourceNode.owner.addEdge(newEdge, sourceNode, targetNode);
+              } else {
+                // check if source and target does not have same owner graph (is inter graph edge)
+                visibleGM.addInterGraphEdge(newEdge, sourceNode, targetNode);
               }
               // add orignal edge to visible edges map
-              visibleGM.edgesMap.set(newEdge.ID,newEdge);
+              visibleGM.edgesMap.set(newEdge.ID, newEdge);
               // report orignal edge as  edge (to be added)
               originalEdgeIDList[0].push(originalEdgeID);
             }
@@ -2441,78 +2674,94 @@
         // remove edge from meta edge map ( this meta edge is expanded and does not exist anymore)
         visibleGM.metaEdgesMap.delete(edgeID);
         // if edge is visible
-        if(visibleGM.edgesMap.has(edgeID)){
+        if (visibleGM.edgesMap.has(edgeID)) {
           // remove edge from visible graph and visible edges map
           Auxiliary.removeEdgeFromGraph(metaEdge);
           visibleGM.edgesMap.delete(edgeID);
         }
-        
       });
-      // report orignal edges id list 
+      // report orignal edges id list
       // Structure = [ [edges to be added] , [meta edges to be removed], [edges to be removed]]
-      return originalEdgeIDList
+      return originalEdgeIDList;
     }
     // function to collapse edge between selected nodes
     static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
       // initalize list to report meta edge
-      let EdgeIDList = [[],[]];
+      let EdgeIDList = [[], []];
       // loop through all the nodes in the list
       for (let i = 0; i < nodeIDList.length; i++) {
         // loop through each pair onece (a-b and b-a are same so ignore one)
-        for (let j = i+1; j < nodeIDList.length; j++) {
+        for (let j = i + 1; j < nodeIDList.length; j++) {
           // get nodes
           let nodeA = visibleGM.nodesMap.get(nodeIDList[i]);
           let nodeB = visibleGM.nodesMap.get(nodeIDList[j]);
           let edgeIDList = [];
           // loop throught edges of first Node A and check if source or target of that edge is Node B and is not already in the edge list , add it.
-          nodeA.edges.forEach(edge => {
-            if(edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID){
-              if(!edgeIDList.includes(edge.ID)){
+          nodeA.edges.forEach((edge) => {
+            if (edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID) {
+              if (!edgeIDList.includes(edge.ID)) {
                 edgeIDList.push(edge.ID);
               }
             }
-          });      
+          });
           // call collapse edges function and pass edge list if edge list is not empty
-          // function returns array containing one object 
+          // function returns array containing one object
           // Structure = [{ID,sourceID,targetID}]
-          if(edgeIDList.length>1){
-            let newMetaEge = this.collapseEdges(edgeIDList,visibleGM,invisibleGM);
+          if (edgeIDList.length > 1) {
+            let newMetaEge = this.collapseEdges(
+              edgeIDList,
+              visibleGM,
+              invisibleGM
+            );
             // append it to the edge list to report.
             EdgeIDList[0] = [...EdgeIDList[0], ...edgeIDList];
             // append it to the meta edge list to report.
             EdgeIDList[1] = [...EdgeIDList[1], ...newMetaEge];
           }
-        }  
+        }
       }
       return EdgeIDList;
     }
 
-    static expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+    static expandEdgesBetweenNodes(
+      nodeIDList,
+      isRecursive,
+      visibleGM,
+      invisibleGM
+    ) {
       // initalize list to report meta edge
-      let EdgeIDList = [[],[],[]];
+      let EdgeIDList = [[], [], []];
       // loop through all the nodes in the list
       for (let i = 0; i < nodeIDList.length; i++) {
         // loop through each pair onece (a-b and b-a are same so ignore one)
-        for (let j = i+1; j < nodeIDList.length; j++) {
+        for (let j = i + 1; j < nodeIDList.length; j++) {
           // get nodes
           let nodeA = visibleGM.nodesMap.get(nodeIDList[i]);
           let nodeB = visibleGM.nodesMap.get(nodeIDList[j]);
           let edgeIDs = [];
           // loop throught edges of first Node A and check if source or target of that edge is Node B and is not already in the edge list , add it.
-          nodeA.edges.forEach(edge => {
-            if(edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID){
-              if(visibleGM.metaEdgesMap.has(edge.ID)){
-                if(!edgeIDs.includes(edge.ID) && edge.originalEdges.length!=1){
+          nodeA.edges.forEach((edge) => {
+            if (edge.source.ID == nodeB.ID || edge.target.ID == nodeB.ID) {
+              if (visibleGM.metaEdgesMap.has(edge.ID)) {
+                if (
+                  !edgeIDs.includes(edge.ID) &&
+                  edge.originalEdges.length != 1
+                ) {
                   edgeIDs.push(edge.ID);
                 }
               }
             }
-          });      
+          });
           // call collapse edges function and pass edge list if edge list is not empty
-          // function returns array containing one object 
+          // function returns array containing one object
           // Structure = [{ID,sourceID,targetID}]
-          if(edgeIDs.length!=0){
-            let returnedEdgeList = this.expandEdges(edgeIDs, isRecursive, visibleGM, invisibleGM);
+          if (edgeIDs.length != 0) {
+            let returnedEdgeList = this.expandEdges(
+              edgeIDs,
+              isRecursive,
+              visibleGM,
+              invisibleGM
+            );
             // append it to the edge list to report.
             EdgeIDList[0] = [...EdgeIDList[0], ...returnedEdgeList[0]];
             // append it to the meta edge list to report.
@@ -2520,40 +2769,42 @@
             // append it to the meta edge list to remove.
             EdgeIDList[2] = [...EdgeIDList[2], ...edgeIDs];
           }
-        }  
+        }
       }
       return EdgeIDList;
     }
 
     static collapseAllEdges(visibleGM, invisibleGM) {
-          // create list for nodes to collapse
+      // create list for nodes to collapse
       let nodeIDList = [];
       // loop through nodes of root graph (rootNodes)
-      visibleGM.nodesMap.forEach((node,ID) => {
-          nodeIDList.push(ID);
+      visibleGM.nodesMap.forEach((node, ID) => {
+        nodeIDList.push(ID);
       });
       // call the collapsedNodes function and pass list of nodes to be collapsed
-      return this.collapseEdgesBetweenNodes(nodeIDList,visibleGM, invisibleGM)
-
+      return this.collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM);
     }
-    
+
     static expandAllEdges(visibleGM, invisibleGM) {
       // create list for nodes to collapse
       let nodeIDList = [];
       // loop through nodes of root graph (rootNodes)
-      visibleGM.nodesMap.forEach((node,ID) => {
-          nodeIDList.push(ID);
+      visibleGM.nodesMap.forEach((node, ID) => {
+        nodeIDList.push(ID);
       });
       // call the collapsedNodes function and pass list of nodes to be collapsed
-      return this.expandEdgesBetweenNodes(nodeIDList, true,visibleGM, invisibleGM)
-
+      return this.expandEdgesBetweenNodes(
+        nodeIDList,
+        true,
+        visibleGM,
+        invisibleGM
+      );
     }
   }
 
   class Auxiliary {
-
     static lastID = 0;
-  // Function to create unique id for new elements
+    // Function to create unique id for new elements
     static createUniqueID() {
       let newID = "Object#" + this.lastID + "";
       this.lastID++;
@@ -2566,401 +2817,461 @@
       if (edgeToRemove.owner instanceof GraphManager) {
         // remove the inter graph edge
         edgeToRemove.owner.removeInterGraphEdge(edgeToRemove);
-      }
-      else {
+      } else {
         // edge is not an inter graph edge
         // remove the edge from the owner graph
         edgeToRemove.owner.removeEdge(edgeToRemove);
       }
     }
 
-    // function to remove a given edge from the meta edge and that meta edge from its parent and so on and so forth 
-    static recursiveMetaEdgeUpdate(edge,visibleGM,invisibleGM){
+    // function to remove a given edge from the meta edge and that meta edge from its parent and so on and so forth
+    static recursiveMetaEdgeUpdate(edge, visibleGM, invisibleGM) {
       // initalize list to report all deleted meta edges
-      let deletedMetaEdges = [[],[]];
+      let deletedMetaEdges = [[], []];
       // edge is part of a meta edge, get that meta edge using edge ID (as newMetaEdge)
       let metaEdge = visibleGM.edgeToMetaEdgeMap.get(edge.ID);
       // remove meta edge from the edge to meta edge map.
       visibleGM.edgeToMetaEdgeMap.delete(edge.ID);
       // check if newMetaEdge is part of any meta edge
-      if(visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID) && metaEdge.originalEdges.length==1){
+      if (
+        visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID) &&
+        metaEdge.originalEdges.length == 1
+      ) {
         // call the function again and pass newMetaEdge
-        let returnedList = this.recursiveMetaEdgeUpdate(metaEdge,visibleGM,invisibleGM);
+        let returnedList = this.recursiveMetaEdgeUpdate(
+          metaEdge,
+          visibleGM,
+          invisibleGM
+        );
         // combine the reproted list and the current list of meta edges to be deleted
-        deletedMetaEdges[0] = [...deletedMetaEdges[0],...returnedList[0]];
-        deletedMetaEdges[1] = [...deletedMetaEdges[1],...returnedList[1]];
+        deletedMetaEdges[0] = [...deletedMetaEdges[0], ...returnedList[0]];
+        deletedMetaEdges[1] = [...deletedMetaEdges[1], ...returnedList[1]];
       }
-      if(visibleGM.metaEdgesMap.has(metaEdge.ID)){
+      if (visibleGM.metaEdgesMap.has(metaEdge.ID)) {
         // get the orignal edges of our newMetaEdge as new list ( orignalEnds)
-        let orignalEnds = [...visibleGM.metaEdgesMap.get(metaEdge.ID)?.originalEdges];
+        let orignalEnds = [
+          ...visibleGM.metaEdgesMap.get(metaEdge.ID)?.originalEdges,
+        ];
         // remove given edgeID from the orignalEnds list (filter out EdgeID)
-        orignalEnds = orignalEnds.filter((i)=>i==edge.ID?false:true);
+        orignalEnds = orignalEnds.filter((i) => (i == edge.ID ? false : true));
         // if filtered list is not empty
-        if(orignalEnds.length==0){
+        if (orignalEnds.length == 0) {
           // delete meta edge from the metaEdgeMap
           visibleGM.metaEdgesMap.delete(metaEdge.ID);
           // if meta edge is visible
-          if(visibleGM.edgesMap.has(metaEdge.ID)){
+          if (visibleGM.edgesMap.has(metaEdge.ID)) {
             // delete meta edge from visible edge map
             Auxiliary.removeEdgeFromGraph(metaEdge);
             visibleGM.edgesMap.delete(metaEdge.ID);
             // report meta edge as processed (to be removed)
             // structure {ID,sourceID,TargetID}
-            deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
+            deletedMetaEdges[0].push({
+              ID: metaEdge.ID,
+              sourceID: metaEdge.source.ID,
+              targetID: metaEdge.target.ID,
+            });
           }
-        }else if(orignalEnds.length==1){
-            visibleGM.edgeToMetaEdgeMap.delete(orignalEnds[0]);
-            if( visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)){
-              let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
-              pMetaEdge.originalEdges.push(orignalEnds[0]);
-              visibleGM.edgeToMetaEdgeMap.set(orignalEnds[0],pMetaEdge);
-              let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i)=>i==metaEdge.ID?false:true);
-              pMetaEdge.originalEdges = updatedPOrignalEnds;
-            }else {
-              deletedMetaEdges[1].push(orignalEnds[0]);
-              if(visibleGM.metaEdgesMap.has(orignalEnds[0])){
-                let outerMetaEdge = visibleGM.metaEdgesMap.get(orignalEnds[0]);
-                if(outerMetaEdge.originalEdges.length!=1){
-
-                  visibleGM.edgesMap.set(orignalEnds[0],outerMetaEdge);
-                  let sourceNode = visibleGM.nodesMap.get(outerMetaEdge.source.ID);
-                  let targetNode = visibleGM.nodesMap.get(outerMetaEdge.target.ID);
-                  if (sourceNode != undefined && targetNode != undefined) {
-                    if (sourceNode.owner === targetNode.owner) {
-                        sourceNode.owner.addEdge(outerMetaEdge, sourceNode, targetNode);
-                    } else {
-                      //add inter graph edges
-                        visibleGM.addInterGraphEdge(outerMetaEdge, sourceNode, targetNode);
-                    }
+        } else if (orignalEnds.length == 1) {
+          visibleGM.edgeToMetaEdgeMap.delete(orignalEnds[0]);
+          if (visibleGM.edgeToMetaEdgeMap.has(metaEdge.ID)) {
+            let pMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
+            pMetaEdge.originalEdges.push(orignalEnds[0]);
+            visibleGM.edgeToMetaEdgeMap.set(orignalEnds[0], pMetaEdge);
+            let updatedPOrignalEnds = pMetaEdge.originalEdges.filter((i) =>
+              i == metaEdge.ID ? false : true
+            );
+            pMetaEdge.originalEdges = updatedPOrignalEnds;
+          } else {
+            deletedMetaEdges[1].push(orignalEnds[0]);
+            if (visibleGM.metaEdgesMap.has(orignalEnds[0])) {
+              let outerMetaEdge = visibleGM.metaEdgesMap.get(orignalEnds[0]);
+              if (outerMetaEdge.originalEdges.length != 1) {
+                visibleGM.edgesMap.set(orignalEnds[0], outerMetaEdge);
+                let sourceNode = visibleGM.nodesMap.get(outerMetaEdge.source.ID);
+                let targetNode = visibleGM.nodesMap.get(outerMetaEdge.target.ID);
+                if (sourceNode != undefined && targetNode != undefined) {
+                  if (sourceNode.owner === targetNode.owner) {
+                    sourceNode.owner.addEdge(
+                      outerMetaEdge,
+                      sourceNode,
+                      targetNode
+                    );
+                  } else {
+                    //add inter graph edges
+                    visibleGM.addInterGraphEdge(
+                      outerMetaEdge,
+                      sourceNode,
+                      targetNode
+                    );
                   }
-
                 }
-              }else {
-                let edgeInInvisible = invisibleGM.edgesMap.get(orignalEnds[0]);
-                let sourceNode = visibleGM.nodesMap.get(edgeInInvisible.source.ID);
-                let targetNode = visibleGM.nodesMap.get(edgeInInvisible.target.ID);
-                let newEdge = new Edge(edgeInInvisible.ID,sourceNode,targetNode);
-                visibleGM.edgesMap.set(orignalEnds[0],newEdge);
-                
-                  if (sourceNode != undefined && targetNode != undefined) {
-                    if (sourceNode.owner === targetNode.owner) {
-                        sourceNode.owner.addEdge(newEdge, sourceNode, targetNode);
-                    } else {
-                      //add inter graph edges
-                        visibleGM.addInterGraphEdge(newEdge, sourceNode, targetNode);
-                    }
-                  }
+              }
+            } else {
+              let edgeInInvisible = invisibleGM.edgesMap.get(orignalEnds[0]);
+              let sourceNode = visibleGM.nodesMap.get(edgeInInvisible.source.ID);
+              let targetNode = visibleGM.nodesMap.get(edgeInInvisible.target.ID);
+              let newEdge = new Edge(edgeInInvisible.ID, sourceNode, targetNode);
+              visibleGM.edgesMap.set(orignalEnds[0], newEdge);
+
+              if (sourceNode != undefined && targetNode != undefined) {
+                if (sourceNode.owner === targetNode.owner) {
+                  sourceNode.owner.addEdge(newEdge, sourceNode, targetNode);
+                } else {
+                  //add inter graph edges
+                  visibleGM.addInterGraphEdge(newEdge, sourceNode, targetNode);
+                }
               }
             }
-              // delete meta edge from the metaEdgeMap
-            visibleGM.metaEdgesMap.delete(metaEdge.ID);
-            // if meta edge is visible
-            if(visibleGM.edgesMap.has(metaEdge.ID)){
-              // delete meta edge from visible edge map
-              try{
-                Auxiliary.removeEdgeFromGraph(metaEdge);
-              }catch(e){console.log(e);}
-              visibleGM.edgesMap.delete(metaEdge.ID);
-              // report meta edge as processed (to be removed)
-              // structure {ID,sourceID,TargetID}
-              deletedMetaEdges[0].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
+          }
+          // delete meta edge from the metaEdgeMap
+          visibleGM.metaEdgesMap.delete(metaEdge.ID);
+          // if meta edge is visible
+          if (visibleGM.edgesMap.has(metaEdge.ID)) {
+            // delete meta edge from visible edge map
+            try {
+              Auxiliary.removeEdgeFromGraph(metaEdge);
+            } catch (e) {
             }
-        }
-        else {
+            visibleGM.edgesMap.delete(metaEdge.ID);
+            // report meta edge as processed (to be removed)
+            // structure {ID,sourceID,TargetID}
+            deletedMetaEdges[0].push({
+              ID: metaEdge.ID,
+              sourceID: metaEdge.source.ID,
+              targetID: metaEdge.target.ID,
+            });
+          }
+        } else {
           // if filtered list is not empty (there are other edges present in orignal edges list of meta edge)
           // set orignal edges list of meta edge to the filtered version (so edgeID gets removed from the orignal ends)
           visibleGM.metaEdgesMap.get(metaEdge.ID).originalEdges = orignalEnds;
         }
-
       }
       // reprot the list of meta edges to be deleted
-      return deletedMetaEdges
+      return deletedMetaEdges;
     }
     //recursivly tracks if meta edge is part of another meta edge if yes returns top one
-    static getTopMetaEdge(metaEdge,visibleGM){
+    static getTopMetaEdge(metaEdge, visibleGM) {
       //check if meta edge is part of another meta edge
       let topMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
       //if not then topMetaEdge will be undefined so return meta edge
-      if(topMetaEdge){
+      if (topMetaEdge) {
         // if yes,
         // check that top meta edge is part of another meta edge
-        if(visibleGM.edgeToMetaEdgeMap.has(topMetaEdge.ID)){
+        if (visibleGM.edgeToMetaEdgeMap.has(topMetaEdge.ID)) {
           // if yes call the function again and pass top meta edge
-          topMetaEdge = this.getTopMetaEdge(topMetaEdge,visibleGM);
+          topMetaEdge = this.getTopMetaEdge(topMetaEdge, visibleGM);
         }
         // return top meta edge
-        return topMetaEdge
+        return topMetaEdge;
       }
       // return meta edge (since top meta edge is undfined, meaning given meta edge is not part of any other meta edge)
-      return metaEdge
+      return metaEdge;
     }
-    static recursiveExpand ( edgeID, visibleGM, bringBack = true ){
+    static recursiveExpand(edgeID, visibleGM, bringBack = true) {
       let metaEdge = visibleGM.edgeToMetaEdgeMap.get(edgeID);
       let parentMetaEdge = visibleGM.edgeToMetaEdgeMap.get(metaEdge.ID);
-      if(parentMetaEdge!= undefined){
-        if(parentMetaEdge.originalEdges.length == 1 ){
-          if((!visibleGM.edgesMap.has(metaEdge.ID)) && bringBack){
-              let sourceInVisible = visibleGM.nodesMap.get(metaEdge.source.ID);
-              let targetInVisible = visibleGM.nodesMap.get(metaEdge.target.ID);
-              // if source and target are visible
-              if (sourceInVisible && targetInVisible) {
-                // check if source and target of incident edge have same owner graph (not an intergraph edge)
-                if (sourceInVisible.owner == targetInVisible.owner) {
-                  // add the meta edge to sibling graph of owner of incident edge (incident edge is from invisible graph)
-                sourceInVisible.owner.addEdge(metaEdge, sourceInVisible, targetInVisible);
-                }
-                else {
-                  // source and target have different owner graphs (is an inter graph edge)
-                  // add meta edge as inter graph edge between visible source and target nodes
-                visibleGM.addInterGraphEdge(metaEdge, sourceInVisible, targetInVisible);
-                }
-                //  add meta edge to visible edges map
-                visibleGM.edgesMap.set(metaEdge.ID, metaEdge);
-                return metaEdge
-             }
-          }
-          else
-          {
-            return metaEdge
-          }
-      }else {
-        return this.recursiveExpand(metaEdge.ID, visibleGM)
-      }
-    }
-    return ['None',metaEdge]
-  }
-
-  static getVisibleParent(nodeID, invisibleGM){
-    let node = invisibleGM.nodesMap.get(nodeID);
-    if(node.isVisible){
-      return node.ID
-    }else {
-      return this.getVisibleParent(node.owner.parent.ID, invisibleGM)
-    }
-  }
-
-    // function to bring node back to visible and all its incident edges
-    static moveNodeToVisible(node, visibleGM, invisibleGM, nodeToBeExpanded = {ID:undefined}) {
-      // initlaize the list of lists to report edges (to be added) and meta edges (to be removed) 
-      // Structure = [ [edges] , [meta edges( to be removed)],[meta edges (to be added)]]
-      var edgeIDList = [[],[],[]];
-      let edgesToBeProcessed = [];
-      // set visbile flag of given node to true (marking it as processed)
-      node.isVisible = true;
-      // create new node with same nodeID as given node
-      let nodeForVisible = new Node(node.ID);
-      // add new node to the sibling graph of owner of the given node (given node is node form invisible GM)
-      let newNode = node.owner.siblingGraph.addNode(nodeForVisible);
-      // add new node to the nodes map of visible GM
-      visibleGM.nodesMap.set(newNode.ID, newNode);
-      // if given node has child graph ( meaning it is a compound node)
-      if (node.child) {
-        // chekc if given node is not collapsed
-        if (node.isCollapsed == false) {
-          // add an empty graph as child graph to new visible node
-          let newGraph = visibleGM.addGraph(new Graph(null, visibleGM), nodeForVisible);
-          // set siblingGraph pointer for visible and invisible child graph (so they point to each other)
-          newGraph.siblingGraph = node.child;
-          node.child.siblingGraph = newGraph;
-        }else {
-          let nodeDescendants =
-            visibleGM.getDescendantsInorder(node);
-            // loop through descendant edges
-            nodeDescendants.edges.forEach((nodeDescendantEdge) => {
-            if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID),invisibleGM.nodesMap.get(nodeToBeExpanded.ID),invisibleGM) || ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID),invisibleGM.nodesMap.get(nodeToBeExpanded.ID),invisibleGM)) {
-              edgesToBeProcessed.push(nodeDescendantEdge);
-            }
-          });
-        }
-      }
-      // Structure [[edges],[metaedges (to be deleted)],[meta edges to be added]]
-      let markedMetaEdges = [[],[],[]];
-      let addedMetaEdges = [];
-      node.edges.forEach(nodeDescendantEdge => {
-        if (invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID).isVisible && invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID).isVisible) {
-          edgesToBeProcessed.push(nodeDescendantEdge);
-        }
-        if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID),invisibleGM.nodesMap.get(nodeToBeExpanded.ID),invisibleGM) || ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID),invisibleGM.nodesMap.get(nodeToBeExpanded.ID),invisibleGM)) {
-              edgesToBeProcessed.push(nodeDescendantEdge);
-            }
-      });
-      let tempSet = new Set(edgesToBeProcessed);
-      edgesToBeProcessed = [...tempSet];
-      // looping through incident edges of given node
-      edgesToBeProcessed.forEach(incidentEdge => {
-        //check if edge is part of a meta edge 
-        if (visibleGM.edgeToMetaEdgeMap.has(incidentEdge.ID)) {
-          // get meta edge corresponding to edgeID from edgeToMetaEdgeMap
-          let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(incidentEdge.ID);
-          // Case (C)
-          // check if meta edge is visible and meta edge's orignal edges length is 1 (meaning meta edge is created by node collapse and is visible) 
-          if(visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length == 1){
-            // delete meta edge from edges map and meta edge map
-            visibleGM.edgesMap.delete(visibleMetaEdge.ID);
-            visibleGM.metaEdgesMap.delete(visibleMetaEdge.ID);
-            // dlete incident edge from edgeToMetaEdgemap
-            visibleGM.edgeToMetaEdgeMap.delete(incidentEdge.ID);
-            // report meta edge as processed (to be removed)
-            // Structure  = {ID,sourceID,targetID}
-            edgeIDList[1].push({ID:visibleMetaEdge.ID,sourceID:visibleMetaEdge.source.ID,targetID:visibleMetaEdge.target.ID});
-            // remove meta edge from graph
-            try{
-              Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
-              }catch(ex){
-                
+      if (parentMetaEdge != undefined) {
+        if (parentMetaEdge.originalEdges.length == 1) {
+          if (!visibleGM.edgesMap.has(metaEdge.ID) && bringBack) {
+            let sourceInVisible = visibleGM.nodesMap.get(metaEdge.source.ID);
+            let targetInVisible = visibleGM.nodesMap.get(metaEdge.target.ID);
+            // if source and target are visible
+            if (sourceInVisible && targetInVisible) {
+              // check if source and target of incident edge have same owner graph (not an intergraph edge)
+              if (sourceInVisible.owner == targetInVisible.owner) {
+                // add the meta edge to sibling graph of owner of incident edge (incident edge is from invisible graph)
+                sourceInVisible.owner.addEdge(
+                  metaEdge,
+                  sourceInVisible,
+                  targetInVisible
+                );
+              } else {
+                // source and target have different owner graphs (is an inter graph edge)
+                // add meta edge as inter graph edge between visible source and target nodes
+                visibleGM.addInterGraphEdge(
+                  metaEdge,
+                  sourceInVisible,
+                  targetInVisible
+                );
               }
-              // check if incident edge is not filtered and not hidden and souce and target both are visible 
-              if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false ) {
+              //  add meta edge to visible edges map
+              visibleGM.edgesMap.set(metaEdge.ID, metaEdge);
+              return metaEdge;
+            }
+          } else {
+            return metaEdge;
+          }
+        } else {
+          return this.recursiveExpand(metaEdge.ID, visibleGM);
+        }
+      }
+      return ["None", metaEdge];
+    }
+
+    static getVisibleParent(nodeID, invisibleGM) {
+      let node = invisibleGM.nodesMap.get(nodeID);
+      if(node){
+        if (node.isVisible) {
+          return node.ID;
+        } else {
+          return this.getVisibleParent(node.owner.parent.ID, invisibleGM);
+        }
+      }else {
+        return undefined;
+      }
+    }
+
+      // function to bring node back to visible and all its incident edges
+      static moveNodeToVisible(node, visibleGM, invisibleGM, nodeToBeExpanded = {
+        ID: undefined
+      }) {
+        // initlaize the list of lists to report edges (to be added) and meta edges (to be removed)
+        // Structure = [ [edges] , [meta edges( to be removed)],[meta edges (to be added)]]
+        var edgeIDList = [[], [], []];
+        let edgesToBeProcessed = [];
+        // set visbile flag of given node to true (marking it as processed)
+        node.isVisible = true;
+        // create new node with same nodeID as given node
+        let nodeForVisible = new Node(node.ID);
+        // add new node to the sibling graph of owner of the given node (given node is node form invisible GM)
+        let newNode = node.owner.siblingGraph.addNode(nodeForVisible);
+        // add new node to the nodes map of visible GM
+        visibleGM.nodesMap.set(newNode.ID, newNode);
+        // if given node has child graph ( meaning it is a compound node)
+        if (node.child) {
+          // chekc if given node is not collapsed
+          if (node.isCollapsed == false) {
+            // add an empty graph as child graph to new visible node
+            let newGraph = visibleGM.addGraph(new Graph(null, visibleGM), nodeForVisible);
+            // set siblingGraph pointer for visible and invisible child graph (so they point to each other)
+            newGraph.siblingGraph = node.child;
+            node.child.siblingGraph = newGraph;
+          } else {
+            let nodeDescendants = visibleGM.getDescendantsInorder(node);
+            // loop through descendant edges
+            nodeDescendants.edges.forEach(nodeDescendantEdge => {
+              if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID), invisibleGM.nodesMap.get(nodeToBeExpanded.ID), invisibleGM) || ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID), invisibleGM.nodesMap.get(nodeToBeExpanded.ID), invisibleGM)) {
+                edgesToBeProcessed.push(nodeDescendantEdge);
+              }
+            });
+          }
+        }
+        // Structure [[edges],[metaedges (to be deleted)],[meta edges to be added]]
+        let markedMetaEdges = [[], [], []];
+        let addedMetaEdges = [];
+        node.edges.forEach(nodeDescendantEdge => {
+          if (invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID).isVisible && invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID).isVisible) {
+            edgesToBeProcessed.push(nodeDescendantEdge);
+          }
+          if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.source.ID), invisibleGM.nodesMap.get(nodeToBeExpanded.ID), invisibleGM) || ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(nodeDescendantEdge.target.ID), invisibleGM.nodesMap.get(nodeToBeExpanded.ID), invisibleGM)) {
+            edgesToBeProcessed.push(nodeDescendantEdge);
+          }
+        });
+        let tempSet = new Set(edgesToBeProcessed);
+        edgesToBeProcessed = [...tempSet];
+        // looping through incident edges of given node
+        edgesToBeProcessed.forEach(incidentEdge => {
+          //check if edge is part of a meta edge
+          if (visibleGM.edgeToMetaEdgeMap.has(incidentEdge.ID)) {
+            // get meta edge corresponding to edgeID from edgeToMetaEdgeMap
+            let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(incidentEdge.ID);
+            // Case (C)
+            // check if meta edge is visible and meta edge's orignal edges length is 1 (meaning meta edge is created by node collapse and is visible)
+            if (visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length == 1) {
+              // delete meta edge from edges map and meta edge map
+              visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+              visibleGM.metaEdgesMap.delete(visibleMetaEdge.ID);
+              // dlete incident edge from edgeToMetaEdgemap
+              visibleGM.edgeToMetaEdgeMap.delete(incidentEdge.ID);
+              // report meta edge as processed (to be removed)
+              // Structure  = {ID,sourceID,targetID}
+              edgeIDList[1].push({
+                ID: visibleMetaEdge.ID,
+                sourceID: visibleMetaEdge.source.ID,
+                targetID: visibleMetaEdge.target.ID
+              });
+              // remove meta edge from graph
+              try {
+                Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
+              } catch (ex) {}
+              // check if incident edge is not filtered and not hidden and souce and target both are visible
+              if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false) {
                 if (incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
                   // move edge to visible graph
                   Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
                   // report edge as processed (to be added)
                   edgeIDList[0].push(incidentEdge.ID);
-              }else {
-                if (incidentEdge.source.isVisible) {
-                  let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
-                  let target = visibleGM.nodesMap.get(targetID);
-                  let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
-                  // report incident edge as processed (to be added)
-                  edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                    compound: 'T'});
-                  }
-                  else if (incidentEdge.target.isVisible) {
-                    let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
-                    let source = visibleGM.nodesMap.get(sourceID);
-                    let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
-                    // report incident edge as processed (to be added)
-                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                      compound: 'T'});
-                  }else {
-                    let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
-                    let source = visibleGM.nodesMap.get(sourceID);
-                    let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
-                    let target = visibleGM.nodesMap.get(targetID);
-                    let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
-                    // report incident edge as processed (to be added)
-                    edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                      compound: 'T'});
-                  }
-              }
-            }
-          }else if(visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length != 1){
-            // Case: meta edge is visible and the lenth of its orignal edges is more than 1 (meta edge is not created by node collapse)
-            //do nothing
-            console.log('done nothing');
-          }
-          else {
-            // Case: meta edge is not visible (CEE....)
-            // check if orignal edges of meta edge have length 1 (meta edge is created by node collapse)
-            if(visibleMetaEdge.originalEdges.length == 1){
-              // check if incident edge is not filtere and not hidde and source and target are visible
-              if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false ) {
-                if (incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
-                // move incident edge to visible graph
-                Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
-                // report incident edge as processed (to be added)
-                edgeIDList[0].push(incidentEdge.ID);
-                // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth 
-                let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge,visibleGM,invisibleGM);
-                // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed) 
-                edgeIDList[1] = [...edgeIDList[1],...deleteMetaEdgeList[0]];
-                edgeIDList[0] = [...edgeIDList[0],...deleteMetaEdgeList[1]];
-                }
-                else
-                {                
-
+                } else {
                   if (incidentEdge.source.isVisible) {
                     let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
-                    if(ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source,invisibleGM.nodesMap.get(targetID),invisibleGM)){
-                      // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth 
-                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge,visibleGM,invisibleGM);
-                      // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed) 
-                      edgeIDList[1] = [...edgeIDList[1],...deleteMetaEdgeList[0]];
-                      edgeIDList[0] = [...edgeIDList[0],...deleteMetaEdgeList[1]];
-                      
+                    if(targetID){
                       let target = visibleGM.nodesMap.get(targetID);
-                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                       // report incident edge as processed (to be added)
-                      edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                        compound: 'T'});
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
                     }
+                  } else if (incidentEdge.target.isVisible) {
+                    let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                    if(sourceID){
+                      let source = visibleGM.nodesMap.get(sourceID);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      // report incident edge as processed (to be added)
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
                     }
-                    else if(incidentEdge.target.isVisible){
-                      let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
-                      if(ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target,invisibleGM.nodesMap.get(sourceID),invisibleGM)){
-                        // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth 
-                        let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge,visibleGM,invisibleGM);
-                        // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed) 
-                        edgeIDList[1] = [...edgeIDList[1],...deleteMetaEdgeList[0]];
-                        edgeIDList[0] = [...edgeIDList[0],...deleteMetaEdgeList[1]];
-                        
-                        let source = visibleGM.nodesMap.get(sourceID);
-                        let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
-                        // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                          compound: 'T'});
+                  } else {
+                    let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                    let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                    if(sourceID && targetID){
+                      let source = visibleGM.nodesMap.get(sourceID);
+                      let target = visibleGM.nodesMap.get(targetID);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      // report incident edge as processed (to be added)
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
+                    }
+                  }
+                }
+              }
+            } else if (visibleGM.edgesMap.has(visibleMetaEdge.ID) && visibleMetaEdge.originalEdges.length != 1) ;else {
+              // Case: meta edge is not visible (CEE....)
+              // check if orignal edges of meta edge have length 1 (meta edge is created by node collapse)
+              if (visibleMetaEdge.originalEdges.length == 1) {
+                // check if incident edge is not filtere and not hidde and source and target are visible
+                if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false) {
+                  if (incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
+                    // move incident edge to visible graph
+                    Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+                    // report incident edge as processed (to be added)
+                    edgeIDList[0].push(incidentEdge.ID);
+                    // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                    let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                    // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                    edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                    edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                  } else {
+                    if (incidentEdge.source.isVisible) {
+                      let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                      if(targetID){
+                        if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                          // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                          let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                          // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                          edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                          edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                          let target = visibleGM.nodesMap.get(targetID);
+                          let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          // report incident edge as processed (to be added)
+                          edgeIDList[2].push({
+                            ID: newMetaEdge.ID,
+                            sourceID: newMetaEdge.source.ID,
+                            targetID: newMetaEdge.target.ID,
+                            size: newMetaEdge.originalEdges.length,
+                            compound: "T"
+                          });
+                        }
                       }
-                    }
-                    else {
+                    } else if (incidentEdge.target.isVisible) {
+                      let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                      if(sourceID){
+                        if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                          // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                          let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                          // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                          edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                          edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                          let source = visibleGM.nodesMap.get(sourceID);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          // report incident edge as processed (to be added)
+                          edgeIDList[2].push({
+                            ID: newMetaEdge.ID,
+                            sourceID: newMetaEdge.source.ID,
+                            targetID: newMetaEdge.target.ID,
+                            size: newMetaEdge.originalEdges.length,
+                            compound: "T"
+                          });
+                        }
+                      }
+                    } else {
                       let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
                       let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
-                      if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID),invisibleGM.nodesMap.get(sourceID),invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID),invisibleGM.nodesMap.get(targetID),invisibleGM)){
-                        // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth 
-                        let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge,visibleGM,invisibleGM);
-                        // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed) 
-                        edgeIDList[1] = [...edgeIDList[1],...deleteMetaEdgeList[0]];
-                        edgeIDList[0] = [...edgeIDList[0],...deleteMetaEdgeList[1]];
-                        
-                        let source = visibleGM.nodesMap.get(sourceID);
-                        let target = visibleGM.nodesMap.get(targetID);
-                        let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID],visibleGM, invisibleGM);
-                        // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                          compound: 'T'});
+                      if(sourceID && targetID && sourceID != targetID){
+                        if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                          // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                          let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                          // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                          edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                          edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                          let source = visibleGM.nodesMap.get(sourceID);
+                          let target = visibleGM.nodesMap.get(targetID);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          // report incident edge as processed (to be added)
+                          edgeIDList[2].push({
+                            ID: newMetaEdge.ID,
+                            sourceID: newMetaEdge.source.ID,
+                            targetID: newMetaEdge.target.ID,
+                            size: newMetaEdge.originalEdges.length,
+                            compound: "T"
+                          });
+                        }
                       }
                     }
+                  }
                 }
-            }
-            }else {
-              // Case (...EEC)
-              // Case meta edge is not visible and length of its orignal ends is greater than 1 ( meta edge is not created by node collapse)
-              //checks if given meta edge is part of any other meta edge, if yes returns the top one (only for cases where given meta edge is not created by node collapse.)
-                visibleMetaEdge = this.getTopMetaEdge(visibleMetaEdge,visibleGM);
+              } else {
+                // Case (...EEC)
+                // Case meta edge is not visible and length of its orignal ends is greater than 1 ( meta edge is not created by node collapse)
+                //checks if given meta edge is part of any other meta edge, if yes returns the top one (only for cases where given meta edge is not created by node collapse.)
+                visibleMetaEdge = this.getTopMetaEdge(visibleMetaEdge, visibleGM);
                 // check if the returned top meta edge was created  by collapse or not
-                if(visibleMetaEdge.originalEdges.length == 1){
-                  let res = this.recursiveExpand ( incidentEdge.ID, visibleGM );
-                  if(!Array.isArray(res)){
-                    if(!markedMetaEdges[1].includes(visibleMetaEdge)){
+                if (visibleMetaEdge.originalEdges.length == 1) {
+                  let res = this.recursiveExpand(incidentEdge.ID, visibleGM);
+                  if (!Array.isArray(res)) {
+                    if (!markedMetaEdges[1].includes(visibleMetaEdge)) {
                       markedMetaEdges[1].push(visibleMetaEdge);
                     }
                     // report incident edge as processed (to be added)
                     edgeIDList[0].push(res.ID);
-                  }else {
-                    if(!markedMetaEdges[1].includes(visibleMetaEdge)){
+                  } else {
+                    if (!markedMetaEdges[1].includes(visibleMetaEdge)) {
                       markedMetaEdges[1].push(visibleMetaEdge);
                     }
-                    if(!markedMetaEdges[2].includes(res[1])){
+                    if (!markedMetaEdges[2].includes(res[1])) {
                       markedMetaEdges[2].push(res[1]);
                     }
                   }
-                  
-                }else {
+                } else {
                   // Case (...ECE...)
                   // Case: top meta edge is not created by node collapse
 
-                  let res = this.recursiveExpand ( incidentEdge.ID, visibleGM, false );
-                  if(!Array.isArray(res)){
+                  let res = this.recursiveExpand(incidentEdge.ID, visibleGM, false);
+                  if (!Array.isArray(res)) {
                     // report incident edge as processed (to be added)
                     edgeIDList[0].push(visibleMetaEdge.ID);
-                    // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth 
-                    let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(res,visibleGM,invisibleGM);
-                    // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed) 
-                    edgeIDList[1] = [...edgeIDList[1],...deleteMetaEdgeList[0]];
-                    edgeIDList[0] = [...edgeIDList[0],...deleteMetaEdgeList[1]];
-                    
-                      visibleMetaEdge = res;
-                    }
-
+                    // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                    let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(res, visibleGM, invisibleGM);
+                    // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                    edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                    edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                    visibleMetaEdge = res;
+                  }
 
                   // get soruce and target of top meta edge
                   let sourceInVisible = visibleGM.nodesMap.get(visibleMetaEdge.source.ID);
@@ -2970,130 +3281,154 @@
                     // check if source and target of incident edge have same owner graph (not an intergraph edge)
                     if (incidentEdge.source.owner == incidentEdge.target.owner) {
                       // add the meta edge to sibling graph of owner of incident edge (incident edge is from invisible graph)
-                      if(!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges,null, visibleGM,invisibleGM)){
-                        try{
+                      if (!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges, null, visibleGM, invisibleGM)) {
+                        try {
                           let newEdge = incidentEdge.source.owner.siblingGraph.addEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
                           addedMetaEdges.push(visibleMetaEdge);
-                        }catch(e){
-                          console.log(e);
-                        }
+                        } catch (e) {}
                       }
-                    }
-                    else {
+                    } else {
                       // source and target have different owner graphs (is an inter graph edge)
                       // add meta edge as inter graph edge between visible source and target nodes
 
-                      if(!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges,null, visibleGM,invisibleGM)){
-                        try{
+                      if (!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges, null, visibleGM, invisibleGM)) {
+                        try {
                           let newEdge = visibleGM.addInterGraphEdge(visibleMetaEdge, sourceInVisible, targetInVisible);
                           addedMetaEdges.push(visibleMetaEdge);
-                        }catch(e){
-                          console.log(e);
-                        }
+                        } catch (e) {}
                       }
                     }
-                    if(!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges,null, visibleGM,invisibleGM)){
-                    //  add meta edge to visible edges map
-                    visibleGM.edgesMap.set(visibleMetaEdge.ID, visibleMetaEdge);
-                    // report meta edge as processed (to be added)
-                    edgeIDList[0].push(visibleMetaEdge.ID);
+                    if (!FilterUnfilter.updateMetaEdge(visibleMetaEdge.originalEdges, null, visibleGM, invisibleGM)) {
+                      //  add meta edge to visible edges map
+                      visibleGM.edgesMap.set(visibleMetaEdge.ID, visibleMetaEdge);
+                      // report meta edge as processed (to be added)
+                      edgeIDList[0].push(visibleMetaEdge.ID);
                     }
-                  }
-                  else if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(visibleMetaEdge.source.ID).isVisible?invisibleGM.nodesMap.get(visibleMetaEdge.target.ID):invisibleGM.nodesMap.get(visibleMetaEdge.source.ID),invisibleGM.nodesMap.get(nodeToBeExpanded.ID),invisibleGM))
-                  {
+                  } else if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(visibleMetaEdge.source.ID).isVisible ? invisibleGM.nodesMap.get(visibleMetaEdge.target.ID) : invisibleGM.nodesMap.get(visibleMetaEdge.source.ID), invisibleGM.nodesMap.get(nodeToBeExpanded.ID), invisibleGM)) {
                     if (sourceInVisible) {
-                      
                       let targetID = this.getVisibleParent(visibleMetaEdge.target.ID, invisibleGM);
-                      if(ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible?incidentEdge.target:incidentEdge.source,invisibleGM.nodesMap.get(targetID),invisibleGM)){
-                        let target = visibleGM.nodesMap.get(targetID);
-                        let newMetaEdge = Topology.addMetaEdge(visibleMetaEdge.source.ID, target.ID, [visibleMetaEdge.ID],visibleGM, invisibleGM);
-                        // report incident edge as processed (to be added)
-                        edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                          compound: 'T'});
-                      }
-                    }
-                    else {
-                        let sourceID = this.getVisibleParent(visibleMetaEdge.source.ID, invisibleGM);
-                        if(ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible?incidentEdge.target:incidentEdge.source,invisibleGM.nodesMap.get(sourceID),invisibleGM)){
-                          let source = visibleGM.nodesMap.get(sourceID);
-                          let newMetaEdge = Topology.addMetaEdge(source.ID, visibleMetaEdge.target.ID, [visibleMetaEdge.ID],visibleGM, invisibleGM);
+                      if(targetID){
+                        if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible ? incidentEdge.target : incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                          let target = visibleGM.nodesMap.get(targetID);
+                          let newMetaEdge = Topology.addMetaEdge(visibleMetaEdge.source.ID, target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
-                          edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                            compound: 'T'});
+                          edgeIDList[2].push({
+                            ID: newMetaEdge.ID,
+                            sourceID: newMetaEdge.source.ID,
+                            targetID: newMetaEdge.target.ID,
+                            size: newMetaEdge.originalEdges.length,
+                            compound: "T"
+                          });
                         }
+                      }
+                    } else {
+                      let sourceID = this.getVisibleParent(visibleMetaEdge.source.ID, invisibleGM);
+                      if(sourceID){
+                        if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible ? incidentEdge.target : incidentEdge.source, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                          let source = visibleGM.nodesMap.get(sourceID);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, visibleMetaEdge.target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
+                          // report incident edge as processed (to be added)
+                          edgeIDList[2].push({
+                            ID: newMetaEdge.ID,
+                            sourceID: newMetaEdge.source.ID,
+                            targetID: newMetaEdge.target.ID,
+                            size: newMetaEdge.originalEdges.length,
+                            compound: "T"
+                          });
+                        }
+                      }
                     }
                   }
                 }
+              }
+            }
+          } else {
+            // incident edge is a normal edge
+            // check if incident edge is not filtered not hidded and soruce and target are visible
+            if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
+              // move incident edge to visible graph
+              Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
+              // report incident edge as processed (to be added)
+              edgeIDList[0].push(incidentEdge.ID);
+            }
+          }
+        });
+        if (markedMetaEdges[0].length != 0 || markedMetaEdges[1].length != 0) {
+          markedMetaEdges[1].forEach(metaEdge => {
+            // if yes deleted top meta edge
+            visibleGM.edgesMap.delete(metaEdge.ID);
+            visibleGM.metaEdgesMap.delete(metaEdge.ID);
+            // report top meta edge as processed (to be removed)
+            // Structure = {ID,sourceID,targetID}
+            edgeIDList[1].push({
+              ID: metaEdge.ID,
+              sourceID: metaEdge.source.ID,
+              targetID: metaEdge.target.ID
+            });
+            // remvoe meta edge from graph
+            try {
+              Auxiliary.removeEdgeFromGraph(metaEdge);
+            } catch (ex) {}
+          });
+          markedMetaEdges[2].forEach(edge => {
+            if (visibleGM.nodesMap.has(edge.source.ID)) {
+              let targetID = this.getVisibleParent(edge.target.ID, invisibleGM);
+              if(targetID){
+                let target = visibleGM.nodesMap.get(targetID);
+                if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.source.ID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                  let newMetaEdge = Topology.addMetaEdge(edge.source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
+                  // report incident edge as processed (to be added)
+                  edgeIDList[2].push({
+                    ID: newMetaEdge.ID,
+                    sourceID: newMetaEdge.source.ID,
+                    targetID: newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length,
+                    compound: "T"
+                  });
+                }
+              }
+            } else if (edge.target.isVisible) {
+              let sourceID = this.getVisibleParent(edge.source.ID, invisibleGM);
+              if(sourceID){
+                let source = visibleGM.nodesMap.get(sourceID);
+                if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.target.ID), invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                  let newMetaEdge = Topology.addMetaEdge(source.ID, edge.target.ID, [edge.ID], visibleGM, invisibleGM);
+                  // report incident edge as processed (to be added)
+                  edgeIDList[2].push({
+                    ID: newMetaEdge.ID,
+                    sourceID: newMetaEdge.source.ID,
+                    targetID: newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length,
+                    compound: "T"
+                  });
+                }
+              }
+            } else {
+              let sourceID = this.getVisibleParent(edge.source.ID, invisibleGM);
+              let targetID = this.getVisibleParent(edge.target.ID, invisibleGM);
+              if(sourceID && targetID && sourceID != targetID){
+                let source = visibleGM.nodesMap.get(sourceID);
+                let target = visibleGM.nodesMap.get(targetID);
+                if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                  let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
+                  // report incident edge as processed (to be added)
+                  edgeIDList[2].push({
+                    ID: newMetaEdge.ID,
+                    sourceID: newMetaEdge.source.ID,
+                    targetID: newMetaEdge.target.ID,
+                    size: newMetaEdge.originalEdges.length,
+                    compound: "T"
+                  });
+                }
+              }
+            }
+          });
+        }
 
-          }}
-        }else {
-          // incident edge is a normal edge 
-          // check if incident edge is not filtered not hidded and soruce and target are visible
-          if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false && incidentEdge.source.isVisible && incidentEdge.target.isVisible) {
-            // move incident edge to visible graph
-            Auxiliary.moveEdgeToVisible(incidentEdge, visibleGM, invisibleGM);
-            // report incident edge as processed (to be added)
-            edgeIDList[0].push(incidentEdge.ID);
-          }
-        }
-      });
-      if(markedMetaEdges[0].length!=0 || markedMetaEdges[1].length!=0){
-        markedMetaEdges[1].forEach((metaEdge) => {
-          // if yes deleted top meta edge
-        visibleGM.edgesMap.delete(metaEdge.ID);
-        visibleGM.metaEdgesMap.delete(metaEdge.ID);
-        // report top meta edge as processed (to be removed)
-        // Structure = {ID,sourceID,targetID}
-        edgeIDList[1].push({ID:metaEdge.ID,sourceID:metaEdge.source.ID,targetID:metaEdge.target.ID});
-        // remvoe meta edge from graph
-        try{
-        Auxiliary.removeEdgeFromGraph(metaEdge);
-        }catch(ex){
-          console.log(ex);
-        }
-        });
-        markedMetaEdges[2].forEach((edge) => {
-          if(visibleGM.nodesMap.has(edge.source.ID)){
-            let targetID = this.getVisibleParent(edge.target.ID, invisibleGM);
-            let target = visibleGM.nodesMap.get(targetID);
-            if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.source.ID),invisibleGM.nodesMap.get(targetID),invisibleGM)){
-              let newMetaEdge = Topology.addMetaEdge(edge.source.ID, target.ID, [edge.ID],visibleGM, invisibleGM);
-              // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                compound: 'T'});
-            }
-          }
-          else if (edge.target.isVisible) {
-            let sourceID = this.getVisibleParent(edge.source.ID, invisibleGM);
-            let source = visibleGM.nodesMap.get(sourceID);
-            if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.target.ID),invisibleGM.nodesMap.get(sourceID),invisibleGM)){
-              let newMetaEdge = Topology.addMetaEdge(source.ID, edge.target.ID, [edge.ID],visibleGM, invisibleGM);
-              // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                compound: 'T'});
-            }
-          }else {
-            let sourceID = this.getVisibleParent(edge.source.ID, invisibleGM);
-            let source = visibleGM.nodesMap.get(sourceID);
-            let targetID = this.getVisibleParent(edge.target.ID, invisibleGM);
-            let target = visibleGM.nodesMap.get(targetID);
-            if(ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID),invisibleGM.nodesMap.get(targetID),invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID),invisibleGM.nodesMap.get(sourceID),invisibleGM)){
-              let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [edge.ID],visibleGM, invisibleGM);
-              // report incident edge as processed (to be added)
-              edgeIDList[2].push({ID:newMetaEdge.ID,sourceID:newMetaEdge.source.ID,targetID:newMetaEdge.target.ID, size: newMetaEdge.originalEdges.length,
-                compound: 'T'});
-            }
-          }
-        
-        });
+        // return the list of list to be reported
+        // Structure = [ [edges] , [meta edges( to be removed)],[meta edges (to be added)]]
+        return edgeIDList;
       }
-      
-
-
-      // return the list of list to be reported
-      // Structure = [ [edges] , [meta edges( to be removed)],[meta edges (to be added)]]
-      return edgeIDList
-    }
 
     // fuunction to move edge to visible graph
     static moveEdgeToVisible(edge, visibleGM, invisibleGM) {
@@ -3104,19 +3439,32 @@
       // get source and target from visible graph
       let sourceInVisible = visibleGM.nodesMap.get(edge.source.ID);
       let targetInVisible = visibleGM.nodesMap.get(edge.target.ID);
-      // initialize new edge 
+      // initialize new edge
       let newEdge;
       // check if owner graph of soruce and target are same (not an inter graph edge)
       if (edge.source.owner == edge.target.owner) {
-        // add new edge to sibling graph of owner of given edge (given edge is from invisible graph)
-        newEdge = edge.source.owner.siblingGraph.addEdge(edgeForVisible, sourceInVisible, targetInVisible);
-      }
-      else {
+        try{
+          // add new edge to sibling graph of owner of given edge (given edge is from invisible graph)
+          newEdge = edge.source.owner.siblingGraph.addEdge(
+            edgeForVisible,
+            sourceInVisible,
+            targetInVisible
+          );
+          visibleGM.edgesMap.set(newEdge.ID, newEdge);
+        }catch(e){
+
+        }    //  add new edge to visible edges map
+      } else {
         // owner graph of soruce and target are different (is an inter graph edge)
-        newEdge = visibleGM.addInterGraphEdge(edgeForVisible, sourceInVisible, targetInVisible);
+        newEdge = visibleGM.addInterGraphEdge(
+          edgeForVisible,
+          sourceInVisible,
+          targetInVisible
+        );
+          //  add new edge to visible edges map
+          visibleGM.edgesMap.set(newEdge.ID, newEdge);
       }
-      //  add new edge to visible edges map
-      visibleGM.edgesMap.set(newEdge.ID, newEdge);
+
     }
 
     // fucntion to get elements from neighbourhood of a given node
@@ -3128,7 +3476,7 @@
       // Structure = { nodes: [nodes], edges: [edges]}
       let neighborhood = this.getZeroDistanceNeighbors(node, invisibleGM);
       // check if zero neighbourhood list includes the given node or not (if given node is the top level node in its tree structure it will not be included int he zero neighbourhood list)
-      // if not add it to the list 
+      // if not add it to the list
       if (!neighborhood.nodes.includes(nodeID)) {
         neighborhood.nodes.push(nodeID);
       }
@@ -3136,46 +3484,57 @@
       // Structure = { nodes: [nodes], edges: [edges]}
       let neighborElements = {
         nodes: [],
-        edges: []
+        edges: [],
       };
       //for each 0 distance neighborhood node get 1 distance nodes and edges
-      neighborhood['nodes'].forEach((neighborNodeID) => {
+      neighborhood["nodes"].forEach((neighborNodeID) => {
         let neighborNode = invisibleGM.nodesMap.get(neighborNodeID);
         neighborNode.edges.forEach((edge) => {
           if (edge.source.ID == neighborNode.ID) {
-            neighborElements['nodes'].push(edge.target.ID);
+            neighborElements["nodes"].push(edge.target.ID);
           } else {
-            neighborElements['nodes'].push(edge.source.ID);
+            neighborElements["nodes"].push(edge.source.ID);
           }
-          neighborElements['edges'].push(edge.ID);
+          neighborElements["edges"].push(edge.ID);
         });
       });
       // remove all duplicates from 1 distance neighbourhood
-      neighborElements['nodes'] = [...new Set([...neighborElements['nodes']])];
-      neighborElements['edges'] = [...new Set([...neighborElements['edges']])];
+      neighborElements["nodes"] = [...new Set([...neighborElements["nodes"]])];
+      neighborElements["edges"] = [...new Set([...neighborElements["edges"]])];
 
       //for each 1 distance node, calculate individual zero distance neighborhood and append it to the orignal dictionary
-      neighborElements['nodes'].forEach((neighborElementID) => {
+      neighborElements["nodes"].forEach((neighborElementID) => {
         let targetNeighborNode = invisibleGM.nodesMap.get(neighborElementID);
-        let targetNeighborhood = this.getZeroDistanceNeighbors(targetNeighborNode, invisibleGM);
-        neighborhood['nodes'] = [...new Set([...neighborhood['nodes'], ...targetNeighborhood['nodes']])];
-        neighborhood['edges'] = [...new Set([...neighborhood['edges'], ...targetNeighborhood['edges']])];
+        let targetNeighborhood = this.getZeroDistanceNeighbors(
+          targetNeighborNode,
+          invisibleGM
+        );
+        neighborhood["nodes"] = [
+          ...new Set([...neighborhood["nodes"], ...targetNeighborhood["nodes"]]),
+        ];
+        neighborhood["edges"] = [
+          ...new Set([...neighborhood["edges"], ...targetNeighborhood["edges"]]),
+        ];
       });
 
       //remove duplications
-      neighborhood['nodes'] = [...new Set([...neighborhood['nodes'], ...neighborElements['nodes']])];
-      neighborhood['edges'] = [...new Set([...neighborhood['edges'], ...neighborElements['edges']])];
+      neighborhood["nodes"] = [
+        ...new Set([...neighborhood["nodes"], ...neighborElements["nodes"]]),
+      ];
+      neighborhood["edges"] = [
+        ...new Set([...neighborhood["edges"], ...neighborElements["edges"]]),
+      ];
 
       //filter out all visible nodes
-      neighborhood['nodes'] = neighborhood['nodes'].filter((itemID) => {
+      neighborhood["nodes"] = neighborhood["nodes"].filter((itemID) => {
         let itemNode = invisibleGM.nodesMap.get(itemID);
-        return !(itemNode.isVisible);
+        return !itemNode.isVisible;
       });
 
       //filter out all visible edges
-      neighborhood['edges'] = neighborhood['edges'].filter((itemID) => {
+      neighborhood["edges"] = neighborhood["edges"].filter((itemID) => {
         let itemEdge = invisibleGM.edgesMap.get(itemID);
-        return !(itemEdge.isVisible);
+        return !itemEdge.isVisible;
       });
 
       return neighborhood;
@@ -3184,96 +3543,111 @@
     // function to get zero neighbourhood element of given node
     static getZeroDistanceNeighbors(node, invisibleGM) {
       // initialize neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       let neighbors = {
         nodes: [],
-        edges: []
+        edges: [],
       };
       // function to get the descendant of given node
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       let descendantNeighborhood = this.getDescendantNeighbors(node);
       // function to get the parents of the given ndoe
-      // Structure = {[nodes],[edges]} 
-      let predecessorsNeighborhood = this.getPredecessorNeighbors(node, invisibleGM);
+      // Structure = {[nodes],[edges]}
+      let predecessorsNeighborhood = this.getPredecessorNeighbors(
+        node,
+        invisibleGM
+      );
       // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
-      neighbors['nodes'] = [...new Set([...descendantNeighborhood['nodes'], ...predecessorsNeighborhood['nodes']])];
-      neighbors['edges'] = [...new Set([...descendantNeighborhood['edges'], ...predecessorsNeighborhood['edges']])];
+      neighbors["nodes"] = [
+        ...new Set([
+          ...descendantNeighborhood["nodes"],
+          ...predecessorsNeighborhood["nodes"],
+        ]),
+      ];
+      neighbors["edges"] = [
+        ...new Set([
+          ...descendantNeighborhood["edges"],
+          ...predecessorsNeighborhood["edges"],
+        ]),
+      ];
 
       // return neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       return neighbors;
     }
 
     // function to get descendants of a given node
     static getDescendantNeighbors(node) {
       // initialize neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       let neighbors = {
         nodes: [],
-        edges: []
+        edges: [],
       };
       // if given node is compound node
       if (node.child) {
         // get nodes of children graph
         let children = node.child.nodes;
         // loop through children nodes
-        children.forEach(childNode => {
-          // report child node as processed 
+        children.forEach((childNode) => {
+          // report child node as processed
           neighbors.nodes.push(childNode.ID);
           // loop through incident edges of child node
-          childNode.edges.forEach(element => {
+          childNode.edges.forEach((element) => {
             // report incident edge as processed
             neighbors.edges.push(element.ID);
           });
           // function to get the descendant of given node
-          // Structure = {[nodes],[edges]} 
+          // Structure = {[nodes],[edges]}
           let nodesReturned = this.getDescendantNeighbors(childNode);
           // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
-          neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
-          neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
+          neighbors["nodes"] = [...neighbors["nodes"], ...nodesReturned["nodes"]];
+          neighbors["edges"] = [...neighbors["edges"], ...nodesReturned["edges"]];
         });
       }
       // return neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       return neighbors;
     }
 
     // function to get predecessors of a given node
     static getPredecessorNeighbors(node, invisibleGM) {
       // initialize neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       let neighbors = {
         nodes: [],
-        edges: []
+        edges: [],
       };
       // check if owner graph of given node is not root graph
       if (node.owner != invisibleGM.rootGraph) {
         // get nodes of the owner graph
         let predecessors = node.owner.nodes;
         // loop through predecessor nodes
-        predecessors.forEach(pNode => {
+        predecessors.forEach((pNode) => {
           // report predecessor node as processed
-          neighbors['nodes'].push(pNode.ID);
+          neighbors["nodes"].push(pNode.ID);
           // loop through edges of the predecessor node
-          pNode.edges.forEach(element => {
+          pNode.edges.forEach((element) => {
             // report edge as processed
             neighbors.edges.push(element.ID);
           });
         });
         // function to get the parents of the given ndoe
-        // Structure = {[nodes],[edges]} 
-        let nodesReturned = this.getPredecessorNeighbors(node.owner.parent, invisibleGM);
+        // Structure = {[nodes],[edges]}
+        let nodesReturned = this.getPredecessorNeighbors(
+          node.owner.parent,
+          invisibleGM
+        );
         // append decendant neighbourhood elements and parent neighbourhood elements to neighbourhood object
-        neighbors['nodes'] = [...neighbors['nodes'], ...nodesReturned['nodes']];
-        neighbors['edges'] = [...neighbors['edges'], ...nodesReturned['edges']];
-      }
-      else {
-      // if owner graph of given node is the root graph
-      // report the given node as processed
-        neighbors['nodes'].push(node.ID);
+        neighbors["nodes"] = [...neighbors["nodes"], ...nodesReturned["nodes"]];
+        neighbors["edges"] = [...neighbors["edges"], ...nodesReturned["edges"]];
+      } else {
+        // if owner graph of given node is the root graph
+        // report the given node as processed
+        neighbors["nodes"].push(node.ID);
       }
       // return neighbourhood object
-      // Structure = {[nodes],[edges]} 
+      // Structure = {[nodes],[edges]}
       return neighbors;
     }
   }
@@ -3611,25 +3985,35 @@
     collapseNodes(nodeIDList, isRecursive) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      return ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+      let reportedData =  ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+      
+      return reportedData;
     }
 
     expandNodes(nodeIDList, isRecursive) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      return ExpandCollapse.expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+      let reportedData =  ExpandCollapse.expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+      
+      return reportedData;
     }
 
     collapseAllNodes() {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      return ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
+      let reportedData =  ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
+      
+      
+      return reportedData;
+
     }
 
     expandAllNodes() {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      return ExpandCollapse.expandAllNodes(visibleGM, invisibleGM);
+      let reportedData =  ExpandCollapse.expandAllNodes(visibleGM, invisibleGM);
+      
+      return reportedData;
     }
 
     collapseEdges(edgeIDList) {

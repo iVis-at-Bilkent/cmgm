@@ -152,6 +152,7 @@ export class FilterUnfilter {
     // lists to report processed nodes and edges.
     let nodeIDListPostProcess = [];
     let edgeIDListPostProcess = [];
+    let metaEdgeIDListPostProcess = [];
     // loop through nodes to unfilter
     nodeIDList.forEach((nodeID) => {
       // get node from invisible graph and set filter status to false
@@ -203,6 +204,10 @@ export class FilterUnfilter {
             edgeIDListPostProcess.push(item)
           }
         })
+        // loop through meta edges to be added
+        tempList[2].forEach((item) => {
+          metaEdgeIDListPostProcess.push(item)
+        });
         let descendants = []
         if(!nodeToUnfilter.isCollapsed){
           descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
@@ -285,7 +290,7 @@ export class FilterUnfilter {
     // combine node and edge list.
     // report nodes first then edges
     // (if edges are reported first they will be added first and without source and target nodes present cytoscpae will give error) 
-    return nodeIDListPostProcess.concat(edgeIDListPostProcess);
+    return [nodeIDListPostProcess.concat(edgeIDListPostProcess),metaEdgeIDListPostProcess];
   }
 
   // function to make all descendants of a compound node visible and report all the procesed descendants.
