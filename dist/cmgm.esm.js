@@ -2242,7 +2242,7 @@ class ExpandCollapse {
                 this.removedElements.metaEdgeIDListForVisible.size - 1
               ) {
                 // loop through current meta edge list
-                edgeIDList.forEach((edgeID) => {
+                edgeIDList?.forEach((edgeID) => {
                   // delete each id from visible graph's edges map
                   visibleGM.edgesMap.delete(edgeID.ID);
                 });
@@ -2305,7 +2305,7 @@ class ExpandCollapse {
                 this.removedElements.metaEdgeIDListForVisible.size - 1
               ) {
                 // loop through current meta edge if list
-                edgeIDList.forEach((edgeID) => {
+                edgeIDList?.forEach((edgeID) => {
                   // delete meta edge from the visible graph
                   visibleGM.edgesMap.delete(edgeID.ID);
                 });
@@ -2370,7 +2370,7 @@ class ExpandCollapse {
                 this.removedElements.metaEdgeIDListForVisible.size - 1
               ) {
                 // loop through current meta edge if list
-                edgeIDList.forEach((edgeID) => {
+                edgeIDList?.forEach((edgeID) => {
                   // delete meta edge from the visible graph
                   visibleGM.edgesMap.delete(edgeID.ID);
                 });
