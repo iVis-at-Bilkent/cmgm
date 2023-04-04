@@ -684,18 +684,16 @@ export class ExpandCollapse {
           // loop through list of meta edge ids list
           // struture list of list of objects
           // strucute [[{meta edge object},{meta edge object}],[{meta edge object},{meta edge object}]]
+          let multipleSelectedMetaEdges = []
           this.removedElements.metaEdgeIDListForVisible.forEach(
-            (edgeIDList) => {
+            (edgeID) => {
               // check if current meta edge list is not the last one
               if (
                 index !=
                 this.removedElements.metaEdgeIDListForVisible.size - 1
               ) {
                 // loop through current meta edge if list
-                edgeIDList?.forEach((edgeID) => {
-                  // delete meta edge from the visible graph
-                  visibleGM.edgesMap.delete(edgeID.ID);
-                });
+                multipleSelectedMetaEdges.push(edgeID)
               }
               // increase index by one when one list is processed
               index = index + 1;
@@ -704,7 +702,8 @@ export class ExpandCollapse {
           // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
           let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
           // get the last list of objects as temp
-          let temp = [...temp1[temp1.length - 1]];
+          let temp = [...temp1[temp1.length - 1],...multipleSelectedMetaEdges];
+          multipleSelectedMetaEdges=[]
           //  set metaEdgeIDListForVisible as a new set
           this.removedElements.metaEdgeIDListForVisible = new Set();
           // loop through the temp list
@@ -757,7 +756,7 @@ export class ExpandCollapse {
                 this.removedElements.metaEdgeIDListForVisible.size - 1
               ) {
                 // loop through current meta edge if list
-                edgeIDList?.forEach((edgeID) => {
+                edgeIDList.forEach((edgeID) => {
                   // delete meta edge from the visible graph
                   visibleGM.edgesMap.delete(edgeID.ID);
                 });
