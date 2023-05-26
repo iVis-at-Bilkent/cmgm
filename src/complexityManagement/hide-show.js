@@ -161,7 +161,7 @@ export class HideShow {
       nodeToShow.isHidden = false;
       // set status flag,  that node is allowed to be shown, initalized as true
       let canNodeToShowBeVisible = true;
-      // if node is not filtered
+      // if node is not filtered 
       if (nodeToShow.isFiltered == false) {
         // create temporary copy for node to Show
         let tempNode = nodeToShow;

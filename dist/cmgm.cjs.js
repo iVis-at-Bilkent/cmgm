@@ -1142,7 +1142,12 @@ class FilterUnfilter {
       // if edge is not filtered or hidded and source and target both are visible report it
       if (edge.isFiltered == false && edge.isHidden == false && edge.source.isVisible && edge.target.isVisible) {
         // report edge
-        descendants.edges.add(edge.ID);
+        if(visibleGM.edgeToMetaEdgeMap.has(edge.ID)){
+          let topMetaEdge = Auxiliary.getTopMetaEdge(edge, visibleGM);
+          descendants.edges.add(topMetaEdge.ID);
+        }else {
+          descendants.edges.add(edge.ID);
+        }
       }
     });
     // report decendant object
@@ -2274,18 +2279,11 @@ class ExpandCollapse {
           });
         }
       });
-      //creating a temporary set
-      let tempSet = new Set();
-      //looping throught set of meta edges to keep and filter out the ones that are no longer visible. (in visibleGM.edgesMap)
-      metaEdgeIDListToKeep.forEach((item) => {
-        // if meta edge is visible
-        if (visibleGM.edgesMap.has(item.ID)) {
-          // add it to tempSet
-          tempSet.add(item);
-        }
-      });
+
+      //filter out the edges that are no longer visible. (in visibleGM.edgesMap)      
+      let metaEdgeIDListToKeepFiltered = metaEdgeIDListToKeep.filter((item) => (visibleGM.edgesMap.has(item.ID)));
       //set filtered tempSet as the new value of metaEdgeIDListForVisible.
-      this.removedElements.metaEdgeIDListForVisible = tempSet;
+      this.removedElements.metaEdgeIDListForVisible = new Set(metaEdgeIDListToKeepFiltered);
     } else {
       // if recusion is not true
       // loop through node id list
@@ -2319,7 +2317,7 @@ class ExpandCollapse {
           // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
           let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
           // get the last list of objects as temp
-          let temp = [...temp1[temp1.length - 1],...multipleSelectedMetaEdges];
+          let temp = [...temp1[-1],...multipleSelectedMetaEdges];
           multipleSelectedMetaEdges=[];
           //  set metaEdgeIDListForVisible as a new set
           this.removedElements.metaEdgeIDListForVisible = new Set();
@@ -3808,7 +3806,7 @@ class HideShow {
       nodeToShow.isHidden = false;
       // set status flag,  that node is allowed to be shown, initalized as true
       let canNodeToShowBeVisible = true;
-      // if node is not filtered
+      // if node is not filtered 
       if (nodeToShow.isFiltered == false) {
         // create temporary copy for node to Show
         let tempNode = nodeToShow;
