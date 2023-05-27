@@ -2287,7 +2287,7 @@
             });
           }
         });
-
+        
         //filter out the edges that are no longer visible. (in visibleGM.edgesMap)      
         let metaEdgeIDListToKeepFiltered = metaEdgeIDListToKeep.filter((item) => (visibleGM.edgesMap.has(item.ID)));
         //set filtered tempSet as the new value of metaEdgeIDListForVisible.
@@ -2325,7 +2325,7 @@
             // get metaEdgeIDListForVisible (struture list of list of objects) as temp 1
             let temp1 = [...this.removedElements.metaEdgeIDListForVisible];
             // get the last list of objects as temp
-            let temp = [...temp1[-1],...multipleSelectedMetaEdges];
+            let temp = [...temp1[temp1.length - 1],...multipleSelectedMetaEdges];
             multipleSelectedMetaEdges=[];
             //  set metaEdgeIDListForVisible as a new set
             this.removedElements.metaEdgeIDListForVisible = new Set();
