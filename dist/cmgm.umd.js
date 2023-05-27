@@ -1132,7 +1132,13 @@
                 // if edge is not filtered or hidded and source and target both are visible report it
                 if (item.isFiltered == false && item.isHidden == false && item.source.isVisible && item.target.isVisible) {
                   // report edge
-                  descendants['edges'].add(item.ID);
+                  if(visibleGM.edgeToMetaEdgeMap.has(item.ID)){
+                    let topMetaEdge = Auxiliary.getTopMetaEdge(item, visibleGM);
+                    descendants['edges'].add(topMetaEdge.ID);
+                  }else {
+                    descendants['edges'].add(item.ID);
+                  }
+                  
                 }
               });
             }
