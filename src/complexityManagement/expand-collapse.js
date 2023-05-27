@@ -657,11 +657,18 @@ export class ExpandCollapse {
           });
         }
       });
-      
-      //filter out the edges that are no longer visible. (in visibleGM.edgesMap)      
-      let metaEdgeIDListToKeepFiltered = metaEdgeIDListToKeep.filter((item) => (visibleGM.edgesMap.has(item.ID)))
+      //creating a temporary set
+      let tempSet = new Set();
+      //looping throught set of meta edges to keep and filter out the ones that are no longer visible. (in visibleGM.edgesMap)
+      metaEdgeIDListToKeep.forEach((item) => {
+        // if meta edge is visible
+        if (visibleGM.edgesMap.has(item.ID)) {
+          // add it to tempSet
+          tempSet.add(item);
+        }
+      });
       //set filtered tempSet as the new value of metaEdgeIDListForVisible.
-      this.removedElements.metaEdgeIDListForVisible = new Set(metaEdgeIDListToKeepFiltered);
+      this.removedElements.metaEdgeIDListForVisible = tempSet;
     } else {
       // if recusion is not true
       // loop through node id list
