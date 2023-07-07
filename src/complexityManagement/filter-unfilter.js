@@ -65,23 +65,19 @@ export class FilterUnfilter {
           visibleGM.getDescendantsInorder(nodeToFilter);
           // loop through descendant edges
         nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
-          if (visibleGM.edgeToMetaEdgeMap.has(nodeToFilterEdge.ID)) {
-            // get that meta edge
-            let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(nodeToFilterEdge.ID)
-            // call updateMetaEdge function to check if all edges who are part of meta edge are filtered or hidden
-            // if yes remove said meta edge
-            let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, nodeToFilterEdge.ID,visibleGM,invisibleGM);
-            // if yes remove said meta edge from visible graph
-            if (status) {
-              if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
-                // delete meta edge from visibleGM's map
-                visibleGM.edgesMap.delete(visibleMetaEdge.ID);
-                // Remove meta edge from graph
-                Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
-              }
-              // Report meta edge as processed
-              edgeIDListPostProcess.push(visibleMetaEdge.ID)
-            }
+          // report edge as processed
+          edgeIDListPostProcess.push(nodeToFilterEdge.ID);
+          // if edge is not a meta edge
+          if (!(nodeToFilterEdge instanceof MetaEdge)) {
+            // get corresponding edge on invisible side and set visible status false
+            let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
+            nodeToFilterEdgeInvisible.isVisible = false;
+          }
+          if(visibleGM.edgesMap.has(nodeToFilterEdge.ID)){
+            // delete edge from visible side
+            visibleGM.edgesMap.delete(nodeToFilterEdge.ID);
+            // delete edge from grpah
+            Auxiliary.removeEdgeFromGraph(nodeToFilterEdge);
           }
         });
         // loop through descendant simple nodes
