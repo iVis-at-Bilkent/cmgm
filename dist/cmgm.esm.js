@@ -921,7 +921,36 @@ class FilterUnfilter {
       else {
         //  if node is not visible
         // get corresponding node from invisible graph and set filtered status true and visible status false
+
+
+
         let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
+
+        let nodeToFilterDescendants =
+          invisibleGM.getDescendantsInorder(nodeToFilterInvisible);
+
+          nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
+            let edgeID = nodeToFilterEdge.ID;
+            if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
+              // get that meta edge
+              let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(edgeID);
+              // call updateMetaEdge function to check if all edges who are part of meta edge are filtered or hidden
+              // if yes remove said meta edge
+              let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
+              // if yes remove said meta edge from visible graph
+              if (status) {
+                if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
+                  // delete meta edge from visibleGM's map
+                  visibleGM.edgesMap.delete(visibleMetaEdge.ID);
+                  // Remove meta edge from graph
+                  Auxiliary.removeEdgeFromGraph(visibleMetaEdge);
+                }
+                // Report meta edge as processed
+                edgeIDListPostProcess.push(visibleMetaEdge.ID);
+              }
+            }
+          });
+
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
       }
