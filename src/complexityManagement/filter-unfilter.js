@@ -260,6 +260,130 @@ export class FilterUnfilter {
 
         // report node its self as processed.
         nodeIDListPostProcess.push(nodeToUnfilter.ID);
+      }else{
+
+        let canNodeEdgesBeProcessed = true;
+        // if node is not hidden
+        if (nodeToUnfilter.isHidden == false) {
+          // create temporary copy for node to unfilter
+          let tempNode = nodeToUnfilter;
+          // following loop check node's parent and their parent and their parent to make sure that at all levels
+          // there is nothing hiden, collapse or filtered.
+          // infinite loop until we find that node can not be unfiltered or we reach root graph.
+          while (true) {
+            //if next owner graph is root gaph (meaning no more parents)
+            if (tempNode.owner == invisibleGM.rootGraph) {
+              break;
+            } else {
+              // there is another parent of current node 
+              // check parent of current node is not hiden, collapse or filtered.
+              // if no
+              if (tempNode.owner.parent.isHidden || tempNode.owner.parent.isFiltered) {
+                // if yes then node ot unfilter is not allowed to be unfiltered. and we break loop
+                canNodeEdgesBeProcessed = false;
+                break;
+              } else {
+                // if yes then set current node to its parent to move up the ancestral line
+                tempNode = tempNode.owner.parent;
+              }
+            }
+          }
+        } else {
+          // if node is hidden then it can not be unfiltered
+          canNodeEdgesBeProcessed = false;
+        }
+
+        if(canNodeEdgesBeProcessed){
+          let edgeIDList = [[],[],[]]
+          nodeToUnfilter.edges.forEach(incidentEdge => {
+            // check if incident edge is not filtere and not hidde and source and target are visible
+            if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false) {
+              
+                if (incidentEdge.source.isVisible) {
+                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                  if(targetID){
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                      // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                      edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                      edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                      let target = visibleGM.nodesMap.get(targetID);
+                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      // report incident edge as processed (to be added)
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
+                    }
+                  }
+                } else if (incidentEdge.target.isVisible) {
+                  let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                  if(sourceID){
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                      // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                      edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                      edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                      let source = visibleGM.nodesMap.get(sourceID);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      // report incident edge as processed (to be added)
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
+                    }
+                  }
+                } else {
+                  let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                  let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                  if(sourceID && targetID && sourceID != targetID){
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                      // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
+                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
+                      edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
+                      edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
+                      let source = visibleGM.nodesMap.get(sourceID);
+                      let target = visibleGM.nodesMap.get(targetID);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      // report incident edge as processed (to be added)
+                      edgeIDList[2].push({
+                        ID: newMetaEdge.ID,
+                        sourceID: newMetaEdge.source.ID,
+                        targetID: newMetaEdge.target.ID,
+                        size: newMetaEdge.originalEdges.length,
+                        compound: "T"
+                      });
+                    }
+                  }
+                }
+            }
+          })
+
+          edgeIDList[0].forEach(item => {
+            // report edge as processed (to be added)
+            if(visibleGM.edgeToMetaEdgeMap.has(item)){
+              let topMetaEdge = Auxiliary.getTopMetaEdge(visibleGM.edgeToMetaEdgeMap.get(item),visibleGM);
+              edgeIDListPostProcess.push(topMetaEdge.ID)
+            }else{
+              edgeIDListPostProcess.push(item)
+            }
+          })
+          // loop through meta edges to be added
+          edgeIDList[2].forEach((item) => {
+            metaEdgeIDListPostProcess.push(item)
+          });
+
+        }
+
       }
     })
     // loop through all the edges to unfilter
