@@ -305,7 +305,7 @@ export class FilterUnfilter {
                   if(targetID){
                     if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
@@ -322,11 +322,11 @@ export class FilterUnfilter {
                     }
                   }
                 } else if (incidentEdge.target.isVisible) {
-                  let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, invisibleGM);
                   if(sourceID){
                     if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
@@ -343,12 +343,12 @@ export class FilterUnfilter {
                     }
                   }
                 } else {
-                  let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
-                  let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, invisibleGM);
                   if(sourceID && targetID && sourceID != targetID){
                     if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = this.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
