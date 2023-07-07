@@ -922,7 +922,7 @@
                     originalEnds.forEach((end) => {
                       visibleGM.edgeToMetaEdgeMap.delete(end);
                     });
-                    let newMetaEdge = Topology$1.addMetaEdge(
+                    let newMetaEdge = Topology.addMetaEdge(
                       nodeToBeCollapsed.ID,
                       target.ID,
                       originalEnds,
@@ -945,7 +945,7 @@
                     Auxiliary.removeEdgeFromGraph(childEdge);
                   }
                   // create new meta edge between node to collapse and the other target of child edge (because child is the source so we replce it with node to be collapsed)
-                  let newMetaEdge = Topology$1.addMetaEdge(
+                  let newMetaEdge = Topology.addMetaEdge(
                     nodeToBeCollapsed.ID,
                     childEdge.target.ID,
                     [childEdge.ID],
@@ -988,7 +988,7 @@
                     originalEnds.forEach((end) => {
                       visibleGM.edgeToMetaEdgeMap.delete(end);
                     });
-                    let newMetaEdge = Topology$1.addMetaEdge(
+                    let newMetaEdge = Topology.addMetaEdge(
                       source.ID,
                       nodeToBeCollapsed.ID,
                       originalEnds,
@@ -1011,7 +1011,7 @@
                     Auxiliary.removeEdgeFromGraph(childEdge);
                   }
                   // create new meta edge between node to collapse and the other source of child edge (because child is the target so we replce it with node to be collapsed)
-                  let newMetaEdge = Topology$1.addMetaEdge(
+                  let newMetaEdge = Topology.addMetaEdge(
                     childEdge.source.ID,
                     nodeToBeCollapsed.ID,
                     [childEdge.ID],
@@ -1684,7 +1684,7 @@
       // get target of the first node (targetNode)
       let targetNode = firstEdge.target;
       // all add meta edge function to create meta edge between source and target
-      let newMetaEdge = Topology$1.addMetaEdge(
+      let newMetaEdge = Topology.addMetaEdge(
         sourceNode.ID,
         targetNode.ID,
         edgeIDList,
@@ -2528,7 +2528,7 @@
     }
   }
 
-  class Topology$1 {
+  class Topology {
     static addNode(nodeID, parentID, visibleGM, invisibleGM) {
       let graphToAdd;
       let graphToAddInvisible;
@@ -2655,7 +2655,7 @@
         if (visibleGM.metaEdgesMap.has(edgeInInvisibleItem)) {
           //recursively passing the nested edge
           let metaEdge = visibleGM.metaEdgesMap.get(edgeInInvisibleItem);
-          Topology$1.removeNestedEdges(
+          Topology.removeNestedEdges(
             metaEdge.originalEdges,
             visibleGM,
             invisibleGM
@@ -2783,7 +2783,7 @@
         //looping through descendant edges
         nodeToRemoveDescendants.edges.forEach((nodeToRemoveEdge) => {
           //removing edge
-          Topology$1.removeEdge(nodeToRemoveEdge.ID, visibleGM, invisibleGM);
+          Topology.removeEdge(nodeToRemoveEdge.ID, visibleGM, invisibleGM);
         });
         //looping through descendant simpleNodes
         nodeToRemoveDescendants.simpleNodes.forEach((nodeToRemoveSimpleNode) => {
@@ -2803,7 +2803,7 @@
         );
         nodeToRemoveDescendantsInvisible.edges.forEach(
           (nodeToRemoveEdgeInvisible) => {
-            Topology$1.removeEdge(
+            Topology.removeEdge(
               nodeToRemoveEdgeInvisible.ID,
               visibleGM,
               invisibleGM
@@ -2887,7 +2887,7 @@
       }
       //if new edge is visible , add the edge to visible graph
       if (edgeToAddForInvisible.isVisible == true) {
-        Topology$1.addEdge(
+        Topology.addEdge(
           edgeID,
           newSourceID,
           newTargetID,
@@ -2950,7 +2950,7 @@
       }
       newParentInInvisible.child.addNode(removedNodeInvisible);
       edgesOfNodeToRemove.forEach((edge) => {
-        Topology$1.addEdge(
+        Topology.addEdge(
           edge.ID,
           edge.source.ID,
           edge.target.ID,
@@ -3270,7 +3270,7 @@
                     let targetID = this.getVisibleParent(incidentEdge.target.ID, invisibleGM);
                     if(targetID){
                       let target = visibleGM.nodesMap.get(targetID);
-                      let newMetaEdge = Topology$1.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -3284,7 +3284,7 @@
                     let sourceID = this.getVisibleParent(incidentEdge.source.ID, invisibleGM);
                     if(sourceID){
                       let source = visibleGM.nodesMap.get(sourceID);
-                      let newMetaEdge = Topology$1.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -3300,7 +3300,7 @@
                     if(sourceID && targetID){
                       let source = visibleGM.nodesMap.get(sourceID);
                       let target = visibleGM.nodesMap.get(targetID);
-                      let newMetaEdge = Topology$1.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -3340,7 +3340,7 @@
                           edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                           edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                           let target = visibleGM.nodesMap.get(targetID);
-                          let newMetaEdge = Topology$1.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
                           edgeIDList[2].push({
                             ID: newMetaEdge.ID,
@@ -3361,7 +3361,7 @@
                           edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                           edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                           let source = visibleGM.nodesMap.get(sourceID);
-                          let newMetaEdge = Topology$1.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
                           edgeIDList[2].push({
                             ID: newMetaEdge.ID,
@@ -3384,7 +3384,7 @@
                           edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                           let source = visibleGM.nodesMap.get(sourceID);
                           let target = visibleGM.nodesMap.get(targetID);
-                          let newMetaEdge = Topology$1.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
                           edgeIDList[2].push({
                             ID: newMetaEdge.ID,
@@ -3473,7 +3473,7 @@
                       if(targetID){
                         if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible ? incidentEdge.target : incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
                           let target = visibleGM.nodesMap.get(targetID);
-                          let newMetaEdge = Topology$1.addMetaEdge(visibleMetaEdge.source.ID, target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
+                          let newMetaEdge = Topology.addMetaEdge(visibleMetaEdge.source.ID, target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
                           edgeIDList[2].push({
                             ID: newMetaEdge.ID,
@@ -3489,7 +3489,7 @@
                       if(sourceID){
                         if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source.isVisible ? incidentEdge.target : incidentEdge.source, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
                           let source = visibleGM.nodesMap.get(sourceID);
-                          let newMetaEdge = Topology$1.addMetaEdge(source.ID, visibleMetaEdge.target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
+                          let newMetaEdge = Topology.addMetaEdge(source.ID, visibleMetaEdge.target.ID, [visibleMetaEdge.ID], visibleGM, invisibleGM);
                           // report incident edge as processed (to be added)
                           edgeIDList[2].push({
                             ID: newMetaEdge.ID,
@@ -3539,7 +3539,7 @@
               if(targetID){
                 let target = visibleGM.nodesMap.get(targetID);
                 if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.source.ID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
-                  let newMetaEdge = Topology$1.addMetaEdge(edge.source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
+                  let newMetaEdge = Topology.addMetaEdge(edge.source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
                   // report incident edge as processed (to be added)
                   edgeIDList[2].push({
                     ID: newMetaEdge.ID,
@@ -3555,7 +3555,7 @@
               if(sourceID){
                 let source = visibleGM.nodesMap.get(sourceID);
                 if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(edge.target.ID), invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
-                  let newMetaEdge = Topology$1.addMetaEdge(source.ID, edge.target.ID, [edge.ID], visibleGM, invisibleGM);
+                  let newMetaEdge = Topology.addMetaEdge(source.ID, edge.target.ID, [edge.ID], visibleGM, invisibleGM);
                   // report incident edge as processed (to be added)
                   edgeIDList[2].push({
                     ID: newMetaEdge.ID,
@@ -3573,7 +3573,7 @@
                 let source = visibleGM.nodesMap.get(sourceID);
                 let target = visibleGM.nodesMap.get(targetID);
                 if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
-                  let newMetaEdge = Topology$1.addMetaEdge(source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
+                  let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [edge.ID], visibleGM, invisibleGM);
                   // report incident edge as processed (to be added)
                   edgeIDList[2].push({
                     ID: newMetaEdge.ID,
@@ -4186,37 +4186,37 @@
     addNode(nodeID, parentID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.addNode(nodeID, parentID, visibleGM, invisibleGM);
+      Topology.addNode(nodeID, parentID, visibleGM, invisibleGM);
     }
 
     addEdge(edgeID, sourceID, targetID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.addEdge(edgeID, sourceID, targetID, visibleGM, invisibleGM);
+      Topology.addEdge(edgeID, sourceID, targetID, visibleGM, invisibleGM);
     }
 
     removeNode(nodeID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.removeNode(nodeID, visibleGM, invisibleGM);
+      Topology.removeNode(nodeID, visibleGM, invisibleGM);
     }
 
     removeEdge(edgeID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.removeEdge(edgeID, visibleGM, invisibleGM);
+      Topology.removeEdge(edgeID, visibleGM, invisibleGM);
     }
 
     reconnect(edgeID, newSourceID, newTargetID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM);
+      Topology.reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM);
     }
 
     changeParent(nodeID, newParentID) {
       let visibleGM = this.#visibleGraphManager;
       let invisibleGM = this.#invisibleGraphManager;
-      Topology$1.changeParent(nodeID, newParentID, visibleGM, invisibleGM);
+      Topology.changeParent(nodeID, newParentID, visibleGM, invisibleGM);
     }
 
     // Complexity management related API methods
