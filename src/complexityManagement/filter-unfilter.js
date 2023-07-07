@@ -1,5 +1,6 @@
 import { MetaEdge } from "../meta-edge";
 import { Auxiliary } from "./auxiliary";
+import { ExpandCollapse } from "./expand-collapse";
 // Filter function
 export class FilterUnfilter {
   static filter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
