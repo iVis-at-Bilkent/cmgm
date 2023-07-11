@@ -2987,6 +2987,11 @@ class Auxiliary {
     let deletedMetaEdges = [[], []];
     // edge is part of a meta edge, get that meta edge using edge ID (as newMetaEdge)
     let metaEdge = visibleGM.edgeToMetaEdgeMap.get(edge.ID);
+
+    if(metaEdge == undefined){
+      return deletedMetaEdges;
+    }
+
     // remove meta edge from the edge to meta edge map.
     visibleGM.edgeToMetaEdgeMap.delete(edge.ID);
     // check if newMetaEdge is part of any meta edge
