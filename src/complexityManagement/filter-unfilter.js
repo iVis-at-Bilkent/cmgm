@@ -4,7 +4,7 @@ import { ExpandCollapse } from "./expand-collapse";
 import { Topology } from "./topology";
 // Filter function
 export class FilterUnfilter {
-  static filter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+  static filter(nodeIDList, edgeIDList, visibleGM, mainGM) {
     // Lists to return back to api to indicate modified elements
     let nodeIDListPostProcess = [];
     let edgeIDListPostProcess = [];
@@ -30,7 +30,7 @@ export class FilterUnfilter {
             let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(edgeID)
             // call updateMetaEdge function to check if all edges who are part of meta edge are filtered or hidden
             // if yes remove said meta edge
-            let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
+            let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,mainGM);
             // if yes remove said meta edge from visible graph
             if (status) {
               if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
@@ -46,7 +46,7 @@ export class FilterUnfilter {
         
       }
       // get corresponding edge in invisible side
-      let edgeToFilterInvisible = invisibleGM.edgesMap.get(edgeID);
+      let edgeToFilterInvisible = mainGM.edgesMap.get(edgeID);
       // set filtered status to tru and visible status to false.
       if(edgeToFilterInvisible){
         edgeToFilterInvisible.isFiltered = true;
@@ -72,7 +72,7 @@ export class FilterUnfilter {
           // if edge is not a meta edge
           if (!(nodeToFilterEdge instanceof MetaEdge)) {
             // get corresponding edge on invisible side and set visible status false
-            let nodeToFilterEdgeInvisible = invisibleGM.edgesMap.get(nodeToFilterEdge.ID);
+            let nodeToFilterEdgeInvisible = mainGM.edgesMap.get(nodeToFilterEdge.ID);
             nodeToFilterEdgeInvisible.isVisible = false;
           }
           if(visibleGM.edgesMap.has(nodeToFilterEdge.ID)){
@@ -85,7 +85,7 @@ export class FilterUnfilter {
         // loop through descendant simple nodes
         nodeToFilterDescendants.simpleNodes.forEach((nodeToFilterSimpleNode) => {
           // get corresponding node in invisible graph and set visible status to false
-          let nodeToFilterSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterSimpleNode.ID);
+          let nodeToFilterSimpleNodeInvisible = mainGM.nodesMap.get(nodeToFilterSimpleNode.ID);
           nodeToFilterSimpleNodeInvisible.isVisible = false;
           // report node as processed
           nodeIDListPostProcess.push(nodeToFilterSimpleNode.ID);
@@ -97,7 +97,7 @@ export class FilterUnfilter {
         nodeToFilterDescendants.compoundNodes.forEach(
           (nodeToFilterCompoundNode) => {
             // get corresponding compound node in invisible graph and set visible status as false
-            let nodeToFilterCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToFilterCompoundNode.ID);
+            let nodeToFilterCompoundNodeInvisible = mainGM.nodesMap.get(nodeToFilterCompoundNode.ID);
             nodeToFilterCompoundNodeInvisible.isVisible = false;
             // report compoound node as processed
             nodeIDListPostProcess.push(nodeToFilterCompoundNode.ID);
@@ -128,7 +128,7 @@ export class FilterUnfilter {
         // report node as processed
         nodeIDListPostProcess.push(nodeID);
         // get corresponding node in invisible graph and set filtered status true and visible status false.
-        let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
+        let nodeToFilterInvisible = mainGM.nodesMap.get(nodeID);
         nodeToFilterInvisible.isFiltered = true;
         nodeToFilterInvisible.isVisible = false;
       }
@@ -138,10 +138,10 @@ export class FilterUnfilter {
 
 
 
-        let nodeToFilterInvisible = invisibleGM.nodesMap.get(nodeID);
+        let nodeToFilterInvisible = mainGM.nodesMap.get(nodeID);
 
         let nodeToFilterDescendants =
-          invisibleGM.getDescendantsInorder(nodeToFilterInvisible);
+          mainGM.getDescendantsInorder(nodeToFilterInvisible);
 
           nodeToFilterDescendants.edges.forEach((nodeToFilterEdge) => {
             let edgeID = nodeToFilterEdge.ID;
@@ -150,7 +150,7 @@ export class FilterUnfilter {
               let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(edgeID)
               // call updateMetaEdge function to check if all edges who are part of meta edge are filtered or hidden
               // if yes remove said meta edge
-              let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
+              let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,mainGM);
               // if yes remove said meta edge from visible graph
               if (status) {
                 if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
@@ -179,7 +179,7 @@ export class FilterUnfilter {
 
 
   // unfilter function
-  static unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+  static unfilter(nodeIDList, edgeIDList, visibleGM, mainGM) {
     // lists to report processed nodes and edges.
     let nodeIDListPostProcess = [];
     let edgeIDListPostProcess = [];
@@ -187,7 +187,7 @@ export class FilterUnfilter {
     // loop through nodes to unfilter
     nodeIDList.forEach((nodeID) => {
       // get node from invisible graph and set filter status to false
-      let nodeToUnfilter = invisibleGM.nodesMap.get(nodeID);
+      let nodeToUnfilter = mainGM.nodesMap.get(nodeID);
       nodeToUnfilter.isFiltered = false;
       // set status flag,  that node is allowed to be filtered, initalized as true
       let canNodeToUnfilterBeVisible = true;
@@ -200,7 +200,7 @@ export class FilterUnfilter {
         // infinite loop until we find that node can not be unfiltered or we reach root graph.
         while (true) {
           //if next owner graph is root gaph (meaning no more parents)
-          if (tempNode.owner == invisibleGM.rootGraph) {
+          if (tempNode.owner == mainGM.rootGraph) {
             break;
           } else {
             // there is another parent of current node 
@@ -223,7 +223,7 @@ export class FilterUnfilter {
       // if node is allowed to be unfiltered
       if (canNodeToUnfilterBeVisible) {
         // move node to visible along with all the associated edges that can be brought to visible side
-        let tempList = Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, invisibleGM);
+        let tempList = Auxiliary.moveNodeToVisible(nodeToUnfilter, visibleGM, mainGM);
         // make all the descendants of the node to unfilter,visible. 
         //loop though edges returned
         tempList[0].forEach(item => {
@@ -241,7 +241,7 @@ export class FilterUnfilter {
         });
         let descendants = []
         if(!nodeToUnfilter.isCollapsed){
-          descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM);
+          descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToUnfilter, visibleGM, mainGM);
         // report all descendant edges, simple nodes and compound nodes as processed
         nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
         edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
@@ -274,7 +274,7 @@ export class FilterUnfilter {
           // infinite loop until we find that node can not be unfiltered or we reach root graph.
           while (true) {
             //if next owner graph is root gaph (meaning no more parents)
-            if (tempNode.owner == invisibleGM.rootGraph) {
+            if (tempNode.owner == mainGM.rootGraph) {
               break;
             } else {
               // there is another parent of current node 
@@ -302,16 +302,16 @@ export class FilterUnfilter {
             if (incidentEdge.isFiltered == false && incidentEdge.isHidden == false) {
               
                 if (incidentEdge.source.isVisible) {
-                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, mainGM);
                   if(targetID){
-                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source, invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.source, mainGM.nodesMap.get(targetID), mainGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, mainGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                       let target = visibleGM.nodesMap.get(targetID);
-                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(incidentEdge.source.ID, target.ID, [incidentEdge.ID], visibleGM, mainGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -323,16 +323,16 @@ export class FilterUnfilter {
                     }
                   }
                 } else if (incidentEdge.target.isVisible) {
-                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, invisibleGM);
+                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, mainGM);
                   if(sourceID){
-                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target, invisibleGM.nodesMap.get(sourceID), invisibleGM)) {
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(incidentEdge.target, mainGM.nodesMap.get(sourceID), mainGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, mainGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                       let source = visibleGM.nodesMap.get(sourceID);
-                      let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, incidentEdge.target.ID, [incidentEdge.ID], visibleGM, mainGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -344,18 +344,18 @@ export class FilterUnfilter {
                     }
                   }
                 } else {
-                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, invisibleGM);
-                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, invisibleGM);
+                  let sourceID = Auxiliary.getVisibleParent(incidentEdge.source.ID, mainGM);
+                  let targetID = Auxiliary.getVisibleParent(incidentEdge.target.ID, mainGM);
                   if(sourceID && targetID && sourceID != targetID){
-                    if (ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(targetID), invisibleGM.nodesMap.get(sourceID), invisibleGM) && ExpandCollapse.incidentEdgeIsOutOfScope(invisibleGM.nodesMap.get(sourceID), invisibleGM.nodesMap.get(targetID), invisibleGM)) {
+                    if (ExpandCollapse.incidentEdgeIsOutOfScope(mainGM.nodesMap.get(targetID), mainGM.nodesMap.get(sourceID), mainGM) && ExpandCollapse.incidentEdgeIsOutOfScope(mainGM.nodesMap.get(sourceID), mainGM.nodesMap.get(targetID), mainGM)) {
                       // call recursiveMetaEdgeUpdate function on incident edge to remove meta edge with incident edge as oringal edge and the meta edge that contains this meta edge and so on and so forth
-                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, invisibleGM);
+                      let deleteMetaEdgeList = Auxiliary.recursiveMetaEdgeUpdate(incidentEdge, visibleGM, mainGM);
                       // report meta edges deleted by recursiveMetaEdgeUpdate function as processed and add them to the list of reported meta edges (to be removed)
                       edgeIDList[1] = [...edgeIDList[1], ...deleteMetaEdgeList[0]];
                       edgeIDList[0] = [...edgeIDList[0], ...deleteMetaEdgeList[1]];
                       let source = visibleGM.nodesMap.get(sourceID);
                       let target = visibleGM.nodesMap.get(targetID);
-                      let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, invisibleGM);
+                      let newMetaEdge = Topology.addMetaEdge(source.ID, target.ID, [incidentEdge.ID], visibleGM, mainGM);
                       // report incident edge as processed (to be added)
                       edgeIDList[2].push({
                         ID: newMetaEdge.ID,
@@ -391,7 +391,7 @@ export class FilterUnfilter {
     // loop through all the edges to unfilter
     edgeIDList.forEach((edgeID) => {
       // get edge from invisible graph and set filtered status to false
-      let edgeToUnfilter = invisibleGM.edgesMap.get(edgeID);
+      let edgeToUnfilter = mainGM.edgesMap.get(edgeID);
       edgeToUnfilter.isFiltered = false;
       // check if edge is part of a meta edge in visible graph
       if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
@@ -407,7 +407,7 @@ export class FilterUnfilter {
           // if source and target are visible
           if(sourceInVisible!=undefined && targetInVisible!=undefined){
             // get corresponding invisible edge for the orignal edge to unfilter
-            let invisibleEdge = invisibleGM.edgesMap.get(edgeID);
+            let invisibleEdge = mainGM.edgesMap.get(edgeID);
             // if source and target of invisible side edge has same owner graph (meaning they belong in same graph and edge is not inter graph edge)
             if (invisibleEdge.source.owner == invisibleEdge.target.owner) {
               // add meta edge to the sibling side of the invisible edge's owner graph. (doing it from invisible side because there is no way to access visible graph directly)
@@ -432,7 +432,7 @@ export class FilterUnfilter {
           // if yes
           if (edgeToUnfilter.isHidden == false && edgeToUnfilter.source.isVisible && edgeToUnfilter.target.isVisible) {
             // bring edge to visible side
-            Auxiliary.moveEdgeToVisible(edgeToUnfilter, visibleGM, invisibleGM);
+            Auxiliary.moveEdgeToVisible(edgeToUnfilter, visibleGM, mainGM);
             // report edge as processed.
             edgeIDListPostProcess.push(edgeToUnfilter.ID);
           }          
@@ -449,7 +449,7 @@ export class FilterUnfilter {
   }
 
   // function to make all descendants of a compound node visible and report all the procesed descendants.
-  static makeDescendantNodesVisible(nodeToUnfilter, visibleGM, invisibleGM) {
+  static makeDescendantNodesVisible(nodeToUnfilter, visibleGM, mainGM) {
     // reproting object for descendants
     let descendants = {
       edges: new Set(),
@@ -465,7 +465,7 @@ export class FilterUnfilter {
         // check if decendant node is not filterted and not hidden 
         if (descendantNode.isFiltered == false && descendantNode.isHidden == false) {
           // move descendant node to visible and all its incident edges
-          let tempList = Auxiliary.moveNodeToVisible(descendantNode, visibleGM, invisibleGM);
+          let tempList = Auxiliary.moveNodeToVisible(descendantNode, visibleGM, mainGM);
           tempList[0].forEach(item => {
             // report edge as processed (to be added)
             descendants.edges.add(item)
@@ -473,7 +473,7 @@ export class FilterUnfilter {
           // check if desndant node is not collapsed
           if (descendantNode.isCollapsed == false) {
             // recall this function for decendant node to get all its descendants (recursion goes until there are not more descendants) 
-            let childDescendents = this.makeDescendantNodesVisible(descendantNode, visibleGM, invisibleGM);
+            let childDescendents = this.makeDescendantNodesVisible(descendantNode, visibleGM, mainGM);
             // loop through keys of reported child descendant object and combine values for each keys
             for (var id in childDescendents) {
               descendants[id] = [...descendants[id] || [], ...childDescendents[id]];
@@ -529,7 +529,7 @@ export class FilterUnfilter {
 // if yes keep meta edge else remove meta edge
 // Return False to report meta edge to be kept,
 // Returns True to  report meta edge to be removed,
-  static updateMetaEdge(nestedEdges, targetEdgeID,visibleGM,invisibleGM) {
+  static updateMetaEdge(nestedEdges, targetEdgeID,visibleGM,mainGM) {
     // initally assuming all orignal edges are either filtered or hidden and meta edge needs to be deleted
     let status = true;
     // loop through given edge IDs
@@ -539,7 +539,7 @@ export class FilterUnfilter {
         // get that meta edge object
         let nestedEdge = visibleGM.metaEdgesMap.get(nestedEdgeID);
         // recall the function for this meta edge's orignal ends
-        let update = this.updateMetaEdge(nestedEdge.originalEdges, targetEdgeID,visibleGM,invisibleGM);
+        let update = this.updateMetaEdge(nestedEdge.originalEdges, targetEdgeID,visibleGM,mainGM);
         // combine the result from above with current one.
         // if one of them is false at any point it will become false
         status = (update==false?update:status)
@@ -547,7 +547,7 @@ export class FilterUnfilter {
       } else {
         // if edge ID is not a meta edge
         // get the simple edge from invisible graph (as this edge is part of a meta edge it will not be on visible graph)
-        let nestedEdge = invisibleGM.edgesMap.get(nestedEdgeID);
+        let nestedEdge = mainGM.edgesMap.get(nestedEdgeID);
         //  check if invisible edge is not filtered and not hidded and is not the given target.
         if (nestedEdge?.isFiltered == false && nestedEdge?.isHidden == false && nestedEdgeID!=targetEdgeID) {
           // report meta edge to be kept. (there is an edge which fulfil requirement so we keep initial meta edge)

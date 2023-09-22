@@ -4,7 +4,7 @@ import { FilterUnfilter } from "./filter-unfilter";
 
 export class HideShow {
 
-  static hide(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+  static hide(nodeIDList, edgeIDList, visibleGM, mainGM) {
 
     // Lists to return back to api to indicate modified elements
     let nodeIDListPostProcess = [];
@@ -31,7 +31,7 @@ export class HideShow {
             let visibleMetaEdge = visibleGM.edgeToMetaEdgeMap.get(edgeID)
             // call updateMetaEdge function to check if all edges who are part of meta edge are filtered or hidden
             // if yes remove said meta edge
-            let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,invisibleGM);
+            let status = this.updateMetaEdge(visibleMetaEdge.originalEdges, edgeID,visibleGM,mainGM);
             // if yes remove said meta edge from visible graph
             if (status) {
               if(visibleGM.edgesMap.has(visibleMetaEdge.ID)){
@@ -47,7 +47,7 @@ export class HideShow {
         
       }
       // get corresponding edge in invisible side
-      let edgeToHideInvisible = invisibleGM.edgesMap.get(edgeID);
+      let edgeToHideInvisible = mainGM.edgesMap.get(edgeID);
       // set hidden status to tru and visible status to false.
       if(edgeToHideInvisible){
         edgeToHideInvisible.isHidden = true;
@@ -73,7 +73,7 @@ export class HideShow {
           // if edge is not a meta edge
           if (!(nodeToHideEdge instanceof MetaEdge)) {
             // get corresponding edge on invisible side and set visible status false
-            let nodeToHideEdgeInvisible = invisibleGM.edgesMap.get(nodeToHideEdge.ID);
+            let nodeToHideEdgeInvisible = mainGM.edgesMap.get(nodeToHideEdge.ID);
             nodeToHideEdgeInvisible.isVisible = false;
           }
           if(visibleGM.edgesMap.has(nodeToHideEdge.ID)){
@@ -86,7 +86,7 @@ export class HideShow {
         // loop through descendant simple nodes
         nodeToHideDescendants.simpleNodes.forEach((nodeToHideSimpleNode) => {
           // get corresponding node in invisible graph and set visible status to false
-          let nodeToHideSimpleNodeInvisible = invisibleGM.nodesMap.get(nodeToHideSimpleNode.ID);
+          let nodeToHideSimpleNodeInvisible = mainGM.nodesMap.get(nodeToHideSimpleNode.ID);
           nodeToHideSimpleNodeInvisible.isVisible = false;
           // report node as processed
           nodeIDListPostProcess.push(nodeToHideSimpleNode.ID);
@@ -98,7 +98,7 @@ export class HideShow {
         nodeToHideDescendants.compoundNodes.forEach(
           (nodeToHideCompoundNode) => {
             // get corresponding compound node in invisible graph and set visible status as false
-            let nodeToHideCompoundNodeInvisible = invisibleGM.nodesMap.get(nodeToHideCompoundNode.ID);
+            let nodeToHideCompoundNodeInvisible = mainGM.nodesMap.get(nodeToHideCompoundNode.ID);
             nodeToHideCompoundNodeInvisible.isVisible = false;
             // report compoound node as processed
             nodeIDListPostProcess.push(nodeToHideCompoundNode.ID);
@@ -129,14 +129,14 @@ export class HideShow {
         // report node as processed
         nodeIDListPostProcess.push(nodeID);
         // get corresponding node in invisible graph and set hidden status true and visible status false.
-        let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
+        let nodeToHideInvisible = mainGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;
       }
       else {
         //  if node is not visible
         // get corresponding node from invisible graph and set hidden status true and visible status false
-        let nodeToHideInvisible = invisibleGM.nodesMap.get(nodeID);
+        let nodeToHideInvisible = mainGM.nodesMap.get(nodeID);
         nodeToHideInvisible.isHidden = true;
         nodeToHideInvisible.isVisible = false;
       }
@@ -149,7 +149,7 @@ export class HideShow {
     return edgeIDListPostProcess.concat(nodeIDListPostProcess);
   }
 
-  static show(nodeIDList, edgeIDList, visibleGM, invisibleGM) {
+  static show(nodeIDList, edgeIDList, visibleGM, mainGM) {
     // lists to report processed nodes and edges.
     let nodeIDListPostProcess = [];
     let edgeIDListPostProcess = [];
@@ -157,7 +157,7 @@ export class HideShow {
     // loop through nodes to show
     nodeIDList.forEach((nodeID) => {
       // get node from invisible graph and set hidden status to false
-      let nodeToShow = invisibleGM.nodesMap.get(nodeID);
+      let nodeToShow = mainGM.nodesMap.get(nodeID);
       nodeToShow.isHidden = false;
       // set status flag,  that node is allowed to be shown, initalized as true
       let canNodeToShowBeVisible = true;
@@ -170,7 +170,7 @@ export class HideShow {
         // infinite loop until we find that node can not be Showed or we reach root graph.
         while (true) {
           //if next owner graph is root gaph (meaning no more parents)
-          if (tempNode.owner == invisibleGM.rootGraph) {
+          if (tempNode.owner == mainGM.rootGraph) {
             break;
           } else {
             // there is another parent of current node 
@@ -193,7 +193,7 @@ export class HideShow {
       // if node is allowed to be Showed
       if (canNodeToShowBeVisible) {
         // move node to visible along with all the associated edges that can be brought to visible side
-        let tempList = Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, invisibleGM);
+        let tempList = Auxiliary.moveNodeToVisible(nodeToShow, visibleGM, mainGM);
         // make all the descendants of the node to Show,visible. 
         //loop though edges returned
         tempList[0].forEach(item => {
@@ -211,7 +211,7 @@ export class HideShow {
         });
         let descendants = []
         if(!nodeToShow.isCollapsed){
-          descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, invisibleGM);
+          descendants = FilterUnfilter.makeDescendantNodesVisible(nodeToShow, visibleGM, mainGM);
         // report all descendant edges, simple nodes and compound nodes as processed
         nodeIDListPostProcess = [...nodeIDListPostProcess, ...descendants.simpleNodes, ...descendants.compoundNodes];
         edgeIDListPostProcess = [...edgeIDListPostProcess, ...descendants.edges];
@@ -237,7 +237,7 @@ export class HideShow {
     // loop through all the edges to Show
     edgeIDList.forEach((edgeID) => {
       // get edge from invisible graph and set hidden status to false
-      let edgeToShow = invisibleGM.edgesMap.get(edgeID);
+      let edgeToShow = mainGM.edgesMap.get(edgeID);
       edgeToShow.isHidden = false;
       // check if edge is part of a meta edge in visible graph
       if (visibleGM.edgeToMetaEdgeMap.has(edgeID)) {
@@ -253,7 +253,7 @@ export class HideShow {
           // if source and target are visible
           if(sourceInVisible!=undefined && targetInVisible!=undefined){
             // get corresponding invisible edge for the orignal edge to Show
-            let invisibleEdge = invisibleGM.edgesMap.get(edgeID);
+            let invisibleEdge = mainGM.edgesMap.get(edgeID);
             // if source and target of invisible side edge has same owner graph (meaning they belong in same graph and edge is not inter graph edge)
             if (invisibleEdge.source.owner == invisibleEdge.target.owner) {
               // add meta edge to the sibling side of the invisible edge's owner graph. (doing it from invisible side because there is no way to access visible graph directly)
@@ -278,7 +278,7 @@ export class HideShow {
           // if yes
           if (edgeToShow.isHidden == false && edgeToShow.source.isVisible && edgeToShow.target.isVisible) {
             // bring edge to visible side
-            Auxiliary.moveEdgeToVisible(edgeToShow, visibleGM, invisibleGM);
+            Auxiliary.moveEdgeToVisible(edgeToShow, visibleGM, mainGM);
             // report edge as processed.
             edgeIDListPostProcess.push(edgeToShow.ID);
           }          
@@ -295,19 +295,19 @@ export class HideShow {
 
   }
 
-  static showAll(visibleGM, invisibleGM) {
+  static showAll(visibleGM, mainGM) {
     let hiddenNodeIDList = [];
     let hiddenEdgeIDList = [];
-    invisibleGM.nodesMap.forEach((node, NodeID) => {
+    mainGM.nodesMap.forEach((node, NodeID) => {
       if (node.isHidden) {
         hiddenNodeIDList.push(node.ID);
       }
     });
-    invisibleGM.edgesMap.forEach((edge, EdgeID) => {
+    mainGM.edgesMap.forEach((edge, EdgeID) => {
       if (edge.isHidden) {
         hiddenEdgeIDList.push(edge.ID);
       }
     });
-    return this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, invisibleGM);
+    return this.show(hiddenNodeIDList, hiddenEdgeIDList, visibleGM, mainGM);
   }
 }

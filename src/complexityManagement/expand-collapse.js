@@ -20,14 +20,14 @@ export class ExpandCollapse {
   };
   //Double Recursive Solution
   // collpase node function
-  static #collapseNode(node, visibleGM, invisibleGM) {
+  static #collapseNode(node, visibleGM, mainGM) {
     //first process the visible graph
     // traverse descdents and get list of nodes, edges and meta edges
     let [
       nodeIDListForInvisible,
       edgeIDListForInvisible,
       metaEdgeIDListForVisible,
-    ] = this.traverseDescendants(node, node, visibleGM, invisibleGM);
+    ] = this.traverseDescendants(node, node, visibleGM, mainGM);
     //  remove child graph of given node
     visibleGM.removeGraph(node.child);
     // loop through descendant nodes
@@ -47,18 +47,18 @@ export class ExpandCollapse {
       }
     });
     // get corresponding node from invisible graph and set is collapsed flag true
-    let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
+    let nodeInInvisible = mainGM.nodesMap.get(node.ID);
     nodeInInvisible.isCollapsed = true;
     // loop through descendant nodes
     nodeIDListForInvisible.forEach((nodeIDInvisible) => {
       // get corresponding node from invisible graph and set is visible flag false
-      nodeInInvisible = invisibleGM.nodesMap.get(nodeIDInvisible);
+      nodeInInvisible = mainGM.nodesMap.get(nodeIDInvisible);
       nodeInInvisible.isVisible = false;
     });
     // loop through descendant edges
     edgeIDListForInvisible.forEach((edgeIDInvisible) => {
       // get corresponding edge from invisible graph and set is visible flag false
-      let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
+      let edgeInInvisible = mainGM.edgesMap.get(edgeIDInvisible);
       if (edgeInInvisible) {
         edgeInInvisible.isVisible = false;
       }
@@ -76,7 +76,7 @@ export class ExpandCollapse {
   }
 
   // traverse function for compound node and report all descendant nodes, edges and meta edges.
-  static traverseDescendants(node, nodeToBeCollapsed, visibleGM, invisibleGM) {
+  static traverseDescendants(node, nodeToBeCollapsed, visibleGM, mainGM) {
     // iniailize arrays to report descendant nodes (to be removed), edges (to be removed) and meta edges (to be added) as processed
     let nodeIDListForInvisible = [];
     let edgeIDListForInvisible = [];
@@ -108,9 +108,9 @@ export class ExpandCollapse {
             if (childEdge.source == child) {
               // check if meta edge needs to be created or not
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(
-                invisibleGM.nodesMap.get(childEdge.target.ID),
-                invisibleGM.nodesMap.get(nodeToBeCollapsed.ID),
-                invisibleGM
+                mainGM.nodesMap.get(childEdge.target.ID),
+                mainGM.nodesMap.get(nodeToBeCollapsed.ID),
+                mainGM
               );
 
               if (
@@ -137,7 +137,7 @@ export class ExpandCollapse {
                     target.ID,
                     originalEnds,
                     visibleGM,
-                    invisibleGM
+                    mainGM
                   );
                   // report meta edge as processed in the form of object with ID, sourceID, targetID
                   metaEdgeIDListForVisible.push({
@@ -160,7 +160,7 @@ export class ExpandCollapse {
                   childEdge.target.ID,
                   [childEdge.ID],
                   visibleGM,
-                  invisibleGM
+                  mainGM
                 );
                 // report meta edge as processed in the form of object with ID, sourceID, targetID
                 metaEdgeIDListForVisible.push({
@@ -175,9 +175,9 @@ export class ExpandCollapse {
               // if child  is the target of child edge.
               // check if meta edge needs to be created or not
               metaEdgeToBeCreated = this.incidentEdgeIsOutOfScope(
-                invisibleGM.nodesMap.get(childEdge.source.ID),
-                invisibleGM.nodesMap.get(nodeToBeCollapsed.ID),
-                invisibleGM
+                mainGM.nodesMap.get(childEdge.source.ID),
+                mainGM.nodesMap.get(nodeToBeCollapsed.ID),
+                mainGM
               );
               if (
                 metaEdgeToBeCreated &&
@@ -203,7 +203,7 @@ export class ExpandCollapse {
                     nodeToBeCollapsed.ID,
                     originalEnds,
                     visibleGM,
-                    invisibleGM
+                    mainGM
                   );
                   // report meta edge as processed in the form of object with ID, sourceID, targetID
                   metaEdgeIDListForVisible.push({
@@ -226,7 +226,7 @@ export class ExpandCollapse {
                   nodeToBeCollapsed.ID,
                   [childEdge.ID],
                   visibleGM,
-                  invisibleGM
+                  mainGM
                 );
                 // report meta edge as processed in the form of object with ID, sourceID, targetID
                 metaEdgeIDListForVisible.push({
@@ -246,7 +246,7 @@ export class ExpandCollapse {
             child,
             nodeToBeCollapsed,
             visibleGM,
-            invisibleGM
+            mainGM
           );
         // combine reproted nodes , edges and meta edges with the orignal ones.
         nodeIDListForInvisible = [
@@ -276,10 +276,10 @@ export class ExpandCollapse {
   static incidentEdgeIsOutOfScope(
     interGraphEdgeTarget,
     nodeToBeCollapsed,
-    invisibleGM
+    mainGM
   ) {
     // check if given target node is in root graph then return true.
-    if (interGraphEdgeTarget.owner == invisibleGM.rootGraph) {
+    if (interGraphEdgeTarget.owner == mainGM.rootGraph) {
       return true;
     } //if parent of given node is node to be collapsed then false
     else if (interGraphEdgeTarget.owner.parent == nodeToBeCollapsed) {
@@ -290,7 +290,7 @@ export class ExpandCollapse {
       return this.incidentEdgeIsOutOfScope(
         interGraphEdgeTarget.owner.parent,
         nodeToBeCollapsed,
-        invisibleGM
+        mainGM
       );
     }
   }
@@ -300,7 +300,7 @@ export class ExpandCollapse {
  //-----------------------------------------------
  //Iterative Collapse Soltion 
  //-------------------------------------------------
- static #collapseNode(node, visibleGM, invisibleGM) {
+ static #collapseNode(node, visibleGM, mainGM) {
    let nodeIDListForInvisible = [];
    let edgeIDListForInvisible = [];
    //first process the visible graph
@@ -314,13 +314,13 @@ export class ExpandCollapse {
          if (childEdge.source == childNode) {
            metaEdgeToBeCreated = [...descendantNodes, node].includes(childEdge.target);
            if (metaEdgeToBeCreated) {
-             Topology.addEdge(childEdge.ID, node.ID, childEdge.target.ID, visibleGM, invisibleGM);
+             Topology.addEdge(childEdge.ID, node.ID, childEdge.target.ID, visibleGM, mainGM);
            }
           }
           else {
             metaEdgeToBeCreated = [...descendantNodes, node].includes(childEdge.source);
             if (metaEdgeToBeCreated) {
-              Topology.addEdge(childEdge.ID, childEdge.source.ID, node.ID, visibleGM, invisibleGM);
+              Topology.addEdge(childEdge.ID, childEdge.source.ID, node.ID, visibleGM, mainGM);
             }
           }
        }
@@ -332,16 +332,16 @@ export class ExpandCollapse {
    descendantNodes.forEach(node => {
      visibleGM.nodesMap.delete(node.ID)
    });
-   let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
+   let nodeInInvisible = mainGM.nodesMap.get(node.ID);
    nodeInInvisible.isCollapsed = true;
 
    nodeIDListForInvisible.forEach(nodeIDInvisible => {
-     nodeInInvisible = invisibleGM.nodesMap.get(nodeIDInvisible);
+     nodeInInvisible = mainGM.nodesMap.get(nodeIDInvisible);
      nodeInInvisible.isVisible = false;
    });
 
    edgeIDListForInvisible.forEach(edgeIDInvisible => {
-     let edgeInInvisible = invisibleGM.edgesMap.get(edgeIDInvisible);
+     let edgeInInvisible = mainGM.edgesMap.get(edgeIDInvisible);
      edgeInInvisible.isVisible = false;
    });
  }
@@ -353,11 +353,11 @@ export class ExpandCollapse {
     node,
     isRecursive,
     visibleGM,
-    invisibleGM,
+    mainGM,
     nodeToBeExpanded = undefined
   ) {
     // get node from invisible graph
-    let nodeInInvisible = invisibleGM.nodesMap.get(node.ID);
+    let nodeInInvisible = mainGM.nodesMap.get(node.ID);
 
     if (nodeInInvisible.isCollapsed) {
       // create new grah in visible  graph as child of given node
@@ -398,7 +398,7 @@ export class ExpandCollapse {
         let tempList = Auxiliary.moveNodeToVisible(
           child,
           visibleGM,
-          invisibleGM,
+          mainGM,
           nodeToBeExpanded == undefined ? node : nodeToBeExpanded
         );
         //loop though edges returned
@@ -446,7 +446,7 @@ export class ExpandCollapse {
           // add child node to the visible graph's nodes map
           let newNode = visibleGM.nodesMap.get(child.ID);
           //  recursively call the expansion of this child node (as it is compound node and recurssion is true)
-          this.#expandNode(newNode, isRecursive, visibleGM, invisibleGM, node);
+          this.#expandNode(newNode, isRecursive, visibleGM, mainGM, node);
         }
       } else if (
         child.isCollapsed &&
@@ -462,7 +462,7 @@ export class ExpandCollapse {
         let tempList = Auxiliary.moveNodeToVisible(
           child,
           visibleGM,
-          invisibleGM,
+          mainGM,
           nodeToBeExpanded == undefined ? node : nodeToBeExpanded
         );
         //loop though edges returned
@@ -512,14 +512,14 @@ export class ExpandCollapse {
           let targetNode = visibleGM.nodesMap.get(topMetaEdge.target.ID);
           if (
             !ExpandCollapse.incidentEdgeIsOutOfScope(
-              invisibleGM.nodesMap.get(topMetaEdge.source.ID),
-              invisibleGM.nodesMap.get(node.ID),
-              invisibleGM
+              mainGM.nodesMap.get(topMetaEdge.source.ID),
+              mainGM.nodesMap.get(node.ID),
+              mainGM
             ) &&
             !ExpandCollapse.incidentEdgeIsOutOfScope(
-              invisibleGM.nodesMap.get(topMetaEdge.target.ID),
-              invisibleGM.nodesMap.get(node.ID),
-              invisibleGM
+              mainGM.nodesMap.get(topMetaEdge.target.ID),
+              mainGM.nodesMap.get(node.ID),
+              mainGM
             )
           ) {
             if (
@@ -589,7 +589,7 @@ export class ExpandCollapse {
   }
 
   // function to collapse nodes in the given list
-  static collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+  static collapseNodes(nodeIDList, isRecursive, visibleGM, mainGM) {
     // clear all elements from the object of the removed elements
     this.removedElements = {
       nodeIDListForInvisible: new Set(),
@@ -612,10 +612,10 @@ export class ExpandCollapse {
           this.collapseCompoundDescendantNodes(
             nodeInVisible,
             visibleGM,
-            invisibleGM
+            mainGM
           );
           // collpase the node by passing it to collapseNode function
-          this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+          this.#collapseNode(nodeInVisible, visibleGM, mainGM);
           // initialize index counter to 0
           let index = 0;
           // loop through list of meta edge ids list
@@ -678,7 +678,7 @@ export class ExpandCollapse {
         // if node is compound node
         if (nodeInVisible.child) {
           // pass node to collpaseNode function
-          this.#collapseNode(nodeInVisible, visibleGM, invisibleGM);
+          this.#collapseNode(nodeInVisible, visibleGM, mainGM);
           // initialize index to 0
           let index = 0;
           // loop through list of meta edge ids list
@@ -728,7 +728,7 @@ export class ExpandCollapse {
   }
 
   // function to collapse all the descendants of given compound node
-  static collapseCompoundDescendantNodes(node, visibleGM, invisibleGM) {
+  static collapseCompoundDescendantNodes(node, visibleGM, mainGM) {
     // if given node is compound node
     if (node.child) {
       // loop though children nodes of child graph
@@ -739,10 +739,10 @@ export class ExpandCollapse {
           this.collapseCompoundDescendantNodes(
             childNode,
             visibleGM,
-            invisibleGM
+            mainGM
           );
           // pass the child node to collapse node function to collapse child node.
-          this.#collapseNode(childNode, visibleGM, invisibleGM);
+          this.#collapseNode(childNode, visibleGM, mainGM);
           // initilaize the index to 0
           let index = 0;
           // loop through list of meta edge ids list
@@ -794,7 +794,7 @@ export class ExpandCollapse {
   }
 
   // expand nodes function takes list of nodes to expand
-  static expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM) {
+  static expandNodes(nodeIDList, isRecursive, visibleGM, mainGM) {
     // clear addedElements object with empty sets
     this.addedElements = {
       nodeIDListForVisible: new Set(),
@@ -807,7 +807,7 @@ export class ExpandCollapse {
       // get node from visible graph (visibleNode)
       let nodeInVisible = visibleGM.nodesMap.get(nodeID);
       // get node from invisible grap (invisibleNode)
-      let nodeInInvisible = invisibleGM.nodesMap.get(nodeID);
+      let nodeInInvisible = mainGM.nodesMap.get(nodeID);
       // check if invisibleNode is compound node and is collapsed and not filtered and not hidded
       if (
         nodeInInvisible.child &&
@@ -816,7 +816,7 @@ export class ExpandCollapse {
         !nodeInInvisible.isHidden
       ) {
         // pass invisibleNode to expand node function and recursive status
-        this.#expandNode(nodeInVisible, isRecursive, visibleGM, invisibleGM);
+        this.#expandNode(nodeInVisible, isRecursive, visibleGM, mainGM);
       }
     });
     // return addedElements
@@ -824,7 +824,7 @@ export class ExpandCollapse {
   }
 
   //  collapse All Nodes function
-  static collapseAllNodes(visibleGM, invisibleGM) {
+  static collapseAllNodes(visibleGM, mainGM) {
     // create list for nodes to collapse
     let nodeIDList = [];
     // loop through nodes of root graph (rootNodes)
@@ -838,15 +838,15 @@ export class ExpandCollapse {
     // call the collapsedNodes function and pass list of nodes to be collapsed
     return {
       collapsedNodes: nodeIDList,
-      ...this.collapseNodes(nodeIDList, true, visibleGM, invisibleGM),
+      ...this.collapseNodes(nodeIDList, true, visibleGM, mainGM),
     };
   }
 
   //expand all nodes function
-  static expandAllNodes(visibleGM, invisibleGM) {
+  static expandAllNodes(visibleGM, mainGM) {
     //  get list of all the top level collapsed compound nodes  (takes invisible root node root node)
     let topCollapsedCompoundNodes = this.getTopCollapsedCompoundNodes(
-      invisibleGM.rootGraph.parent
+      mainGM.rootGraph.parent
     );
     // all the expandNodes function will the list of all top level collapsed compound nodes
     return {
@@ -855,7 +855,7 @@ export class ExpandCollapse {
         topCollapsedCompoundNodes,
         true,
         visibleGM,
-        invisibleGM
+        mainGM
       ),
     };
   }
@@ -886,7 +886,7 @@ export class ExpandCollapse {
   }
 
   // function to collapse edges between 2 nodes (takes lis of edges)
-  static collapseEdges(edgeIDList, visibleGM, invisibleGM) {
+  static collapseEdges(edgeIDList, visibleGM, mainGM) {
     // get first edge from the list of edges
     let firstEdge = visibleGM.edgesMap.get(edgeIDList[0]);
     // get source of the first edge (sourceNode)
@@ -899,7 +899,7 @@ export class ExpandCollapse {
       targetNode.ID,
       edgeIDList,
       visibleGM,
-      invisibleGM
+      mainGM
     );
     // initailize list of edge ids list
     let edgeIDListForInvisible = [];
@@ -923,7 +923,7 @@ export class ExpandCollapse {
     // loop through removted edges
     edgeIDListForInvisible.forEach((edgeForInvisibleID) => {
       // get corresponding edge from invisible graph and set visible flag false.
-      let edgeInInvisible = invisibleGM.edgesMap.get(edgeForInvisibleID);
+      let edgeInInvisible = mainGM.edgesMap.get(edgeForInvisibleID);
       edgeInInvisible.isVisible = false;
     });
     // return list of object with new meta edge infromation
@@ -940,7 +940,7 @@ export class ExpandCollapse {
   }
 
   // function to expand edges (takes list of edges to expand)
-  static expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM) {
+  static expandEdges(edgeIDList, isRecursive, visibleGM, mainGM) {
     // intialize list of 2d array with orignal edges list to report
     // Structure = [ [edges to be added] , [meta edges to be removed] , [edges to be removed]]
     let originalEdgeIDList = [[], [], []];
@@ -978,7 +978,7 @@ export class ExpandCollapse {
               [originalEdge.ID],
               isRecursive,
               visibleGM,
-              invisibleGM
+              mainGM
             );
             // remove this meta edge from meta edge map
             visibleGM.metaEdgesMap.delete(originalEdge.ID);
@@ -1017,10 +1017,10 @@ export class ExpandCollapse {
               compound: "T",
             });
           }
-        } else if(invisibleGM.edgesMap.has(originalEdgeID)) {
+        } else if(mainGM.edgesMap.has(originalEdgeID)) {
           // if orignal edge is not a meta edge
           // get edge from invisible side
-          let edgeInInvisible = invisibleGM.edgesMap.get(originalEdgeID);
+          let edgeInInvisible = mainGM.edgesMap.get(originalEdgeID);
           //  check if edge is not filtered and not hiddedn
           if (
             edgeInInvisible.isFiltered == false &&
@@ -1065,7 +1065,7 @@ export class ExpandCollapse {
     return originalEdgeIDList;
   }
   // function to collapse edge between selected nodes
-  static collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM) {
+  static collapseEdgesBetweenNodes(nodeIDList, visibleGM, mainGM) {
     // initalize list to report meta edge
     let EdgeIDList = [[], []];
     // loop through all the nodes in the list
@@ -1091,7 +1091,7 @@ export class ExpandCollapse {
           let newMetaEge = this.collapseEdges(
             edgeIDList,
             visibleGM,
-            invisibleGM
+            mainGM
           );
           // append it to the edge list to report.
           EdgeIDList[0] = [...EdgeIDList[0], ...edgeIDList];
@@ -1107,7 +1107,7 @@ export class ExpandCollapse {
     nodeIDList,
     isRecursive,
     visibleGM,
-    invisibleGM
+    mainGM
   ) {
     // initalize list to report meta edge
     let EdgeIDList = [[], [], []];
@@ -1140,7 +1140,7 @@ export class ExpandCollapse {
             edgeIDs,
             isRecursive,
             visibleGM,
-            invisibleGM
+            mainGM
           );
           // append it to the edge list to report.
           EdgeIDList[0] = [...EdgeIDList[0], ...returnedEdgeList[0]];
@@ -1154,7 +1154,7 @@ export class ExpandCollapse {
     return EdgeIDList;
   }
 
-  static collapseAllEdges(visibleGM, invisibleGM) {
+  static collapseAllEdges(visibleGM, mainGM) {
     // create list for nodes to collapse
     let nodeIDList = [];
     // loop through nodes of root graph (rootNodes)
@@ -1162,10 +1162,10 @@ export class ExpandCollapse {
       nodeIDList.push(ID);
     });
     // call the collapsedNodes function and pass list of nodes to be collapsed
-    return this.collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM);
+    return this.collapseEdgesBetweenNodes(nodeIDList, visibleGM, mainGM);
   }
 
-  static expandAllEdges(visibleGM, invisibleGM) {
+  static expandAllEdges(visibleGM, mainGM) {
     // create list for nodes to collapse
     let nodeIDList = [];
     // loop through nodes of root graph (rootNodes)
@@ -1177,7 +1177,7 @@ export class ExpandCollapse {
       nodeIDList,
       true,
       visibleGM,
-      invisibleGM
+      mainGM
     );
   }
 }

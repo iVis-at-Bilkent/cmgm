@@ -19,17 +19,17 @@ export class ComplexityManager {
   #visibleGraphManager;
 
   // Graph manager that is responsible from invisible compound graph
-  #invisibleGraphManager;
+  #mainGraphManager;
 
   /**
    * Constructor
    */
   constructor() {
     this.#visibleGraphManager = this.#newGraphManager(true);
-    this.#invisibleGraphManager = this.#newGraphManager(false);
+    this.#mainGraphManager = this.#newGraphManager(false);
     // Set sibling graph managers
-    this.#visibleGraphManager.siblingGraphManager = this.#invisibleGraphManager;
-    this.#invisibleGraphManager.siblingGraphManager = this.#visibleGraphManager;
+    this.#visibleGraphManager.siblingGraphManager = this.#mainGraphManager;
+    this.#mainGraphManager.siblingGraphManager = this.#visibleGraphManager;
   }
 
   // Get methods
@@ -37,8 +37,8 @@ export class ComplexityManager {
     return this.#visibleGraphManager;
   }
 
-  get invisibleGraphManager() {
-    return this.#invisibleGraphManager;
+  get mainGraphManager() {
+    return this.#mainGraphManager;
   }
 
   /*
@@ -69,38 +69,38 @@ export class ComplexityManager {
 
   addNode(nodeID, parentID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.addNode(nodeID, parentID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.addNode(nodeID, parentID, visibleGM, mainGM);
   }
 
   addEdge(edgeID, sourceID, targetID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.addEdge(edgeID, sourceID, targetID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.addEdge(edgeID, sourceID, targetID, visibleGM, mainGM);
   }
 
   removeNode(nodeID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.removeNode(nodeID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.removeNode(nodeID, visibleGM, mainGM);
   }
 
   removeEdge(edgeID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.removeEdge(edgeID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.removeEdge(edgeID, visibleGM, mainGM);
   }
 
   reconnect(edgeID, newSourceID, newTargetID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.reconnect(edgeID, newSourceID, newTargetID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.reconnect(edgeID, newSourceID, newTargetID, visibleGM, mainGM);
   }
 
   changeParent(nodeID, newParentID) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    Topology.changeParent(nodeID, newParentID, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    Topology.changeParent(nodeID, newParentID, visibleGM, mainGM);
   }
 
   // Complexity management related API methods
@@ -109,58 +109,58 @@ export class ComplexityManager {
 
   filter(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return FilterUnfilter.filter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return FilterUnfilter.filter(nodeIDList, edgeIDList, visibleGM, mainGM);
   }
 
   unfilter(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return FilterUnfilter.unfilter(nodeIDList, edgeIDList, visibleGM, mainGM);
   }
 
   // hide/show methods
 
   hide(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return HideShow.hide(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return HideShow.hide(nodeIDList, edgeIDList, visibleGM, mainGM);
   }
 
   show(nodeIDList, edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return HideShow.show(nodeIDList, edgeIDList, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return HideShow.show(nodeIDList, edgeIDList, visibleGM, mainGM);
   }
 
   showAll() {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return HideShow.showAll(visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return HideShow.showAll(visibleGM, mainGM);
   }
 
   // expand/collapse methods
 
   collapseNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    let reportedData =  ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    let reportedData =  ExpandCollapse.collapseNodes(nodeIDList, isRecursive, visibleGM, mainGM);
     
     return reportedData;
   }
 
   expandNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    let reportedData =  ExpandCollapse.expandNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    let reportedData =  ExpandCollapse.expandNodes(nodeIDList, isRecursive, visibleGM, mainGM);
     
     return reportedData;
   }
 
   collapseAllNodes() {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    let reportedData =  ExpandCollapse.collapseAllNodes(visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    let reportedData =  ExpandCollapse.collapseAllNodes(visibleGM, mainGM);
     
     
     return reportedData;
@@ -169,59 +169,59 @@ export class ComplexityManager {
 
   expandAllNodes() {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    let reportedData =  ExpandCollapse.expandAllNodes(visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    let reportedData =  ExpandCollapse.expandAllNodes(visibleGM, mainGM);
     
     return reportedData;
   }
 
   collapseEdges(edgeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
+    let mainGM = this.#mainGraphManager;
     if(!visibleGM.edgesMap.has(edgeIDList[0])){
       edgeIDList.shift();
     }
-    return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, invisibleGM);
+    return ExpandCollapse.collapseEdges(edgeIDList, visibleGM, mainGM);
   }
 
   expandEdges(edgeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return ExpandCollapse.expandEdges(edgeIDList, isRecursive, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return ExpandCollapse.expandEdges(edgeIDList, isRecursive, visibleGM, mainGM);
   }
 
   collapseEdgesBetweenNodes(nodeIDList) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return ExpandCollapse.collapseEdgesBetweenNodes(nodeIDList, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return ExpandCollapse.collapseEdgesBetweenNodes(nodeIDList, visibleGM, mainGM);
   }
 
   expandEdgesBetweenNodes(nodeIDList, isRecursive) {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return ExpandCollapse.expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return ExpandCollapse.expandEdgesBetweenNodes(nodeIDList, isRecursive, visibleGM, mainGM);
   }
 
   collapseAllEdges() {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return ExpandCollapse.collapseAllEdges(visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return ExpandCollapse.collapseAllEdges(visibleGM, mainGM);
   }
 
   expandAllEdges() {
     let visibleGM = this.#visibleGraphManager;
-    let invisibleGM = this.#invisibleGraphManager;
-    return ExpandCollapse.expandAllEdges(visibleGM, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return ExpandCollapse.expandAllEdges(visibleGM, mainGM);
   }
 
   getHiddenNeighbors(nodeID) {
-    let invisibleGM = this.#invisibleGraphManager;
-    return Auxiliary.getTargetNeighborhoodElements(nodeID, invisibleGM);
+    let mainGM = this.#mainGraphManager;
+    return Auxiliary.getTargetNeighborhoodElements(nodeID, mainGM);
   }
 
   isCollapsible(nodeID){
-    let invisibleGM = this.#invisibleGraphManager;
-    let node = invisibleGM.nodesMap.get(nodeID);
+    let mainGM = this.#mainGraphManager;
+    let node = mainGM.nodesMap.get(nodeID);
     if(node.child && node.isCollapsed == false){
       return true;
     }
@@ -231,8 +231,8 @@ export class ComplexityManager {
   }
 
   isExpandable(nodeID){
-    let invisibleGM = this.#invisibleGraphManager;
-    let node = invisibleGM.nodesMap.get(nodeID);
+    let mainGM = this.#mainGraphManager;
+    let node = mainGM.nodesMap.get(nodeID);
     if(node.child && node.isCollapsed){
       return true;
     }
