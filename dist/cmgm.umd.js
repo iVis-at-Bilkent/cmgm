@@ -3049,48 +3049,7 @@
               i == metaEdge.ID ? false : true
             );
             pMetaEdge.originalEdges = updatedPOrignalEnds;
-          } else {
-            deletedMetaEdges[1].push(orignalEnds[0]);
-            if (visibleGM.metaEdgesMap.has(orignalEnds[0])) {
-              let outerMetaEdge = visibleGM.metaEdgesMap.get(orignalEnds[0]);
-              if (outerMetaEdge.originalEdges.length != 1) {
-                visibleGM.edgesMap.set(orignalEnds[0], outerMetaEdge);
-                let sourceNode = visibleGM.nodesMap.get(outerMetaEdge.source.ID);
-                let targetNode = visibleGM.nodesMap.get(outerMetaEdge.target.ID);
-                if (sourceNode != undefined && targetNode != undefined) {
-                  if (sourceNode.owner === targetNode.owner) {
-                    sourceNode.owner.addEdge(
-                      outerMetaEdge,
-                      sourceNode,
-                      targetNode
-                    );
-                  } else {
-                    //add inter graph edges
-                    visibleGM.addInterGraphEdge(
-                      outerMetaEdge,
-                      sourceNode,
-                      targetNode
-                    );
-                  }
-                }
-              }
-            } else {
-              let edgeInInvisible = mainGM.edgesMap.get(orignalEnds[0]);
-              let sourceNode = visibleGM.nodesMap.get(edgeInInvisible.source.ID);
-              let targetNode = visibleGM.nodesMap.get(edgeInInvisible.target.ID);
-              let newEdge = new Edge(edgeInInvisible.ID, sourceNode, targetNode);
-              visibleGM.edgesMap.set(orignalEnds[0], newEdge);
-
-              if (sourceNode != undefined && targetNode != undefined) {
-                if (sourceNode.owner === targetNode.owner) {
-                  sourceNode.owner.addEdge(newEdge, sourceNode, targetNode);
-                } else {
-                  //add inter graph edges
-                  visibleGM.addInterGraphEdge(newEdge, sourceNode, targetNode);
-                }
-              }
-            }
-          }
+          } 
           // delete meta edge from the metaEdgeMap
           visibleGM.metaEdgesMap.delete(metaEdge.ID);
           // if meta edge is visible
